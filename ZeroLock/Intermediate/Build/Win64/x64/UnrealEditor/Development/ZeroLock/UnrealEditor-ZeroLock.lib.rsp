@@ -1,0 +1,17 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UnrealEditor-ZeroLock.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\ZeroLockEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\ZeroLock.init.gen.cpp.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\ZeroLockCharacter.gen.cpp.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\ZeroLockGameMode.gen.cpp.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\ZeroLock.cpp.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\ZeroLockCharacter.cpp.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\ZeroLockGameMode.cpp.obj"
+"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\Default.rc2.res"
+/OUT:"E:\Repo\ZeroLock\ZeroLock\ZeroLock\Intermediate\Build\Win64\x64\UnrealEditor\Development\ZeroLock\UnrealEditor-ZeroLock.lib"

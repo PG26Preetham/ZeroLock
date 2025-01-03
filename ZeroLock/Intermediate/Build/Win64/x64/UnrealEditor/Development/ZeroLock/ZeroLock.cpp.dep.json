@@ -1,0 +1,14 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "e:\\repo\\zerolock\\zerolock\\zerolock\\source\\zerolock\\zerolock.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\repo\\zerolock\\zerolock\\zerolock\\intermediate\\build\\win64\\x64\\zerolockeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "e:\\repo\\zerolock\\zerolock\\zerolock\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\zerolock\\definitions.zerolock.h",
+            "e:\\repo\\zerolock\\zerolock\\zerolock\\source\\zerolock\\zerolock.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

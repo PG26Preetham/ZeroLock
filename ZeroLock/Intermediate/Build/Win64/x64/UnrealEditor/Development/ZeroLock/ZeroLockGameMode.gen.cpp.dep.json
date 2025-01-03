@@ -1,0 +1,19 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "e:\\repo\\zerolock\\zerolock\\zerolock\\intermediate\\build\\win64\\unrealeditor\\inc\\zerolock\\uht\\zerolockgamemode.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "e:\\repo\\zerolock\\zerolock\\zerolock\\intermediate\\build\\win64\\x64\\zerolockeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "e:\\repo\\zerolock\\zerolock\\zerolock\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\zerolock\\definitions.zerolock.h",
+            "e:\\repo\\zerolock\\zerolock\\zerolock\\source\\zerolock\\zerolockgamemode.h",
+            "z:\\epicgames\\ue_5.4\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
+            "z:\\epicgames\\ue_5.4\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
+            "z:\\epicgames\\ue_5.4\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\serverstatreplicator.generated.h",
+            "z:\\epicgames\\ue_5.4\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemodebase.generated.h",
+            "e:\\repo\\zerolock\\zerolock\\zerolock\\intermediate\\build\\win64\\unrealeditor\\inc\\zerolock\\uht\\zerolockgamemode.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

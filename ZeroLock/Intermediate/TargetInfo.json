@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "ZeroLock",
+			"Path": "..\\Source\\ZeroLock.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "ZeroLockEditor",
+			"Path": "..\\Source\\ZeroLockEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}

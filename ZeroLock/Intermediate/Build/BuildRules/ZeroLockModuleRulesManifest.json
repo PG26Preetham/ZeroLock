@@ -1,0 +1,8 @@
+{
+	"SourceFiles": [
+		"E:\\Repo\\ZeroLock\\ZeroLock\\ZeroLock\\Source\\ZeroLock\\ZeroLock.Build.cs",
+		"E:\\Repo\\ZeroLock\\ZeroLock\\ZeroLock\\Source\\ZeroLock.Target.cs",
+		"E:\\Repo\\ZeroLock\\ZeroLock\\ZeroLock\\Source\\ZeroLockEditor.Target.cs"
+	],
+	"EngineVersion": "5.4.3"
+}
