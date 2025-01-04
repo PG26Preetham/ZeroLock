@@ -20,6 +20,10 @@ class AZeroLockCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
+	protected:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Movement")
+	class UZeroBaseCharacterMovementComp* ZeroMovementComp;
+	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -45,7 +49,7 @@ class AZeroLockCharacter : public ACharacter
 	UInputAction* LookAction;
 
 public:
-	AZeroLockCharacter();
+	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
 	
 
 protected:

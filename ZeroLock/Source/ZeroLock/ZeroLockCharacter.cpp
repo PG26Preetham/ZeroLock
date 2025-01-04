@@ -10,14 +10,18 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "ZeroBaseCharacterMovementComp.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
 // AZeroLockCharacter
 
-AZeroLockCharacter::AZeroLockCharacter()
+AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UZeroBaseCharacterMovementComp>(ACharacter::CharacterMovementComponentName))
 {
+
+	ZeroMovementComp = Cast<UZeroBaseCharacterMovementComp>(GetCharacterMovement());
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -92,6 +96,9 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
 	}
 }
+
+
+
 
 void AZeroLockCharacter::Move(const FInputActionValue& Value)
 {
