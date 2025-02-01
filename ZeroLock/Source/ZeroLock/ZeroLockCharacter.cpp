@@ -64,6 +64,18 @@ void AZeroLockCharacter::BeginPlay()
 	Super::BeginPlay();
 }
 
+FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
+{
+	FCollisionQueryParams params;
+
+	TArray<AActor*> CharacterChilder;
+	GetAllChildActors(CharacterChilder);
+	params.AddIgnoredActors(CharacterChilder);
+	params.AddIgnoredActor(this);
+
+	return params;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 

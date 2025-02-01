@@ -1,0 +1,27 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Camera/PlayerCameraManager.h"
+#include "ZeroPlayerCameraManager.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class ZEROLOCK_API AZeroPlayerCameraManager : public APlayerCameraManager
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere)
+	float CrouchBlendDuration =0.5f;
+	UPROPERTY(EditAnywhere)
+	float CrouchBlendTime;
+	
+	public:
+	AZeroPlayerCameraManager();
+
+	virtual void UpdateViewTarget(FTViewTarget& OutVT, float DeltaTime) override;
+
+	
+};

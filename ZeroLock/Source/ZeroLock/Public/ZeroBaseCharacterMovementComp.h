@@ -9,6 +9,14 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum ECustomMovementModes
+{
+	CMove_None UMETA(hidden),
+	CMove_Slide UMETA(DisplayName = " Slide"),
+	CMove_MAX UMETA(hidden)
+};
+
 UCLASS()
 class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementComponent
 {
@@ -21,8 +29,10 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 	public:
 		FSavedMove_Zero() ;
 	
-		
+		//flag
 		uint8 S_bWantsSprint:1;
+
+		uint8 Saved_bPrevWantsToCrouch:1;
 
 		//Check if the previous and current saveddata can be combined so we can save bandwidth
 		virtual bool CanCombineWith(const FSavedMovePtr& NewMove, ACharacter* InCharacter, float MaxDelta) const override;
@@ -56,11 +66,23 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 	
 	bool Safe_bWantSprint;
+	bool Safe_bPrevWantsToCrouch;
 	
 public:
 	UZeroBaseCharacterMovementComp();
 
+	//transient
+	UPROPERTY(transient)
+	class AZeroLockCharacter* ZeroCharacterOwner;
+
 	virtual void OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity) override;
+	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
+
+	//handles custom phys
+	virtual void PhysCustom(float deltaTime, int32 Iterations) override;
+
+	virtual bool IsMovingOnGround() const override;
+	virtual bool CanCrouchInCurrentState() const override;
 
 	//Sprint
 	UFUNCTION(BlueprintCallable)
@@ -73,6 +95,35 @@ public:
 	float Max_SprintSpeed;
 	UPROPERTY(EditDefaultsOnly)
 	float Max_WalkSpeed;
+
+
+	//Crouch
+	UFUNCTION(BlueprintCallable)
+	void CrouchPressed();
+	UFUNCTION(BlueprintCallable)
+	void CrouchReleased();
+
+	UFUNCTION(BlueprintPure)
+	bool IsCustomMovementMode(ECustomMovementModes InCustomMovementMode) const;
+
+	protected:
+	virtual void InitializeComponent() override;
+
+	//slide
+private:
+	void EnterSlide();
+	void ExitSlide();
+	void PhysSlide(float deltaTime, int32 Iterations);
+	bool GetSlideSurface(FHitResult& OutHit) const;
+
+	UPROPERTY(EditDefaultsOnly)
+	float SlideMinSpeed =350;
+	UPROPERTY(EditDefaultsOnly)
+	float SlideEnterImpluse = 500;
+	UPROPERTY(EditDefaultsOnly)
+	float SlideGravityForce =5000;
+	UPROPERTY(EditDefaultsOnly)
+	float SlideFriction =1.3;
 };
 
 
