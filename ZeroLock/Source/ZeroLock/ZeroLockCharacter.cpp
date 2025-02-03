@@ -76,6 +76,17 @@ FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
 	return params;
 }
 
+bool AZeroLockCharacter::CanJumpInternal_Implementation() const
+{
+	if(ZeroMovementComp ->IsCustomMovementMode(CMove_Slide))
+	{
+		return true;
+	}
+	return Super::CanJumpInternal_Implementation();
+}
+
+
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 

@@ -77,5 +77,8 @@ public:
 
 	
 	FCollisionQueryParams GetIgnoreCharacterParams() const ;
+
+	virtual bool CanJumpInternal_Implementation() const override;
+	
 };
 

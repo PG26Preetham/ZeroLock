@@ -83,6 +83,7 @@ public:
 
 	virtual bool IsMovingOnGround() const override;
 	virtual bool CanCrouchInCurrentState() const override;
+	virtual bool CanAttemptJump() const override;
 
 	//Sprint
 	UFUNCTION(BlueprintCallable)

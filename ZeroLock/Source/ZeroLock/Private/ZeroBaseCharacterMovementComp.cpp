@@ -47,7 +47,7 @@ void UZeroBaseCharacterMovementComp::InitializeComponent()
 
 void UZeroBaseCharacterMovementComp::EnterSlide()
 {
-	bWantsToCrouch = true;
+	//bWantsToCrouch = true;
 	Velocity+=Velocity.GetSafeNormal2D() * SlideEnterImpluse;
 	SetMovementMode(MOVE_Custom,CMove_Slide);
 }
@@ -98,7 +98,7 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float deltaTime, int32 Iterations
 	//Calculate Velocity
 	if(!HasAnimRootMotion() && CurrentRootMotion.HasOverrideVelocity())
 	{
-		CalcVelocity(deltaTime,SlideFriction,true,GetMaxBrakingDeceleration());
+		CalcVelocity(deltaTime,SlideFriction * GroundFriction,true,GetMaxBrakingDeceleration());
 	}
 	ApplyRootMotionToVelocity(deltaTime);
 
@@ -121,7 +121,7 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float deltaTime, int32 Iterations
 		HandleImpact(Hit,deltaTime,Adjusted);
 		SlideAlongSurface(Adjusted,1-Hit.Time,Hit.Normal,Hit,true);
 	}
-
+	
 	FHitResult NewSurfaceHit;
 	if(!GetSlideSurface(NewSurfaceHit) || Velocity.SizeSquared() < pow(SlideMinSpeed,2))
 	{
@@ -163,15 +163,17 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
 
 void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
 {
-if(MovementMode == MOVE_Walking && !bWantsToCrouch && Safe_bPrevWantsToCrouch)
-{
 	FHitResult  PotentialSlideSurface;
 	if(Velocity.SizeSquared() < pow(SlideMinSpeed,2) && GetSlideSurface(PotentialSlideSurface))
 	{
-		EnterSlide();
+		if(MovementMode == MOVE_Walking && bWantsToCrouch && Safe_bPrevWantsToCrouch)
+		{
+			EnterSlide();
+		}
+		
 	}
-}
-	if(IsCustomMovementMode(CMove_Slide) && !bWantsToCrouch)
+
+	if(IsCustomMovementMode(CMove_Slide) && (!bWantsToCrouch || Velocity.SizeSquared() < pow(SlideMinSpeed,2) && GetSlideSurface(PotentialSlideSurface)))
 	{
 		ExitSlide();
 	}
@@ -196,11 +198,21 @@ void UZeroBaseCharacterMovementComp::PhysCustom(float deltaTime, int32 Iteration
 bool UZeroBaseCharacterMovementComp::IsMovingOnGround() const
 {
 	return Super::IsMovingOnGround() || IsCustomMovementMode(CMove_Slide);
+	
 }
 
 bool UZeroBaseCharacterMovementComp::CanCrouchInCurrentState() const
 {
 	return Super::CanCrouchInCurrentState() || IsMovingOnGround();
+}
+
+bool UZeroBaseCharacterMovementComp::CanAttemptJump() const
+{
+	if(IsCustomMovementMode(CMove_Slide))
+	{
+		return true;
+	}
+	return Super::CanAttemptJump();
 }
 
 
