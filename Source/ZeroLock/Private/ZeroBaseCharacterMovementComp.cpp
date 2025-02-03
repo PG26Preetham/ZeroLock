@@ -95,10 +95,10 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float deltaTime, int32 Iterations
 		Acceleration = FVector::ZeroVector;
 	}
 
+	CalcVelocity(deltaTime,SlideFriction,true,GetMaxBrakingDeceleration());
 	//Calculate Velocity
 	if(!HasAnimRootMotion() && CurrentRootMotion.HasOverrideVelocity())
 	{
-		CalcVelocity(deltaTime,SlideFriction * GroundFriction,true,GetMaxBrakingDeceleration());
 	}
 	ApplyRootMotionToVelocity(deltaTime);
 
@@ -173,7 +173,7 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
 		
 	}
 
-	if(IsCustomMovementMode(CMove_Slide) && (!bWantsToCrouch || Velocity.SizeSquared() < pow(SlideMinSpeed,2) && GetSlideSurface(PotentialSlideSurface)))
+	if(IsCustomMovementMode(CMove_Slide) && !bWantsToCrouch)
 	{
 		ExitSlide();
 	}
