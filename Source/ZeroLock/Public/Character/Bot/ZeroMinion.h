@@ -4,10 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
 #include "ZeroMinion.generated.h"
 
+class UCapsuleComponent;
+
 UCLASS()
-class ZEROLOCK_API AZeroMinion : public APawn
+class ZEROLOCK_API AZeroMinion : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -28,7 +31,10 @@ public:
 
 private:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = true))
+	TObjectPtr<UCapsuleComponent> MinionCapsule;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh", meta = (AllowPrivateAccess = true))
-	TObjectPtr<UStaticMeshComponent> Mesh;
+	TObjectPtr<USkeletalMeshComponent> MinionMesh;
 
 };

@@ -3,11 +3,17 @@
 
 #include "Character/Bot/ZeroMinion.h"
 
+#include "Components/CapsuleComponent.h"
+
 // Sets default values
 AZeroMinion::AZeroMinion()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+
+	MinionCapsule = GetCapsuleComponent();
+
+	MinionMesh = GetMesh();
 
 }
 
