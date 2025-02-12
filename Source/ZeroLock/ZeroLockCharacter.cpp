@@ -190,7 +190,6 @@ void AZeroLockCharacter::OnRep_PlayerState()
 
 void AZeroLockCharacter::PrimaryFirePressed()
 {
-
 }
 
 void AZeroLockCharacter::PrimaryFireReleased()
@@ -203,18 +202,22 @@ void AZeroLockCharacter::PrimaryFireTickFunction()
 
 void AZeroLockCharacter::SecondryFirePressed()
 {
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(SecondryFireAbility);
 }
 
 void AZeroLockCharacter::Ability_1Pressed()
 {
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(Ability_1);
 }
 
 void AZeroLockCharacter::Ability_2Pressed()
 {
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(Ability_2);
 }
 
 void AZeroLockCharacter::UltimateAbilityPressed()
 {
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(UltimateAbility);
 }
 
 
@@ -244,6 +247,19 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZeroLockCharacter::Look);
+
+		//GAS
+		EnhancedInputComponent->BindAction(EI_PrimaryFire,ETriggerEvent::Started,this,&AZeroLockCharacter::PrimaryFirePressed);
+		EnhancedInputComponent->BindAction(EI_PrimaryFire,ETriggerEvent::Completed,this,&AZeroLockCharacter::PrimaryFireReleased);
+
+		EnhancedInputComponent->BindAction(EI_SecondryFire,ETriggerEvent::Started,this,&AZeroLockCharacter::SecondryFirePressed);
+
+		EnhancedInputComponent->BindAction(EI_Ability1,ETriggerEvent::Started,this,&AZeroLockCharacter::Ability_1Pressed);
+
+		EnhancedInputComponent->BindAction(EI_Ability2,ETriggerEvent::Started,this,&AZeroLockCharacter::Ability_2Pressed);
+
+		EnhancedInputComponent->BindAction(EI_Ultimate,ETriggerEvent::Started,this,&AZeroLockCharacter::UltimateAbilityPressed);
+		
 	}
 	else
 	{

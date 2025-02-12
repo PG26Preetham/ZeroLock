@@ -52,6 +52,23 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	UInputAction* LookAction;
 
 
+
+	//Gameplay Ability system inputs
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_PrimaryFire;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_SecondryFire;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Ability1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Ability2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Ultimate;
+
 	
 public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
