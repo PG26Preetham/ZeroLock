@@ -130,6 +130,7 @@ public:
 
 	void PrimaryFirePressed();
 	void PrimaryFireReleased();
+	float TimeOfLastShot;
 
 	void PrimaryFireTickFunction();
 	FTimerHandle PrimaryFireTickHandle;

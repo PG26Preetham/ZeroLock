@@ -190,14 +190,27 @@ void AZeroLockCharacter::OnRep_PlayerState()
 
 void AZeroLockCharacter::PrimaryFirePressed()
 {
+	if(!PrimaryFireAbility)
+	{
+		return;
+	}
+	
+	float FirstDelay =FMath::Max(TimeOfLastShot + AttributeSet->FireRate.GetCurrentValue() - GetWorld()->TimeSeconds,0.0f);
+	FString TheFloatStr = "Dam=" + FString::SanitizeFloat(FirstDelay);
+	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
+	GetWorldTimerManager().SetTimer(PrimaryFireTickHandle,this,&AZeroLockCharacter::PrimaryFireTickFunction, AttributeSet->FireRate.GetCurrentValue(), true, FirstDelay);
+	//GetWorldTimerManager().SetTimer(PrimaryFireTickHandle,this,&AZeroLockCharacter::PrimaryFireTickFunction, AttributeSet->FireRate, true, FirstDelay);
 }
 
 void AZeroLockCharacter::PrimaryFireReleased()
 {
+	GetWorldTimerManager().ClearTimer(PrimaryFireTickHandle);
 }
 
 void AZeroLockCharacter::PrimaryFireTickFunction()
 {
+	AbilitySystemComp->TryActivateAbilityByClass(PrimaryFireAbility, true);
+	TimeOfLastShot = GetWorld()->TimeSeconds;
 }
 
 void AZeroLockCharacter::SecondryFirePressed()

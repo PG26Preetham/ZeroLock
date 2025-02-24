@@ -67,9 +67,17 @@ public:
 		FGameplayAttributeData CurrentJump;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, CurrentJump)
 
-	UPROPERTY(BlueprintReadOnly, Category = "Soul Attribute Set", ReplicatedUsing = OnRep_CurrentJump)
+	UPROPERTY(BlueprintReadOnly, Category = "Soul Attribute Set", ReplicatedUsing = OnRep_Souls)
 	FGameplayAttributeData Soul;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, Soul)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_FireRate)
+	FGameplayAttributeData FireRate;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, FireRate)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_WeaponDamage)
+	FGameplayAttributeData WeaponDamage;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, WeaponDamage)
 
 protected:
 
@@ -93,5 +101,10 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_Souls(const FGameplayAttributeData& OldValue);
-	
+
+	UFUNCTION()
+	virtual void OnRep_FireRate(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_WeaponDamage(const FGameplayAttributeData& OldValue);
 };

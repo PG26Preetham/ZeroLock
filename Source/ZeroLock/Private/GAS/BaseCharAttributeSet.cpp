@@ -17,6 +17,8 @@ UBaseCharAttributeSet::UBaseCharAttributeSet()
 	CurrentSpeed = 0.0f;
 	CurrentJump = 0.0f;
 	Soul =0;
+	FireRate = 0.0f;
+	WeaponDamage = 0.0f;
 }
 void UBaseCharAttributeSet::PreAttributeChange(const FGameplayAttribute & Attribute, float & NewValue)
 {
@@ -139,6 +141,8 @@ void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentSpeed, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentJump, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,Soul, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FireRate, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponDamage,COND_None,REPNOTIFY_OnChanged);
 }
 
 void UBaseCharAttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, const float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const
@@ -188,5 +192,15 @@ void UBaseCharAttributeSet::OnRep_HealthRegeneration(const FGameplayAttributeDat
 void UBaseCharAttributeSet::OnRep_Souls(const FGameplayAttributeData & OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, Soul, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_FireRate(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, FireRate, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_WeaponDamage(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, WeaponDamage, OldValue);
 }
 
