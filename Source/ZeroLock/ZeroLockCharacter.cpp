@@ -16,6 +16,8 @@
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "NetCodeBase/ClientPredictedActorBase.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -209,7 +211,66 @@ void AZeroLockCharacter::PrimaryFireReleased()
 
 void AZeroLockCharacter::PrimaryFireTickFunction()
 {
-	AbilitySystemComp->TryActivateAbilityByClass(PrimaryFireAbility, true);
+	bool bIsOwningClient =false;
+	if(IsLocallyControlled())
+	{
+		bIsOwningClient = true;
+	}
+	//bool bIsPredicted;
+	uint32 ClientID;
+	//AbilitySystemComp->TryActivateAbilityByClass(PrimaryFireAbility, true);
+	FActorSpawnParameters Params;
+	Params.Owner = Params.Instigator = this;
+	Params.CustomPreSpawnInitalization = [bIsOwningClient, ClientID](AActor* Actor)
+	{
+		if (auto PA = Cast<AClientPredictedActorBase>(Actor))
+		{
+			PA->SetIdentifier(ClientID);
+			/// You should determine this value yourself based on whether this is the local creation, or the Server RPC
+			/// It just sets the "bIsPredictedCopy" internal variable which lets us differentiate on the local client
+			PA->SetIsPredictedCopy(bIsOwningClient);
+		}
+	};
+
+	FVector MuzzleOffset;
+	FVector CameraLocation;
+	FRotator CameraRotation;
+	GetActorEyesViewPoint(CameraLocation, CameraRotation);
+	CameraLocation = GetMesh()->GetSocketLocation(FName("Gun"));
+
+	FHitResult Hit;
+
+	// We set up a line trace from our current location to a point 1000cm ahead of us
+	FVector TraceStart = CameraLocation;
+	//FVector CameFor =Hero->GetCamForwardVector()
+	
+	FVector TraceEnd = TraceStart + GetFollowCamera()->GetForwardVector()  * 10000.0f;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	
+	// Set MuzzleOffset to spawn projectiles slightly in front of the camera.
+	MuzzleOffset.Set(100.0f, 0.0f, 0.0f);
+
+	
+
+	// Transform MuzzleOffset from camera space to world space.
+	FVector MuzzleLocation = CameraLocation + (GetActorForwardVector() * 100);
+
+	// Skew the aim to be slightly upwards.
+	FRotator MuzzleRotation = UKismetMathLibrary::FindLookAtRotation(MuzzleLocation,TraceEnd);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECollisionChannel::ECC_Camera, QueryParams))
+	{
+		FVector HitLoc = Hit.ImpactPoint;
+		MuzzleRotation = UKismetMathLibrary::FindLookAtRotation(MuzzleLocation, HitLoc);
+	}
+	//MuzzleRotation.Pitch += 10.0f;
+	//Hero->IncrementComboCount();
+
+
+	GetWorld()->SpawnActor<AClientPredictedActorBase>(MuzzleLocation,MuzzleRotation, Params);
 	TimeOfLastShot = GetWorld()->TimeSeconds;
 }
 

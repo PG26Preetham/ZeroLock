@@ -10,6 +10,7 @@
 #include "GameplayAbilitySpec.h"
 #include "ZeroLockCharacter.generated.h"
 
+class AClientPredictedActorBase;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -170,5 +171,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GAS")
 	TArray<FGameplayAbilitySpecHandle> DefaultAbilitiesHandles;
+
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<AClientPredictedActorBase> ProjectileClass;
 };
 
