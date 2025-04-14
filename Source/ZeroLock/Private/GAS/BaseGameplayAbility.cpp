@@ -5,5 +5,5 @@
 
 UBaseGameplayAbility::UBaseGameplayAbility()
 {
-	
+	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.Skill")));
 }
