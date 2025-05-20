@@ -100,12 +100,21 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 
-	
+	//movement
 	FCollisionQueryParams GetIgnoreCharacterParams() const ;
 
 	virtual bool CanJumpInternal_Implementation() const override;
 
+	
+	//JUMP
+	bool bPressedZeroJump;
+	bool bStillJumpKeyDown =false;
+	//float ZeroTimeJumpKeyPressed;
+	float ZeroJumpHoldTIme;
 
+	virtual void Jump() override;
+	virtual void StopJumping() override;
+	virtual void ClearJumpInput(float DeltaTime) override;
 
 	//Ability System 
 protected:

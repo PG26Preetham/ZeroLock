@@ -91,11 +91,47 @@ FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
 
 bool AZeroLockCharacter::CanJumpInternal_Implementation() const
 {
-	if(ZeroMovementComp ->IsCustomMovementMode(CMove_Slide))
+	if(ZeroMovementComp->IsCustomMovementMode(CMOVE_Zipline))
+	{
+		return false;
+	}
+	if(ZeroMovementComp->IsCustomMovementMode(CMOVE_Slide))
 	{
 		return true;
 	}
 	return Super::CanJumpInternal_Implementation();
+}
+
+void AZeroLockCharacter::Jump()
+{
+	Super::Jump();
+
+	bPressedZeroJump = true;
+
+	bPressedJump = false;
+	bStillJumpKeyDown =true;
+	//ZeroTimeJumpKeyPressed = GetWorld()->TimeSeconds;
+	ZeroJumpHoldTIme =0.0f;
+}
+
+void AZeroLockCharacter::StopJumping()
+{
+	Super::StopJumping();
+	bPressedZeroJump = false;
+	bStillJumpKeyDown = false;
+}
+
+void AZeroLockCharacter::ClearJumpInput(float DeltaTime)
+{
+	Super::ClearJumpInput(DeltaTime);
+	if(bStillJumpKeyDown)
+	{
+		ZeroJumpHoldTIme += DeltaTime;
+	}
+	else
+	{
+		//	ZeroJumpHoldTIme =0;
+	}
 }
 
 class UAbilitySystemComponent* AZeroLockCharacter::GetAbilitySystemComponent() const

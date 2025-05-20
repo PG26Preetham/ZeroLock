@@ -4,6 +4,8 @@
 #include "MonkeyBoi/Abilities/ZL_Ruyibang.h"
 
 #include "GAS/Tasks/GAST_PlayMontageAndWaitForEvent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 UZL_Ruyibang::UZL_Ruyibang()
@@ -75,6 +77,22 @@ void UZL_Ruyibang::EventReceived(FGameplayTag EventTag, FGameplayEventData Event
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		}
 		//Hero->LaunchCharacter(FVector(0,0,1000),true,true);
+		TArray<AActor*> ignoreActors;
+		ignoreActors.Add(Hero);
+		FVector CentreOfSphere = Hero->GetActorLocation() ;
+		TArray<TEnumAsByte<EObjectTypeQuery>> traceObjectTypes;
+		traceObjectTypes.Add(UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn));
+		TArray<AActor*> outActors;
+		//DrawDebugSphere(GetWorld(),GetActorLocation(),BlastRadius,32,FColor::Orange,true,5);
+		UKismetSystemLibrary::SphereOverlapActors(GetWorld(),CentreOfSphere,Range,traceObjectTypes,AZeroLockCharacter::StaticClass(),ignoreActors,outActors);
+		for(int i = 0; i < outActors.Num(); i++)
+		{
+			if(AZeroLockCharacter* hit =  Cast<AZeroLockCharacter>(outActors[i]))
+			{
+				//FVector CentreOfSphere = (hit->GetActorLocation() - Hero->GetActorLocation()).GetSafeNormal();
+				//hit->LaunchCharacter(CentreOfSphere * 10000,true,true);
+			}
+		}
 		//EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}
 }
