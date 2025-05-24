@@ -136,11 +136,11 @@ public:
 	
 
 	//Zipline
-	UPROPERTY(EditDefaultsOnly) float ZiplineMinKeyPressTime = 0.5f;
-	UPROPERTY(EditDefaultsOnly) float ZiplineCheckTickIntervel =0.5f;
-	UPROPERTY(EditDefaultsOnly) float ZiplineCheckSphereRadius =110.0f;
-	UPROPERTY(EditDefaultsOnly) float ZiplineCheckMaxDistance = 2000.0f;
-	UPROPERTY(EditDefaultsOnly) float ZiplineSpeed = 500.0f;
+	UPROPERTY(EditDefaultsOnly) float ZiplineMinKeyPressTime ;
+	UPROPERTY(EditDefaultsOnly) float ZiplineCheckTickIntervel;
+	UPROPERTY(EditDefaultsOnly) float ZiplineCheckSphereRadius ;
+	UPROPERTY(EditDefaultsOnly) float ZiplineCheckMaxDistance ;
+	UPROPERTY(EditDefaultsOnly) float ZiplineSpeed;
 	float ZiplineLastTickTime;
 	bool bZiplineMoveingToEnd;
 	AZero_ZiplineActor* ZiplineActorRef;
@@ -151,7 +151,7 @@ public:
 	UPROPERTY(EditDefaultsOnly) float DashJumpEndTime;
 
 	//QuickFall
-	UPROPERTY(EditDefaultsOnly) float QuickFallImpulse =500.0f;
+	UPROPERTY(EditDefaultsOnly) float QuickFallImpulse;
 	bool bCanQuickFall;
 	
 	

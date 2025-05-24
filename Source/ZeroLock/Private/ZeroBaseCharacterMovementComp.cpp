@@ -143,12 +143,12 @@ UZeroBaseCharacterMovementComp::UZeroBaseCharacterMovementComp()
 	Walk_MaxSpeed = 600;
 	NavAgentProps.bCanCrouch = true;
 
-	SlideFriction=1.3f;
-	SlideMinSpeed=350;
+	SlideFriction=0.75f;
+	SlideMinSpeed=250;
 	SlideEnterImpulse=500;
 	SlideGravityForce =5000;
 
-	DashImpulse = 1000.0f;
+	DashImpulse = 1750.0f;
 	DashCoolDownDuration =1.f;
 	AuthDashCoolDownDuration =0.9f;
 
@@ -160,6 +160,17 @@ UZeroBaseCharacterMovementComp::UZeroBaseCharacterMovementComp()
 	MantleMinWallSteepnessAngle = 75.0f;
 	MantleMaxSurfaceAngle = 40.0f;
 	MantleMaxAlignmentAngle =45.0f;
+
+
+	ZiplineMinKeyPressTime = 0.5f;
+	ZiplineCheckTickIntervel =0.5f;
+	ZiplineCheckSphereRadius =110.0f;
+	ZiplineCheckMaxDistance = 2000.0f;
+	ZiplineSpeed = 1000.0f;
+
+	QuickFallImpulse =500.0f;
+
+	bUseSeparateBrakingFriction = true;
 }
 
 void UZeroBaseCharacterMovementComp::InitializeComponent()
@@ -658,9 +669,11 @@ ZLOG(ZipHit.GetActor()->GetName());
 		{
 			ZiplineActorRef = Cast<AZero_ZiplineActor>(ZipHit.GetActor());
 			ZiplineSplineComp = ZiplineActorRef->GetZiplineComponent();
+			float ClosestDistancetoPlayer = ZiplineSplineComp->GetDistanceAlongSplineAtLocation(CharLocation(),ESplineCoordinateSpace::World);
 			float maxDis = ZiplineSplineComp->GetSplineLength();
 			FVector EndPoint = ZiplineSplineComp->GetLocationAtDistanceAlongSpline(maxDis,ESplineCoordinateSpace::World);
-			float Angle = (CharacterOwner->GetActorForwardVector())| (EndPoint - CharLocation() );
+			FVector ZiplineDir = ZiplineSplineComp->GetDirectionAtDistanceAlongSpline(ClosestDistancetoPlayer,ESplineCoordinateSpace::World);
+			float Angle = CharacterOwner->GetActorForwardVector()| ZiplineDir;
 			bZiplineMoveingToEnd =false;
 			if(Angle> 0)
 			{
