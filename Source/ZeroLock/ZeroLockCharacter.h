@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "AbilitySystemInterface.h"
+#include <GameplayEffectTypes.h>
+#include "GameplayAbilitySpec.h"
 #include "ZeroLockCharacter.generated.h"
 
 class USpringArmComponent;
@@ -16,7 +19,7 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config=Game)
-class AZeroLockCharacter : public ACharacter
+class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -48,6 +51,25 @@ class AZeroLockCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+
+
+	//Gameplay Ability system inputs
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_PrimaryFire;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_SecondryFire;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Ability1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Ability2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Ultimate;
+
+	
 public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
 	
@@ -64,6 +86,9 @@ protected:
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	// End of APawn interface
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	// To add mapping context
 	virtual void BeginPlay();
@@ -75,10 +100,84 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 
-	
+	//movement
 	FCollisionQueryParams GetIgnoreCharacterParams() const ;
 
 	virtual bool CanJumpInternal_Implementation() const override;
+
 	
+	//JUMP
+	bool bPressedZeroJump;
+	bool bStillJumpKeyDown =false;
+	//float ZeroTimeJumpKeyPressed;
+	float ZeroJumpHoldTIme;
+
+	virtual void Jump() override;
+	virtual void StopJumping() override;
+	virtual void ClearJumpInput(float DeltaTime) override;
+
+	//Ability System 
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UBaseCharAbilitySystemComponent* AbilitySystemComp;
+
+
+	UPROPERTY()
+	class UBaseCharAttributeSet* AttributeSet;
+
+public:
+	
+	virtual class UAbilitySystemComponent* GetAbilitySystemComponent()const override;
+
+	virtual void InitializeAttributes();
+	virtual void GiveAbilities();
+
+
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+
+
+	void PrimaryFirePressed();
+	void PrimaryFireReleased();
+	float TimeOfLastShot;
+
+	void PrimaryFireTickFunction();
+	FTimerHandle PrimaryFireTickHandle;
+
+	void SecondryFirePressed();
+
+	void Ability_1Pressed();
+
+	void Ability_2Pressed();
+
+	void UltimateAbilityPressed();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> DefaultGameplayEffect;
+
+
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TArray<TSubclassOf<class UBaseGameplayAbility>> DefaultAbilities;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UBaseGameplayAbility> PrimaryFireAbility;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UBaseGameplayAbility> SecondryFireAbility;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UBaseGameplayAbility> Ability_1;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UBaseGameplayAbility> Ability_2;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UBaseGameplayAbility> UltimateAbility;
+
+
+
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GAS")
+	TArray<FGameplayAbilitySpecHandle> DefaultAbilitiesHandles;
 };
 
