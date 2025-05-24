@@ -12,10 +12,11 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "ZeroBaseCharacterMovementComp.h"
+#include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
+#include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -47,6 +48,7 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	JumpMaxCount =2;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -93,7 +95,7 @@ bool AZeroLockCharacter::CanJumpInternal_Implementation() const
 {
 	if(ZeroMovementComp->IsCustomMovementMode(CMOVE_Zipline))
 	{
-		return false;
+		return true;
 	}
 	if(ZeroMovementComp->IsCustomMovementMode(CMOVE_Slide))
 	{
@@ -141,6 +143,7 @@ class UAbilitySystemComponent* AZeroLockCharacter::GetAbilitySystemComponent() c
 
 void AZeroLockCharacter::InitializeAttributes()
 {
+	
 	if (AbilitySystemComp && DefaultGameplayEffect)
 	{
 		FGameplayEffectContextHandle EffectContext = AbilitySystemComp->MakeEffectContext();
@@ -151,7 +154,7 @@ void AZeroLockCharacter::InitializeAttributes()
 
 		if (SpecHandle.IsValid())
 		{
-			FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			//FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
 }

@@ -6,13 +6,17 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "ZeroBaseCharacterMovementComp.generated.h"
 
-
-class AZero_ZiplineActor;
-class AZeroLockCharacter;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDashStartDelegate);
 /**
  * 
  */
+
+class USplineComponent;
+class AZero_ZiplineActor;
+class AZeroLockCharacter;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDashStartDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWallBounceDelegate);
+
+
 UENUM(BlueprintType)
 enum ECustomMovementMode
 {
@@ -85,11 +89,13 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 
 
 	
+	
 
 	//replicated
 	UPROPERTY(ReplicatedUsing=OnRep_DashStart) bool Proxy_bDashStart;
 	UPROPERTY(ReplicatedUsing=OnRep_ShortMantle) bool Proxy_bShortMantle;
 	UPROPERTY(ReplicatedUsing=OnRep_TallMantle) bool Proxy_bTallMantle;
+	UPROPERTY(ReplicatedUsing=OnRep_WallBounce) bool Proxy_bWallBounce;
 
 	//transient
 	UPROPERTY(transient) AZeroLockCharacter* ZeroCharacter_Owner;
@@ -110,13 +116,15 @@ public:
 	UPROPERTY(EditDefaultsOnly) float SlideGravityForce;
 	UPROPERTY(EditDefaultsOnly) float SlideFriction;
 
-
+	//Dash
 	UPROPERTY(EditDefaultsOnly) float DashImpulse;
 	UPROPERTY(EditDefaultsOnly) float DashCoolDownDuration;
 	UPROPERTY(EditDefaultsOnly) float AuthDashCoolDownDuration;
+	UPROPERTY(BlueprintAssignable) FDashStartDelegate DashStartDelegate;
 
+	//WallBounce
 	UPROPERTY(EditDefaultsOnly) float WallBounceImpluse;
-
+	UPROPERTY(BlueprintAssignable) FWallBounceDelegate WallBounceDelegate;
 	//Mantle
 	UPROPERTY(EditDefaultsOnly) float MantleMaxDistance ;
 	UPROPERTY(EditDefaultsOnly) float MantleReachHeight ;
@@ -125,14 +133,28 @@ public:
 	UPROPERTY(EditDefaultsOnly) float MantleMaxSurfaceAngle ;
 	UPROPERTY(EditDefaultsOnly) float MantleMaxAlignmentAngle;
 
-	UPROPERTY(BlueprintAssignable) FDashStartDelegate DashStartDelegate;
+	
 
 	//Zipline
 	UPROPERTY(EditDefaultsOnly) float ZiplineMinKeyPressTime = 0.5f;
 	UPROPERTY(EditDefaultsOnly) float ZiplineCheckTickIntervel =0.5f;
 	UPROPERTY(EditDefaultsOnly) float ZiplineCheckSphereRadius =110.0f;
+	UPROPERTY(EditDefaultsOnly) float ZiplineCheckMaxDistance = 2000.0f;
+	UPROPERTY(EditDefaultsOnly) float ZiplineSpeed = 500.0f;
 	float ZiplineLastTickTime;
+	bool bZiplineMoveingToEnd;
 	AZero_ZiplineActor* ZiplineActorRef;
+	TObjectPtr<USplineComponent> ZiplineSplineComp;
+
+	//DashJump
+	UPROPERTY(EditDefaultsOnly) float DashJumpStartTime;
+	UPROPERTY(EditDefaultsOnly) float DashJumpEndTime;
+
+	//QuickFall
+	UPROPERTY(EditDefaultsOnly) float QuickFallImpulse =500.0f;
+	bool bCanQuickFall;
+	
+	
 	
 	UZeroBaseCharacterMovementComp();
 
@@ -150,8 +172,7 @@ protected:
 	virtual void PhysCustom(float deltaTime, int32 Iterations) override;
 	virtual void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
 
-	
-	
+	//virtual bool DoJump(bool bReplayingMoves) override;
 	
 public:
 	virtual bool IsMovingOnGround() const override;
@@ -176,7 +197,9 @@ public:
 	UFUNCTION() void OnRep_ShortMantle();
 	UFUNCTION() void OnRep_TallMantle();
 
+	UFUNCTION() void OnRep_WallBounce();
 
+	//Mantle
 	bool TryMantle();
 	
 	//Wall Bounce
@@ -184,11 +207,13 @@ public:
 	
 	//Zipline
 	bool TryZipLine();
-	UFUNCTION(Server, Reliable) void Server_EnterZipline(AZero_ZiplineActor* ZiplineToUse);
+	UFUNCTION(Server, Reliable) void Server_EnterZipline(USplineComponent* ZiplineToUse , bool InSplineDir);
 	void EnterZipline();
 	void ExitZipline();
 	void PhysZipline(float DeltaTime, int32 Iterations);
-	
+
+	//QuickFall
+	void QuickFallDown();
 
 	bool IsServer() const;
 	float CapR() const;
@@ -217,5 +242,3 @@ public:
 	
 
 };
-
-
