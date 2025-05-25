@@ -333,6 +333,11 @@ void UZeroBaseCharacterMovementComp::OnMovementModeChanged(EMovementMode Previou
 	if (IsCustomMovementMode(CMOVE_Zipline)) EnterZipline();
 
 	if (MovementMode == MOVE_Falling) bCanQuickFall = true;
+
+	if (ZeroMovementModeChangedDelegate.IsBound())
+	{
+		ZeroMovementModeChangedDelegate.Broadcast();
+	}
 }
 
 

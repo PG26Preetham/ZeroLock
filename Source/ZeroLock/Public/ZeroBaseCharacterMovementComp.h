@@ -16,6 +16,8 @@ class AZeroLockCharacter;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDashStartDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWallBounceDelegate);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMMDelegate);
+
 
 UENUM(BlueprintType)
 enum ECustomMovementMode
@@ -88,8 +90,8 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 	FTimerHandle TimerHandle_DashCoolDown;
 
 
-	
-	
+	UPROPERTY(BlueprintAssignable)
+	FMMDelegate ZeroMovementModeChangedDelegate;
 
 	//replicated
 	UPROPERTY(ReplicatedUsing=OnRep_DashStart) bool Proxy_bDashStart;
@@ -226,7 +228,7 @@ public:
 	FQuat CamQuat()const;
 	
 public:
-	UFUNCTION(BlueprintPure) bool IsCustomMovementMode(ECustomMovementMode inCustomMode) const;
+	UFUNCTION(BlueprintPure,BlueprintCallable) bool IsCustomMovementMode(ECustomMovementMode inCustomMode) const;
 	
 	UFUNCTION(BlueprintCallable) void SprintPressed();
 	UFUNCTION(BlueprintCallable) void SprintReleased();
