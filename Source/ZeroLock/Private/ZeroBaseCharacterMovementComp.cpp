@@ -162,8 +162,8 @@ UZeroBaseCharacterMovementComp::UZeroBaseCharacterMovementComp()
 	MantleMaxAlignmentAngle =45.0f;
 
 
-	ZiplineMinKeyPressTime = 0.5f;
-	ZiplineCheckTickIntervel =0.5f;
+	ZiplineMinKeyPressTime = 0.15f;
+	ZiplineCheckTickIntervel =0.15f;
 	ZiplineCheckSphereRadius =110.0f;
 	ZiplineCheckMaxDistance = 2000.0f;
 	ZiplineSpeed = 1000.0f;
@@ -209,6 +209,23 @@ void UZeroBaseCharacterMovementComp:: OnMovementUpdated(float DeltaSeconds, cons
 //Crouch is being handled here so slide can work before crouch overwrites it
 void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
 {
+    if(ZeroCharacter_Owner->ZeroJumpHoldTIme > ZiplineMinKeyPressTime && ZeroCharacter_Owner->bStillJumpKeyDown)
+    {
+    	if(TryZipLine())
+    	{
+            	
+    		//StartZipline();
+    		SetMovementMode(MOVE_Custom,CMOVE_Zipline);
+    		if(!CharacterOwner->HasAuthority())
+    		{
+    			if(ZiplineActorRef)
+    			{
+    				Server_EnterZipline(ZiplineActorRef->GetZiplineComponent(),bZiplineMoveingToEnd);
+    			}
+    		}
+    		return;
+    	}
+    }
 	//WallJump ? Mantle
 	if(ZeroCharacter_Owner->bPressedZeroJump)
 	{
@@ -223,28 +240,13 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
 		}
 		else
 		{
-			ZLOG("RevertToJumping");
+			
 			ZeroCharacter_Owner->bPressedZeroJump = false;
 			CharacterOwner->bPressedJump = true;
 			CharacterOwner->CheckJumpInput(DeltaSeconds);
 		}
 	}
-	if(ZeroCharacter_Owner->ZeroJumpHoldTIme > ZiplineMinKeyPressTime && ZeroCharacter_Owner->bStillJumpKeyDown)
-	{
-		if(TryZipLine())
-		{
-			ZeroCharacter_Owner->StopJumping();
-			//StartZipline();
-			SetMovementMode(MOVE_Custom,CMOVE_Zipline);
-			if(!CharacterOwner->HasAuthority())
-			{
-				if(ZiplineActorRef)
-				{
-					Server_EnterZipline(ZiplineActorRef->GetZiplineComponent(),bZiplineMoveingToEnd);
-				}
-			}
-		}
-	}
+	
 	//Dash
 	bool bAuthProxy = CharacterOwner->HasAuthority() && !CharacterOwner->IsLocallyControlled();
 	if(Safe_bWantsToDash && CanDash())
@@ -326,11 +328,23 @@ void UZeroBaseCharacterMovementComp::OnMovementModeChanged(EMovementMode Previou
 	uint8 PreviousCustomMode)
 {
 	Super::OnMovementModeChanged(PreviousMovementMode, PreviousCustomMode);
-	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Slide) ExitSlide();
-	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Zipline) ExitZipline();
-	
-	if (IsCustomMovementMode(CMOVE_Slide)) EnterSlide();
-	if (IsCustomMovementMode(CMOVE_Zipline)) EnterZipline();
+	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Slide)
+	{
+		ExitSlide();
+	}
+	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Zipline)
+	{
+		ExitZipline();
+	}
+
+	if (IsCustomMovementMode(CMOVE_Slide))
+	{
+		EnterSlide();
+	}
+	if (IsCustomMovementMode(CMOVE_Zipline))
+	{
+     EnterZipline();
+	}
 
 	if (MovementMode == MOVE_Falling) bCanQuickFall = true;
 
@@ -474,7 +488,7 @@ void UZeroBaseCharacterMovementComp::PerformDash()
 
 	FVector DashDirection = (Acceleration.IsNearlyZero() ? UpdatedComponent->GetForwardVector() : Acceleration).GetSafeNormal2D();
 	
-	Velocity = DashImpulse * (DashDirection + FVector::UpVector * 0.1f);
+	Velocity = DashImpulse * (DashDirection + FVector::UpVector * 0.25f);
 
 	FQuat NewRot = FRotationMatrix::MakeFromXZ(DashDirection,FVector::UpVector).ToQuat();
 	FHitResult Hit;
@@ -534,7 +548,7 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
 	float CosMMAA = FMath::Cos(FMath::DegreesToRadians(MantleMaxAlignmentAngle));
 
 
-ZLOG("Starting Mantle Attempt")
+
 
 	// Check Front Face
 	FHitResult FrontHit;
@@ -575,7 +589,7 @@ ZLINE(TraceStart, FrontHit.Location + Fwd, FColor::Orange)
 	if (!SurfaceHit.IsValidBlockingHit() || (SurfaceHit.Normal | FVector::UpVector) < CosMMSA) return false;
 	float Height = (SurfaceHit.Location - BaseLoc) | FVector::UpVector;
 
-ZLOG(FString::Printf(TEXT("Height: %f"), Height))
+
 ZPOINT(SurfaceHit.Location, FColor::Blue);
 	
 	if (Height > MaxHeight) return false;
@@ -594,7 +608,7 @@ ZCAPSULE(ClearCapLoc, FColor::Red)
 	{
 ZCAPSULE(ClearCapLoc, FColor::Green)
 	}
-ZLOG("Can Mantle")
+
 	
 	FVector TransitionTarget = ClearCapLoc;
 ZCAPSULE(TransitionTarget, FColor::Yellow)
@@ -611,7 +625,6 @@ ZCAPSULE(UpdatedComponent->GetComponentLocation(), FColor::Red)
 	TransitionRMS->AccumulateMode = ERootMotionAccumulateMode::Override;
 	
 	TransitionRMS->Duration = FMath::Clamp(TransDistance / 500.f, .1f, .25f);
-ZLOG(FString::Printf(TEXT("Duration: %f"), TransitionRMS->Duration))
 	TransitionRMS->StartLocation = UpdatedComponent->GetComponentLocation();
 	TransitionRMS->TargetLocation = TransitionTarget;
 
@@ -635,7 +648,7 @@ bool UZeroBaseCharacterMovementComp::TryWallBounce()
 	FQuat RotationX = FQuat::Identity;
 	if(GetWorld()->SweepSingleByChannel(WallHit,TraceLocation,TraceLocation,RotationX,ECC_WorldStatic,CapShape,ZeroCharacter_Owner->GetIgnoreCharacterParams()))
 	{
-ZLOG("Wall Detected");
+
 		//ZPOINT(WallHit.ImpactPoint,FColor::Blue);
 
 		//Launch Dir
@@ -668,8 +681,6 @@ bool UZeroBaseCharacterMovementComp::TryZipLine()
 	if(GetWorld()->SweepSingleByObjectType(ZipHit,TraceLocation,TraceEndLocation,CamQuat(),ECC_Vehicle,ZipCap,ZeroCharacter_Owner->GetIgnoreCharacterParams()))
 	{
 ZPOINT(ZipHit.ImpactPoint,FColor::Magenta);
-ZLOG("Hit")
-ZLOG(ZipHit.GetActor()->GetName());
 		if(Cast<AZero_ZiplineActor>(ZipHit.GetActor()))
 		{
 			ZiplineActorRef = Cast<AZero_ZiplineActor>(ZipHit.GetActor());
@@ -707,13 +718,15 @@ void UZeroBaseCharacterMovementComp::Server_EnterZipline_Implementation(USplineC
 void UZeroBaseCharacterMovementComp::EnterZipline()
 {
 	Velocity = FVector::ZeroVector;
+ZLOG("Enter Zipline");
 }
 
 void UZeroBaseCharacterMovementComp::ExitZipline()
 {
-	FQuat NewRot = FRotationMatrix::MakeFromXZ(UpdatedComponent->GetForwardVector().GetSafeNormal2D(),FVector::UpVector).ToQuat();
-	FHitResult Hit;
-	SafeMoveUpdatedComponent(FVector::ZeroVector,NewRot,true,Hit);
+	//FQuat NewRot = FRotationMatrix::MakeFromXZ(UpdatedComponent->GetForwardVector().GetSafeNormal2D(),FVector::UpVector).ToQuat();
+	//FHitResult Hit;
+	//SafeMoveUpdatedComponent(FVector::ZeroVector,NewRot,true,Hit);
+ZLOG("Exit Zipline");
 }
 
 
@@ -731,7 +744,7 @@ void UZeroBaseCharacterMovementComp::PhysZipline(float DeltaTime, int32 Iteratio
 		return;
 	}
 	//
-	if(Safe_bWantsToDash || bWantsToCrouch || ZeroCharacter_Owner->bPressedZeroJump)
+	if(Safe_bWantsToDash || bWantsToCrouch )
 	{
 		SetMovementMode(MOVE_Falling);
 		StartNewPhysics(DeltaTime,Iterations);//starts a new physics in the same frame
@@ -769,12 +782,12 @@ void UZeroBaseCharacterMovementComp::PhysZipline(float DeltaTime, int32 Iteratio
 	FQuat NewRot =FRotationMatrix::MakeFromXZ(FVofSplinePoint,FVector::UpVector).ToQuat();
 	SafeMoveUpdatedComponent(Adjusted,NewRot,true,Hit);
 
-	if(Hit.Time <1.f)
+	/*if(Hit.Time <1.f)
 	{
 		SetMovementMode(MOVE_Falling);
 		StartNewPhysics(DeltaTime,Iterations);//starts a new physics in the same frame
 		return;
-	}
+	}*/
 	//Update ongoing Velocity and Accer
 	if(!bJustTeleported && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
 	{

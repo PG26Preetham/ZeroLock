@@ -136,10 +136,12 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;
 
-
+	bool bIsPrimaryPressed =false;
 	void PrimaryFirePressed();
 	void PrimaryFireReleased();
 	float TimeOfLastShot;
+
+	void ChangeFireRate();
 
 	void PrimaryFireTickFunction();
 	FTimerHandle PrimaryFireTickHandle;

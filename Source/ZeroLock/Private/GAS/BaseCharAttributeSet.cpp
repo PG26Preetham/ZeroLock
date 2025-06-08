@@ -117,6 +117,10 @@ void UBaseCharAttributeSet::PostAttributeChange(const FGameplayAttribute& Attrib
 		TargetChar->GetCharacterMovement()->JumpZVelocity = NewValue;
 	
 	}
+	else if (Attribute == GetFireRateAttribute())
+	{
+		TargetChar->ChangeFireRate();
+	}
 	/*else if (Attribute == GetMaximumHealthAttribute())
 	{
 		float HP = GetCurrentHealth();

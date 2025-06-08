@@ -154,7 +154,7 @@ void AZeroLockCharacter::InitializeAttributes()
 
 		if (SpecHandle.IsValid())
 		{
-			//FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
 	}
 }
@@ -233,17 +233,30 @@ void AZeroLockCharacter::PrimaryFirePressed()
 	{
 		return;
 	}
-	
+	bIsPrimaryPressed = true;
 	float FirstDelay =FMath::Max(TimeOfLastShot + AttributeSet->FireRate.GetCurrentValue() - GetWorld()->TimeSeconds,0.0f);
 	FString TheFloatStr = "Dam=" + FString::SanitizeFloat(FirstDelay);
-	GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
-	GetWorldTimerManager().SetTimer(PrimaryFireTickHandle,this,&AZeroLockCharacter::PrimaryFireTickFunction, AttributeSet->FireRate.GetCurrentValue(), true, FirstDelay);
+	float FireRate = AttributeSet->FireRate.GetCurrentValue();
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
+	GetWorldTimerManager().SetTimer(PrimaryFireTickHandle,this,&AZeroLockCharacter::PrimaryFireTickFunction,FireRate , true, FirstDelay);
 	//GetWorldTimerManager().SetTimer(PrimaryFireTickHandle,this,&AZeroLockCharacter::PrimaryFireTickFunction, AttributeSet->FireRate, true, FirstDelay);
 }
 
 void AZeroLockCharacter::PrimaryFireReleased()
 {
+	bIsPrimaryPressed = false;
 	GetWorldTimerManager().ClearTimer(PrimaryFireTickHandle);
+	//GetWorldTimerManager().
+}
+
+void AZeroLockCharacter::ChangeFireRate()
+{
+	if (!bIsPrimaryPressed) return;
+	float FirstDelay =FMath::Max(TimeOfLastShot + AttributeSet->FireRate.GetCurrentValue() - GetWorld()->TimeSeconds,0.0f);
+	
+	float FireRate = AttributeSet->FireRate.GetCurrentValue();
+	GetWorldTimerManager().SetTimer(PrimaryFireTickHandle,this,&AZeroLockCharacter::PrimaryFireTickFunction,FireRate , true, FirstDelay);
+	
 }
 
 void AZeroLockCharacter::PrimaryFireTickFunction()

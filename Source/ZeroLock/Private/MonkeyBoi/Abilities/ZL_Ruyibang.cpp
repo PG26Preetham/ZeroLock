@@ -12,7 +12,7 @@ UZL_Ruyibang::UZL_Ruyibang()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerExecution;
 
-	FGameplayTag Ability1Tag = FGameplayTag::RequestGameplayTag(FName("Ability.Skill.Ability1"));
+	FGameplayTag Ability1Tag = FGameplayTag::RequestGameplayTag(FName("Ability.Skill.Ability1"),false);
 	AbilityTags.AddTag(Ability1Tag);
 	ActivationOwnedTags.AddTag(Ability1Tag);
 
