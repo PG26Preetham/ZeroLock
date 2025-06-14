@@ -307,6 +307,12 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AZeroLockCharacter::DashPressed);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Completed, this, &AZeroLockCharacter::DashReleased);
+
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AZeroLockCharacter::CrouchPressed);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AZeroLockCharacter::CrouchReleased);
+
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZeroLockCharacter::Move);
 
@@ -379,4 +385,24 @@ void AZeroLockCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AZeroLockCharacter::DashPressed()
+{
+	ZeroMovementComp->DashPressed();
+}
+
+void AZeroLockCharacter::DashReleased()
+{
+	ZeroMovementComp->DashReleased();
+}
+
+void AZeroLockCharacter::CrouchPressed()
+{
+	ZeroMovementComp->CrouchPressed();
+}
+
+void AZeroLockCharacter::CrouchReleased()
+{
+	ZeroMovementComp->CrouchReleased();
 }

@@ -19,6 +19,11 @@ UBaseCharAttributeSet::UBaseCharAttributeSet()
 	Soul =0;
 	FireRate = 0.0f;
 	WeaponDamage = 0.0f;
+	CurrentAmmo = 0.0f;
+	MaxAmmo = 0.0f;
+	WeaponResistance=0.0f;
+	SpiritDamage = 0.0f;
+	SpiritResistance = 0.0f;
 }
 void UBaseCharAttributeSet::PreAttributeChange(const FGameplayAttribute & Attribute, float & NewValue)
 {
@@ -142,11 +147,17 @@ void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaximumHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, HealthRegeneration, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentSpeed, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentJump, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,Soul, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentSpeed, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentJump, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, Soul, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FireRate, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponDamage,COND_None,REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentAmmo, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaxAmmo, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponResistance, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritDamage, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritResistance, COND_None, REPNOTIFY_OnChanged);
+	
 }
 
 void UBaseCharAttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, const float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const
@@ -206,5 +217,30 @@ void UBaseCharAttributeSet::OnRep_FireRate(const FGameplayAttributeData& OldValu
 void UBaseCharAttributeSet::OnRep_WeaponDamage(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, WeaponDamage, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_CurrentAmmo(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, CurrentAmmo, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MaxAmmo(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, MaxAmmo, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_WeaponResistance(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, WeaponResistance, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_SpiritDamage(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, SpiritDamage, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_SpiritResistance(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, SpiritResistance, OldValue);
 }
 

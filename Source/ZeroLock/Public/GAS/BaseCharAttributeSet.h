@@ -36,35 +36,35 @@ public:
 
 	// Used to create a local copy of Damage which is then subtracted from Current Health.
 	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", meta = (HideFromLevelInfos))
-		FGameplayAttributeData Damage;
+	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, Damage)
 
 		// Used to create a local copy of Healing which is then added to Current Health.
-		UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", meta = (HideFromLevelInfos))
-		FGameplayAttributeData Healing;
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", meta = (HideFromLevelInfos))
+	FGameplayAttributeData Healing;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, Healing)
 
 		// Holds the current value for Health.
-		UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_CurrentHealth)
-		FGameplayAttributeData CurrentHealth;
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_CurrentHealth)
+	FGameplayAttributeData CurrentHealth;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, CurrentHealth)
 
 		// Holds the value for Maximum Health.
-		UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_MaximumHealth)
-		FGameplayAttributeData MaximumHealth;
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_MaximumHealth)
+	FGameplayAttributeData MaximumHealth;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaximumHealth)
 
 		// Holds the value for Health Regeneration.
-		UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_HealthRegeneration)
-		FGameplayAttributeData HealthRegeneration;
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_HealthRegeneration)
+	FGameplayAttributeData HealthRegeneration;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, HealthRegeneration)
 
-		UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_CurrentSpeed)
-		FGameplayAttributeData CurrentSpeed;
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_CurrentSpeed)
+	FGameplayAttributeData CurrentSpeed;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, CurrentSpeed)
 
-		UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_CurrentJump)
-		FGameplayAttributeData CurrentJump;
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_CurrentJump)
+	FGameplayAttributeData CurrentJump;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, CurrentJump)
 
 	UPROPERTY(BlueprintReadOnly, Category = "Soul Attribute Set", ReplicatedUsing = OnRep_Souls)
@@ -78,6 +78,29 @@ public:
 	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_WeaponDamage)
 	FGameplayAttributeData WeaponDamage;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, WeaponDamage)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_WeaponResistance)
+	FGameplayAttributeData WeaponResistance;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, WeaponResistance)
+
+	
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_CurrentAmmo)
+	FGameplayAttributeData CurrentAmmo;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, CurrentAmmo)
+
+	
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_MaxAmmo)
+	FGameplayAttributeData MaxAmmo;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaxAmmo)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Spirit Attribute Set", ReplicatedUsing= OnRep_SpiritDamage)
+	FGameplayAttributeData SpiritDamage;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, SpiritDamage)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Spirit Attribute Set", ReplicatedUsing= OnRep_SpiritResistance)
+	FGameplayAttributeData SpiritResistance;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, SpiritResistance)
+	
 
 protected:
 
@@ -107,4 +130,22 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_WeaponDamage(const FGameplayAttributeData& OldValue);
+
+	
+	UFUNCTION()
+	virtual void OnRep_CurrentAmmo(const FGameplayAttributeData& OldValue);
+
+	
+	UFUNCTION()
+	virtual void OnRep_MaxAmmo(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_WeaponResistance(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_SpiritDamage(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_SpiritResistance(const FGameplayAttributeData& OldValue);
+	
 };
