@@ -110,8 +110,6 @@ void UBaseCharAttributeSet::PostAttributeChange(const FGameplayAttribute& Attrib
 	}
 	if (Attribute == GetCurrentSpeedAttribute())
 	{
-	
-		
 		TargetChar->GetCharacterMovement()->MaxWalkSpeed = NewValue;
 	
 	}
@@ -126,18 +124,10 @@ void UBaseCharAttributeSet::PostAttributeChange(const FGameplayAttribute& Attrib
 	{
 		TargetChar->ChangeFireRate();
 	}
-	/*else if (Attribute == GetMaximumHealthAttribute())
+	else if (Attribute == GetCurrentHealthAttribute())
 	{
-		float HP = GetCurrentHealth();
-		float Diff = NewValue - OldValue;
-		FString TheFloatStr = "Diff="+FString::SanitizeFloat(Diff);
-		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
-		TheFloatStr = "HP=" + FString::SanitizeFloat(HP);
-		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Green, *TheFloatStr);
-		 TheFloatStr = "Diff+HP=" + FString::SanitizeFloat(HP + Diff);
-		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Orange, *TheFloatStr);
-		
-	}*/
+		TargetChar->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
+	}
 }
 
 void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

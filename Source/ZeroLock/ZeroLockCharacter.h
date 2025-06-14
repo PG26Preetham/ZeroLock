@@ -17,6 +17,7 @@ class UInputAction;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealthChangeDelgate,float ,currentHealth,float,MaxHealth);
 
 UCLASS(config=Game)
 class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
@@ -193,5 +194,11 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GAS")
 	TArray<FGameplayAbilitySpecHandle> DefaultAbilitiesHandles;
+
+	UPROPERTY(BlueprintAssignable)
+	FHealthChangeDelgate HealthChangeDelegate;
+public:
+	UFUNCTION()
+	void HealthChanged(float currentH , float MaxH);
 };
 

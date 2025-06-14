@@ -285,6 +285,14 @@ void AZeroLockCharacter::UltimateAbilityPressed()
 	GetAbilitySystemComponent()->TryActivateAbilityByClass(UltimateAbility);
 }
 
+void AZeroLockCharacter::HealthChanged(float currentH , float MaxH)
+{
+	if (HealthChangeDelegate.IsBound())
+	{
+		HealthChangeDelegate.Broadcast(currentH, MaxH);
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
