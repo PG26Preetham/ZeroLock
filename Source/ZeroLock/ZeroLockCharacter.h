@@ -64,6 +64,9 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	//Gameplay Ability system inputs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_PrimaryFire;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Reload;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_SecondryFire;
@@ -167,6 +170,9 @@ public:
 
 	void UltimateAbilityPressed();
 
+	void Reload();
+	
+
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> DefaultGameplayEffect;
 
@@ -189,6 +195,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UBaseGameplayAbility> UltimateAbility;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UBaseGameplayAbility> ReloadAbility;
 
 
 

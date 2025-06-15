@@ -3,6 +3,7 @@
 
 #include "Weapon/Zero_BaseWeaponAbility.h"
 
+#include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Weapon/Zero_BaseProjectile.h"
@@ -12,16 +13,21 @@ UZero_BaseWeaponAbility::UZero_BaseWeaponAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerExecution;
 
-	FGameplayTag ReloadTag = FGameplayTag::RequestGameplayTag(FName("Weapon.Reload"),false);
+	FGameplayTag ReloadTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Weapon.Reloading"),false);
 	ActivationBlockedTags.AddTag(ReloadTag);
 }
 
 void UZero_BaseWeaponAbility::Fire()
 {
-	
+	FGameplayTag ReloadTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Weapon.Reloading"),false);
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (Hero)
 	{
+		if (Hero->GetAbilitySystemComponent()->HasMatchingGameplayTag(ReloadTag))
+		{
+			
+			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+		}
 		if (ProjectileClass)
 		{
 				
@@ -33,7 +39,8 @@ void UZero_BaseWeaponAbility::Fire()
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(Hero);
 			Rotation = UKismetMathLibrary::FindLookAtRotation(Location, CamTraceEndLocation);
-			if (GetWorld()->LineTraceSingleByChannel(Hit,Location,CamTraceEndLocation,ECC_Pawn,QueryParams))
+			
+			if (GetWorld()->LineTraceSingleByChannel(Hit,CamTraceStartLocation,CamTraceEndLocation,ECC_Pawn,QueryParams))
 			{
 				FVector HitLoc = Hit.ImpactPoint;
 				Rotation = UKismetMathLibrary::FindLookAtRotation(Location, HitLoc);

@@ -33,7 +33,7 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 		
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
 	// Configure character movement
@@ -193,6 +193,12 @@ void AZeroLockCharacter::GiveAbilities()
 			DefaultAbilitiesHandles.Add(
 				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(UltimateAbility, 1, static_cast<int32>(UltimateAbility.GetDefaultObject()->AbilityInputID), this)));
 		}
+		if (ReloadAbility)
+		{
+			DefaultAbilitiesHandles.Add(
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(ReloadAbility, 1, static_cast<int32>(ReloadAbility.GetDefaultObject()->AbilityInputID), this)));
+		}
+		
 	}
 	if (HasAuthority() && AbilitySystemComp)
 	{
@@ -285,6 +291,11 @@ void AZeroLockCharacter::UltimateAbilityPressed()
 	GetAbilitySystemComponent()->TryActivateAbilityByClass(UltimateAbility);
 }
 
+void AZeroLockCharacter::Reload()
+{
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(ReloadAbility);
+}
+
 void AZeroLockCharacter::HealthChanged(float currentH , float MaxH)
 {
 	if (HealthChangeDelegate.IsBound())
@@ -338,6 +349,8 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(EI_Ability2,ETriggerEvent::Started,this,&AZeroLockCharacter::Ability_2Pressed);
 
 		EnhancedInputComponent->BindAction(EI_Ultimate,ETriggerEvent::Started,this,&AZeroLockCharacter::UltimateAbilityPressed);
+		
+		EnhancedInputComponent->BindAction(EI_Reload,ETriggerEvent::Started,this,&AZeroLockCharacter::Reload);
 		
 	}
 	else

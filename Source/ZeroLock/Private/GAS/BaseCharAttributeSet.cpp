@@ -124,10 +124,18 @@ void UBaseCharAttributeSet::PostAttributeChange(const FGameplayAttribute& Attrib
 	{
 		TargetChar->ChangeFireRate();
 	}
-	else if (Attribute == GetCurrentHealthAttribute())
+	else if (Attribute == GetCurrentHealthAttribute() || Attribute == GetMaximumHealthAttribute())
 	{
 		TargetChar->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
 	}
+	else if (Attribute == GetCurrentAmmoAttribute())
+	{
+		if (GetCurrentAmmo() <= 0.0f)
+		{
+			TargetChar->Reload();	
+		}
+	}
+	
 }
 
 void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
