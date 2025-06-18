@@ -718,7 +718,7 @@ void UZeroBaseCharacterMovementComp::Server_EnterZipline_Implementation(USplineC
 void UZeroBaseCharacterMovementComp::EnterZipline()
 {
 	Velocity = FVector::ZeroVector;
-ZLOG("Enter Zipline");
+//ZLOG("Enter Zipline");
 }
 
 void UZeroBaseCharacterMovementComp::ExitZipline()
@@ -726,7 +726,7 @@ void UZeroBaseCharacterMovementComp::ExitZipline()
 	//FQuat NewRot = FRotationMatrix::MakeFromXZ(UpdatedComponent->GetForwardVector().GetSafeNormal2D(),FVector::UpVector).ToQuat();
 	//FHitResult Hit;
 	//SafeMoveUpdatedComponent(FVector::ZeroVector,NewRot,true,Hit);
-ZLOG("Exit Zipline");
+
 }
 
 
@@ -762,7 +762,7 @@ void UZeroBaseCharacterMovementComp::PhysZipline(float DeltaTime, int32 Iteratio
 	float DistanceToMoveAlongSpline = bZiplineMoveingToEnd? ZiplineSpeed : (ZiplineSpeed * -1);
 	FVector TargetLocation = ZiplineSplineComp->GetLocationAtDistanceAlongSpline(DistancetoPoint + DistanceToMoveAlongSpline,ESplineCoordinateSpace::World);
 	FVector Adjusted = (TargetLocation - CharLocation()).GetSafeNormal() * DeltaTime * ZiplineSpeed;
-	if(MaxDis <= DistancetoPoint || DistancetoPoint <= 0.0f)
+	if(  (bZiplineMoveingToEnd && MaxDis <= DistancetoPoint) || (!bZiplineMoveingToEnd && DistancetoPoint <= 0.0f))
 	{
 		SetMovementMode(MOVE_Falling);
 		StartNewPhysics(DeltaTime,Iterations);//starts a new physics in the same frame
