@@ -16,6 +16,7 @@
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
+#include "Kismet/GameplayStatics.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -77,6 +78,8 @@ void AZeroLockCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	FGameplayTag StunTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Stun"),false);
+	AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
@@ -369,6 +372,28 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void AZeroLockCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
+void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (NewCount>0)
+	{
+		AbilitySystemComp->CancelAllAbilities();
+		
+		if (PC)
+		{
+			DisableInput(PC);
+		}
+			
+	}
+	else
+	{
+		if (PC)
+		{
+			EnableInput(PC);
+		}
+	}
 }
 
 

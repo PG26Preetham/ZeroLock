@@ -14,7 +14,7 @@
 #include "Components/SplineComponent.h"
 
 // Helper Macros
-#if 1
+#if 0
 float MacroDuration = 2.f;
 #define ZLOG(x) GEngine->AddOnScreenDebugMessage(-1, MacroDuration ? MacroDuration : -1.f, FColor::Yellow, x);
 #define ZPOINT(x, c) DrawDebugPoint(GetWorld(), x, 10, c, !MacroDuration, MacroDuration);
@@ -319,6 +319,9 @@ void UZeroBaseCharacterMovementComp::PhysCustom(float deltaTime, int32 Iteration
 	case CMOVE_Zipline:
 		PhysZipline(deltaTime, Iterations);
 		break;
+	case CMOVE_Melee:
+		PhysMelee(deltaTime, Iterations);
+		break;
 	default:
 		UE_LOG(LogTemp,Fatal,TEXT("InvalidMovement MOde"));
 	}
@@ -336,6 +339,10 @@ void UZeroBaseCharacterMovementComp::OnMovementModeChanged(EMovementMode Previou
 	{
 		ExitZipline();
 	}
+	if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Melee)
+	{
+		ZLOG("EndMelee");
+	}
 
 	if (IsCustomMovementMode(CMOVE_Slide))
 	{
@@ -344,6 +351,10 @@ void UZeroBaseCharacterMovementComp::OnMovementModeChanged(EMovementMode Previou
 	if (IsCustomMovementMode(CMOVE_Zipline))
 	{
      EnterZipline();
+	}
+	if (IsCustomMovementMode(CMOVE_Melee))
+	{
+		ZLOG("MeleeStart");
 	}
 
 	if (MovementMode == MOVE_Falling) bCanQuickFall = true;
@@ -849,7 +860,46 @@ FQuat UZeroBaseCharacterMovementComp::CamQuat() const
 	return ZeroCharacter_Owner->GetFollowCamera()->GetComponentRotation().Quaternion();
 }
 
+void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations)
+{
+	//delta time is not less than the min tick time 
+	if(DeltaTime < MIN_TICK_TIME)
+	{
+		return;
+	}
 
+	RestorePreAdditiveRootMotionVelocity();
+
+	//TODO add a way to find if we reached the end of zipline
+
+	//Perform Move
+	Iterations++;
+	bJustTeleported = false;
+	FVector OldLocation = UpdatedComponent->GetComponentLocation();
+	
+	FVector TargetLocation = OldLocation + CamFV() * 100;
+	FVector Adjusted = (TargetLocation - CharLocation()).GetSafeNormal() * DeltaTime * 1000;
+	FQuat OldRot = UpdatedComponent->GetComponentRotation().Quaternion();
+	FHitResult Hit(1.f);
+	
+	FQuat NewRot =FRotationMatrix::MakeFromXZ(CamFV(),FVector::UpVector).ToQuat();
+	SafeMoveUpdatedComponent(Adjusted,NewRot,true,Hit);
+
+	if(Hit.Time <1.f)
+	{
+		//HandleImpact(Hit,DeltaTime,Adjusted);
+		SlideAlongSurface(Adjusted,(1.f - Hit.Time),Hit.Normal,Hit,true);
+		if (Cast<AZeroLockCharacter>(Hit.GetActor()))
+		{
+			MeleeHitDelegate.Broadcast();
+		}
+	}
+	//Update ongoing Velocity and Accer
+	if(!bJustTeleported && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
+	{
+		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) /DeltaTime;
+	}
+}
 
 
 bool UZeroBaseCharacterMovementComp::IsCustomMovementMode(ECustomMovementMode inCustomMode) const

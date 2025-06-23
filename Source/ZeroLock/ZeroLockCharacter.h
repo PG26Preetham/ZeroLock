@@ -105,7 +105,8 @@ protected:
 
 	// End of APawn interface
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
+	void Stunned(FGameplayTag GameplayTag, int NewCount);
 	// To add mapping context
 	virtual void BeginPlay();
 

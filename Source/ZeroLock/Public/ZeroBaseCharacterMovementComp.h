@@ -15,6 +15,7 @@ class AZero_ZiplineActor;
 class AZeroLockCharacter;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDashStartDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWallBounceDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMeleeHitDelegate);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMMDelegate);
 
@@ -25,6 +26,7 @@ enum ECustomMovementMode
 	CMOVE_None  UMETA(DisplayName = "None"),
 	CMOVE_Slide UMETA(DisplayName = "Slide"),
 	CMOVE_Zipline UMETA(DisplayName = "Zipline"),
+	CMOVE_Melee UMETA(DisplayName = "Melee"),
 	CMOVE_Max   UMETA(DisplayName = "Max")
 };
 
@@ -156,7 +158,8 @@ public:
 	UPROPERTY(EditDefaultsOnly) float QuickFallImpulse;
 	bool bCanQuickFall;
 	
-	
+	UPROPERTY(BlueprintAssignable)
+	FMeleeHitDelegate MeleeHitDelegate;
 	
 	UZeroBaseCharacterMovementComp();
 
@@ -217,6 +220,11 @@ public:
 	//QuickFall
 	void QuickFallDown();
 
+	//Melee
+	void PhysMelee(float DeltaTime, int32 Iterations);
+
+	
+
 	bool IsServer() const;
 	float CapR() const;
 	float CapHH() const;
@@ -226,6 +234,8 @@ public:
 	FVector CamFV()const;
 	FVector CamLoc()const;
 	FQuat CamQuat()const;
+
+	
 	
 public:
 	UFUNCTION(BlueprintPure,BlueprintCallable) bool IsCustomMovementMode(ECustomMovementMode inCustomMode) const;
