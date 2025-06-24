@@ -92,6 +92,23 @@ void UGAST_MeleeMoveTo::TickTask(float DeltaTime)
 				CharMoveComp->SetMovementMode(MOVE_Custom,CMOVE_Melee);
 			}
 		}
+		if (MyCharacter)
+		{
+			FCollisionShape Cap = FCollisionShape::MakeSphere(100);
+			FVector TraceLocation = MyCharacter->GetActorLocation() + MyCharacter->GetActorForwardVector()*100;
+			FVector TraceEndLocation =TraceLocation ;
+			FHitResult Hits;
+			FQuat RotationQuat = MyCharacter->GetActorRotation().Quaternion();
+			if(GetWorld()->SweepSingleByObjectType(Hits,TraceLocation,TraceEndLocation,RotationQuat,ECC_Pawn,Cap,MyCharacter->GetIgnoreCharacterParams()))
+			{
+				MyActor->ForceNetUpdate();
+				if (ShouldBroadcastAbilityTaskDelegates())
+				{
+					OnMeleeMoveFinished.Broadcast();
+				}
+				EndTask();
+			}
+		}
 
 
 		float CurrentTime = GetWorld()->GetTimeSeconds();

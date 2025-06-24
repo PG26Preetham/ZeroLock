@@ -72,14 +72,21 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	AbilitySystemComp->SetIsReplicated(true);
 	AbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 	AttributeSet = CreateDefaultSubobject<UBaseCharAttributeSet>(TEXT("AttributeSet"));
+
+	ParryComp=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ParryComponent"));
+	ParryComp->SetupAttachment(RootComponent);
+	ParryComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AZeroLockCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+	ParryComp->SetVisibility(false);
 	FGameplayTag StunTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Stun"),false);
+	FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);
 	AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
+	AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
@@ -200,6 +207,22 @@ void AZeroLockCharacter::GiveAbilities()
 		{
 			DefaultAbilitiesHandles.Add(
 				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(ReloadAbility, 1, static_cast<int32>(ReloadAbility.GetDefaultObject()->AbilityInputID), this)));
+		}
+		if (HeavyMeleeAbility)
+		{
+			DefaultAbilitiesHandles.Add(
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(HeavyMeleeAbility, 1, static_cast<int32>(HeavyMeleeAbility.GetDefaultObject()->AbilityInputID), this)));
+		}
+		if (LightMeleeAbility)
+		{
+			DefaultAbilitiesHandles.Add(
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(LightMeleeAbility, 1, static_cast<int32>(LightMeleeAbility.GetDefaultObject()->AbilityInputID), this)));
+		
+		}
+		if (ParryAbility)
+		{
+			DefaultAbilitiesHandles.Add(
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(ParryAbility, 1, static_cast<int32>(ParryAbility.GetDefaultObject()->AbilityInputID), this)));
 		}
 		
 	}
@@ -354,6 +377,11 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(EI_Ultimate,ETriggerEvent::Started,this,&AZeroLockCharacter::UltimateAbilityPressed);
 		
 		EnhancedInputComponent->BindAction(EI_Reload,ETriggerEvent::Started,this,&AZeroLockCharacter::Reload);
+
+		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Started,this,&AZeroLockCharacter::MeleePressed);
+		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Completed,this,&AZeroLockCharacter::MeleeReleased);
+		
+		EnhancedInputComponent->BindAction(EI_Parry,ETriggerEvent::Started,this,&AZeroLockCharacter::ParryPressed);
 		
 	}
 	else
@@ -385,7 +413,10 @@ void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
 		{
 			DisableInput(PC);
 		}
-			
+		if (StunChangedDelegate.IsBound())
+		{
+			StunChangedDelegate.Broadcast(true);
+		}
 	}
 	else
 	{
@@ -393,6 +424,22 @@ void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
 		{
 			EnableInput(PC);
 		}
+		if (StunChangedDelegate.IsBound())
+		{
+			StunChangedDelegate.Broadcast(false);
+		}
+	}
+}
+
+void AZeroLockCharacter::Parry(FGameplayTag GameplayTag, int NewCount)
+{
+	if (NewCount>0)
+	{
+		ParryComp->SetVisibility(true);
+	}
+	else
+	{
+		ParryComp->SetVisibility(false);
 	}
 }
 
@@ -451,4 +498,36 @@ void AZeroLockCharacter::CrouchPressed()
 void AZeroLockCharacter::CrouchReleased()
 {
 	ZeroMovementComp->CrouchReleased();
+}
+
+void AZeroLockCharacter::MeleePressed()
+{
+	bMeleeUsed = true;
+	MeleePressedTime = GetWorld()->GetTimeSeconds();
+	GetWorldTimerManager().SetTimer(MeleePressedTimer,this,&AZeroLockCharacter::MeleeReleased,MeleeMinHoldTime,false);
+}
+
+void AZeroLockCharacter::MeleeReleased()
+{
+	
+	GetWorldTimerManager().ClearTimer(MeleePressedTimer);
+	if (!bMeleeUsed)
+	{
+		return;
+	}
+	float meleeTimeAfterPressed = (GetWorld()->GetTimeSeconds() - MeleePressedTime);
+	if (meleeTimeAfterPressed >=MeleeMinHoldTime)
+	{
+		AbilitySystemComp->TryActivateAbilityByClass(HeavyMeleeAbility);
+	}
+	else
+	{
+		AbilitySystemComp->TryActivateAbilityByClass(LightMeleeAbility);
+	}
+	bMeleeUsed = false;
+}
+
+void AZeroLockCharacter::ParryPressed()
+{
+	AbilitySystemComp->TryActivateAbilityByClass(ParryAbility);
 }

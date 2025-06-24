@@ -18,6 +18,7 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealthChangeDelgate,float ,currentHealth,float,MaxHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStunChanged,bool,IsStunned);
 
 UCLASS(config=Game)
 class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
@@ -32,6 +33,8 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Parry, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* ParryComp;
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
@@ -80,6 +83,11 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_Ultimate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Melee;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_Parry;
 	
 public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
@@ -98,6 +106,15 @@ protected:
 	void DashReleased();
 	void CrouchPressed();
 	void CrouchReleased();
+	void MeleePressed();
+	void MeleeReleased();
+	void ParryPressed();
+
+	float MeleePressedTime;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Melee, meta = (AllowPrivateAccess = "true"))
+	float MeleeMinHoldTime;
+	FTimerHandle MeleePressedTimer;
+	bool bMeleeUsed = false;
 
 protected:
 	// APawn interface
@@ -107,6 +124,9 @@ protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void Stunned(FGameplayTag GameplayTag, int NewCount);
+	void Parry(FGameplayTag GameplayTag, int NewCount);
+
+	
 	// To add mapping context
 	virtual void BeginPlay();
 
@@ -200,6 +220,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UBaseGameplayAbility> ReloadAbility;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS/Melee")
+	TSubclassOf<class UBaseGameplayAbility> LightMeleeAbility;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS/Melee")
+	TSubclassOf<class UBaseGameplayAbility> HeavyMeleeAbility;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS/Melee")
+	TSubclassOf<class UBaseGameplayAbility> ParryAbility;
+
 
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "GAS")
@@ -207,8 +236,18 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FHealthChangeDelgate HealthChangeDelegate;
+	UPROPERTY(BlueprintAssignable)
+	FStunChanged StunChangedDelegate;
 public:
 	UFUNCTION()
 	void HealthChanged(float currentH , float MaxH);
+
+	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "Animation/melee")
+	UAnimMontage* LightMeleeMontage;
+
+	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "Animation/melee")
+	UAnimMontage* HeavyMeleeMontage;
+
+	
 };
 

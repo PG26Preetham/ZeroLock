@@ -876,13 +876,14 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
 	Iterations++;
 	bJustTeleported = false;
 	FVector OldLocation = UpdatedComponent->GetComponentLocation();
-	
-	FVector TargetLocation = OldLocation + CamFV() * 100;
+	FVector CamForVect = CamFV();
+	CamForVect.Z = 0;
+	FVector TargetLocation = OldLocation + CamForVect * 100;
 	FVector Adjusted = (TargetLocation - CharLocation()).GetSafeNormal() * DeltaTime * 1000;
 	FQuat OldRot = UpdatedComponent->GetComponentRotation().Quaternion();
 	FHitResult Hit(1.f);
 	
-	FQuat NewRot =FRotationMatrix::MakeFromXZ(CamFV(),FVector::UpVector).ToQuat();
+	FQuat NewRot =FRotationMatrix::MakeFromXZ(CamForVect,FVector::UpVector).ToQuat();
 	SafeMoveUpdatedComponent(Adjusted,NewRot,true,Hit);
 
 	if(Hit.Time <1.f)

@@ -4,43 +4,29 @@
 
 #include "CoreMinimal.h"
 #include "GAS/BaseGameplayAbility.h"
-#include "ZeroBase_HeavyMelee.generated.h"
+#include "ZeroBase_LightMelee.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ZEROLOCK_API UZeroBase_HeavyMelee : public UBaseGameplayAbility
+class ZEROLOCK_API UZeroBase_LightMelee : public UBaseGameplayAbility
 {
 	GENERATED_BODY()
-public:
-	UZeroBase_HeavyMelee();
-
+	UZeroBase_LightMelee();
 	UFUNCTION()
 	void OnFinish();
-	UFUNCTION()
-	void MeleeDistanceFinished();
 
-	
 	/** Actually activate ability, do not call this directly. We'll call it from APAHeroCharacter::ActivateAbilitiesWithTags(). */
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-
-	class UGAST_MeleeMoveTo* MeleeMoveTask;
-
-	class UGAST_PlayMontageAndWaitForEvent* MeleePlayMontageAndWaitForEvent;
-
-	UPROPERTY(BlueprintReadWrite,EditAnywhere)
-	float MeleeTime = 2;
-
-	UPROPERTY(BlueprintReadWrite,EditAnywhere)
-	float MeleeSpeed = 500;
-
+public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
-	TSubclassOf<class UGameplayEffect> HeavyMeleeDamageEffect;
+	TSubclassOf<class UGameplayEffect> LightMeleeDamageEffect;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> ParryEffect;
 
-	
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Anim")
+	UAnimMontage* LightMeleeMontage;
 	
 };
