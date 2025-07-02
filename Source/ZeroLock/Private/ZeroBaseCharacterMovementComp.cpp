@@ -278,7 +278,7 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
 	{
 		if (MovementMode == MOVE_Falling && bWantsToCrouch && !Safe_bPrevWantsToCrouch )
 		{
-			QuickFallDown();
+			//QuickFallDown();
 			bCanQuickFall = false;
 		}
 	}
@@ -813,6 +813,8 @@ void UZeroBaseCharacterMovementComp::QuickFallDown()
 	Velocity += FVector::DownVector * QuickFallImpulse;
 	bCanQuickFall=false;
 }
+
+
 #pragma endregion
 
 #pragma region Helper Functions

@@ -39,7 +39,11 @@ void UBaseCharAttributeSet::PreAttributeChange(const FGameplayAttribute & Attrib
 void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData & Data)
 {
 	Super::PostGameplayEffectExecute(Data);
- 
+	//AZeroLockCharacter* TargetChar = Cast<AZeroLockCharacter>(GetOwningActor());
+	
+	
+
+	
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
 		
@@ -53,21 +57,21 @@ void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 
 		if (LocalDamageDone > 0.0f)
 		{
-
-			// Apply the Health change and then clamp it.
 			const float NewHealth = GetCurrentHealth() - LocalDamageDone;
-			//FString TheFloatStr = FString::SanitizeFloat(NewHealth);
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, *TheFloatStr);
 			SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));
-			// TheFloatStr = FString::SanitizeFloat(GetCurrentHealth());
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, *TheFloatStr);
+		//	TargetCharacter->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
+		
 			if (GetCurrentHealth() <= 0)
 			{
-				//Handle Death
+				//TargetCharacter->Death();
 			}
 		}
 	}
-	
+	else if (Data.EvaluatedData.Attribute == GetMaximumHealthAttribute())
+	{
+		//TargetCharacter->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
+		
+	}
 
 	else if (Data.EvaluatedData.Attribute == GetHealingAttribute())
 	{
@@ -82,14 +86,14 @@ void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 			const float NewHealth = GetCurrentHealth() + LocalHealingDone;
 
 			SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));
+			//TargetCharacter->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
 		}
 	}
 
 	else if (Data.EvaluatedData.Attribute == GetCurrentHealthAttribute())
 	{
 		SetCurrentHealth(FMath::Clamp(GetCurrentHealth(), 0.0f, GetMaximumHealth()));
-
-
+		//TargetCharacter->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
 	}
 
 	else if (Data.EvaluatedData.Attribute == GetHealthRegenerationAttribute())
@@ -124,9 +128,9 @@ void UBaseCharAttributeSet::PostAttributeChange(const FGameplayAttribute& Attrib
 	{
 		TargetChar->ChangeFireRate();
 	}
-	else if (Attribute == GetCurrentHealthAttribute() || Attribute == GetMaximumHealthAttribute())
+	else if (Attribute == GetMaximumHealthAttribute() )
 	{
-		TargetChar->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
+		//TargetChar->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
 	}
 	else if (Attribute == GetCurrentAmmoAttribute())
 	{

@@ -94,8 +94,8 @@ void UGAST_MeleeMoveTo::TickTask(float DeltaTime)
 		}
 		if (MyCharacter)
 		{
-			FCollisionShape Cap = FCollisionShape::MakeSphere(100);
-			FVector TraceLocation = MyCharacter->GetActorLocation() + MyCharacter->GetActorForwardVector()*100;
+			FCollisionShape Cap = FCollisionShape::MakeSphere(50);
+			FVector TraceLocation = MyCharacter->GetActorLocation() + MyCharacter->GetActorForwardVector()*50;
 			FVector TraceEndLocation =TraceLocation ;
 			FHitResult Hits;
 			FQuat RotationQuat = MyCharacter->GetActorRotation().Quaternion();

@@ -82,6 +82,7 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 	//Flags
 	bool Safe_bWantsToSprint;
 	bool Safe_bPrevWantsToCrouch;
+	
 
 	bool Safe_bWantsToDash;
 	bool Safe_bHadAnimRootMotion;
@@ -219,7 +220,7 @@ public:
 
 	//QuickFall
 	void QuickFallDown();
-
+	
 	//Melee
 	void PhysMelee(float DeltaTime, int32 Iterations);
 

@@ -126,7 +126,8 @@ protected:
 	void Stunned(FGameplayTag GameplayTag, int NewCount);
 	void Parry(FGameplayTag GameplayTag, int NewCount);
 
-	
+
+	void HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
 	// To add mapping context
 	virtual void BeginPlay();
 
@@ -152,6 +153,9 @@ public:
 	virtual void Jump() override;
 	virtual void StopJumping() override;
 	virtual void ClearJumpInput(float DeltaTime) override;
+
+	//
+	void Death();
 
 	//Ability System 
 protected:
@@ -247,6 +251,10 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "Animation/melee")
 	UAnimMontage* HeavyMeleeMontage;
+
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void FOVChange(float newFOV,float duration);
 
 	
 };

@@ -87,6 +87,8 @@ void AZeroLockCharacter::BeginPlay()
 	FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);
 	AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
 	AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
+	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
+	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
@@ -144,6 +146,19 @@ void AZeroLockCharacter::ClearJumpInput(float DeltaTime)
 	{
 		//	ZeroJumpHoldTIme =0;
 	}
+}
+
+void AZeroLockCharacter::Death()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	
+		AbilitySystemComp->CancelAllAbilities();
+		
+		if (PC)
+		{
+			DisableInput(PC);
+		}
+	
 }
 
 class UAbilitySystemComponent* AZeroLockCharacter::GetAbilitySystemComponent() const
@@ -293,8 +308,17 @@ void AZeroLockCharacter::ChangeFireRate()
 
 void AZeroLockCharacter::PrimaryFireTickFunction()
 {
-	AbilitySystemComp->TryActivateAbilityByClass(PrimaryFireAbility, true);
-	TimeOfLastShot = GetWorld()->TimeSeconds;
+	if (AttributeSet->GetCurrentAmmo() > 0)
+	{
+		AbilitySystemComp->TryActivateAbilityByClass(PrimaryFireAbility, true);
+		TimeOfLastShot = GetWorld()->TimeSeconds;
+	}
+	else
+	{
+		PrimaryFireReleased();
+		Reload();
+	}
+	
 }
 
 void AZeroLockCharacter::SecondryFirePressed()
@@ -433,13 +457,34 @@ void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
 
 void AZeroLockCharacter::Parry(FGameplayTag GameplayTag, int NewCount)
 {
+	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (NewCount>0)
 	{
 		ParryComp->SetVisibility(true);
+		if (PC)
+		{
+			DisableInput(PC);
+		}
 	}
 	else
 	{
 		ParryComp->SetVisibility(false);
+		if (PC)
+        {
+			EnableInput(PC);
+        }
+	}
+}
+
+void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData)
+{
+	
+	float currentH= OnAttributeChangeData.NewValue;
+	float MaxH = AttributeSet->GetMaximumHealth();
+	
+	if (HealthChangeDelegate.IsBound())
+	{
+		HealthChangeDelegate.Broadcast(currentH, MaxH);
 	}
 }
 

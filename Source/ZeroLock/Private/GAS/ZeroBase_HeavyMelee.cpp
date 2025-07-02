@@ -45,7 +45,7 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 		MontageTask->OnCancelled.AddDynamic(this,&UZeroBase_HeavyMelee::OnFinish);
 		MontageTask->ReadyForActivation();
 	}
-	
+	Hero->FOVChange(120,0.25);
 	UAbilitySystemComponent* AbilitySystemComp = Hero->GetAbilitySystemComponent();
 	FCollisionShape Cap = FCollisionShape::MakeSphere(100);
 	FVector TraceLocation = Hero->GetActorLocation() + Hero->GetActorForwardVector()*100;
@@ -72,7 +72,7 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 			HitActors.Add(Villan);
 			if (Villan->GetAbilitySystemComponent()->HasMatchingGameplayTag(ParryTag))
 			{
-				ZLOG("Found Parry");
+				//ZLOG("Found Parry");
 				if (AbilitySystemComp && ParryEffect)
 				{
 					FGameplayEffectContextHandle EffectContext =AbilitySystemComp->MakeEffectContext();
@@ -91,11 +91,13 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 			}
 			if (AbilitySystemComp && HeavyMeleeDamageEffect)
 			{
-				ZLOG("Found Damage");
+				//ZLOG("Found Damage");
 				FGameplayEffectContextHandle EffectContext =AbilitySystemComp->MakeEffectContext();
 				EffectContext.AddSourceObject(this);
-
-
+				
+				FVector KnockbackDir = (Villan->GetActorLocation() - Hero->GetActorLocation()).GetSafeNormal();
+				KnockbackDir.Z=0;
+				Villan->LaunchCharacter(KnockbackDir * 1000,false,false);
 				FGameplayEffectSpecHandle SpecHandle = AbilitySystemComp->MakeOutgoingSpec(HeavyMeleeDamageEffect, 1, EffectContext);
 
 				if (SpecHandle.IsValid())
@@ -118,7 +120,7 @@ void UZeroBase_HeavyMelee::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	UAbilitySystemComponent* AbilitySystemComp = Hero->GetAbilitySystemComponent();
-	
+	Hero->FOVChange(130,0.25);
 	MeleeMoveTask = UGAST_MeleeMoveTo::MeleeToLocation(this,FName("HeavyMelee"),MeleeTime,MeleeSpeed);
 	MeleeMoveTask->OnMeleeMoveFinished.AddDynamic(this,&UZeroBase_HeavyMelee::MeleeDistanceFinished);
 	MeleeMoveTask->ReadyForActivation();
