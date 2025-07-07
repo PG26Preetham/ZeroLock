@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "ZeroLockGameMode.h"
+
+#include "AbilitySystemGlobals.h"
 #include "ZeroLockCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -12,4 +14,11 @@ AZeroLockGameMode::AZeroLockGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+}
+
+void AZeroLockGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	UAbilitySystemGlobals::Get().InitGlobalData();
+
 }

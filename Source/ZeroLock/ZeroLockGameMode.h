@@ -13,6 +13,8 @@ class AZeroLockGameMode : public AGameModeBase
 
 public:
 	AZeroLockGameMode();
+
+	virtual void BeginPlay() override;
 };
 
 

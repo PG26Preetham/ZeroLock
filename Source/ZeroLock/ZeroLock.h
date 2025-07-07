@@ -17,3 +17,11 @@ enum class EGASAbilityInputID : uint8
 	Ability_2,
 	Ultimate
 };
+UENUM(BlueprintType)
+enum class EGASTargetConfirmationStyle : uint8
+{
+	Instant,
+	Quick,
+	Confirm,
+	Passive
+};

@@ -5,5 +5,8 @@
 
 UBaseGameplayAbility::UBaseGameplayAbility()
 {
-	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Ability.Skill"),false));
+	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities"),false));
+	BlockAbilitiesWithTag.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities"),false));
+	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLLock.Abilities"),false));
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }

@@ -406,6 +406,9 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Completed,this,&AZeroLockCharacter::MeleeReleased);
 		
 		EnhancedInputComponent->BindAction(EI_Parry,ETriggerEvent::Started,this,&AZeroLockCharacter::ParryPressed);
+
+		EnhancedInputComponent->BindAction(EI_Confirm,ETriggerEvent::Completed,AbilitySystemComp,&UAbilitySystemComponent::LocalInputConfirm);
+		EnhancedInputComponent->BindAction(EI_Cancel,ETriggerEvent::Completed,AbilitySystemComp,&UAbilitySystemComponent::LocalInputCancel);
 		
 	}
 	else

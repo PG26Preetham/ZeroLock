@@ -20,4 +20,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	EGASAbilityInputID AbilityInputID = EGASAbilityInputID::None;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	EGASTargetConfirmationStyle TargetStyle = EGASTargetConfirmationStyle::Instant;
 };
