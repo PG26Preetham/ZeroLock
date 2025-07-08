@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
 #include "Abilities/GameplayAbilityTargetActor_Trace.h"
-#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
 //#include "GAS/Tasks/GAST_WaitTargetData.h"
 #include "ZeroLock/ZeroLockCharacter.h"
@@ -30,16 +30,25 @@ UBase_GA_TargetActors::UBase_GA_TargetActors()
 
 void UBase_GA_TargetActors::TargetConfirmed(const FGameplayAbilityTargetDataHandle& Data)
 {
-	ZLOG("Confirmed");
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-
+	AbilityConfirmedAction(Data);
 }
 
 void UBase_GA_TargetActors::TargetCancelled(const FGameplayAbilityTargetDataHandle& Data)
 {
-	ZLOG("Cancelled");
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	AbilityCancelledAction(Data);
+}
 
+void UBase_GA_TargetActors::TargetInputRelease(float TimeHeld)
+{
+	ZLOG("InputRelease");
+	if (WaitTargetTask->IsActive())
+	{
+		AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+		if (Hero)
+		{
+			Hero->GetAbilitySystemComponent()->TargetConfirm();
+		}
+	}
 }
 
 void UBase_GA_TargetActors::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
@@ -75,24 +84,39 @@ void UBase_GA_TargetActors::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	TargetActor->StartTargeting(this);
 
 	TargetActor->ReticleClass = ReticleClassX;
-
-	// ✅ Begin wait task
-	UAbilityTask_WaitTargetData* Task = UAbilityTask_WaitTargetData::WaitTargetDataUsingActor(this,FName(TEXT("Targeting")),	EGameplayTargetingConfirmation::UserConfirmed,TargetActor);
-
-	Task->ValidData.AddDynamic(this, &UBase_GA_TargetActors::TargetConfirmed);
-	Task->Cancelled.AddDynamic(this, &UBase_GA_TargetActors::TargetCancelled);
-
-	Task->ReadyForActivation();
-
-}
-
-void UBase_GA_TargetActors::WaitFinish()
-{
-	ZLOG("Wait over");
-	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	if (Hero)
+	if (TargetConfirmationStyle == EGASTargetConfirmationStyle::Instant)
 	{
-		Hero->GetAbilitySystemComponent()->LocalInputConfirm();
-		
+		WaitTargetTask = UAbilityTask_WaitTargetData::WaitTargetDataUsingActor(this,FName(TEXT("Targeting")),	EGameplayTargetingConfirmation::Instant,TargetActor);
 	}
+	else
+	{
+		WaitTargetTask = UAbilityTask_WaitTargetData::WaitTargetDataUsingActor(this,FName(TEXT("Targeting")),	EGameplayTargetingConfirmation::UserConfirmed,TargetActor);
+	}
+	WaitTargetTask->ValidData.AddDynamic(this, &UBase_GA_TargetActors::TargetConfirmed);
+	WaitTargetTask->Cancelled.AddDynamic(this, &UBase_GA_TargetActors::TargetCancelled);
+
+	WaitTargetTask->ReadyForActivation();
+
+	if (TargetConfirmationStyle == EGASTargetConfirmationStyle::Quick)
+	{
+		UAbilityTask_WaitInputRelease* InputRTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this,true);
+		InputRTask->OnRelease.AddDynamic(this, &UBase_GA_TargetActors::TargetInputRelease);
+		InputRTask->ReadyForActivation();
+	}
+	
 }
+
+void UBase_GA_TargetActors::AbilityConfirmedAction(const FGameplayAbilityTargetDataHandle& Data)
+{
+	ZLOG("Confirmed");
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UBase_GA_TargetActors::AbilityCancelledAction(const FGameplayAbilityTargetDataHandle& Data)
+{
+	ZLOG("Cancelled");
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+
+}
+
+

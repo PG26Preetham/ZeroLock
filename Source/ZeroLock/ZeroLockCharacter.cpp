@@ -201,22 +201,22 @@ void AZeroLockCharacter::GiveAbilities()
 		if (SecondryFireAbility)
 		{
 			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(SecondryFireAbility, 1, static_cast<int32>(SecondryFireAbility.GetDefaultObject()->AbilityInputID), this)));
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(SecondryFireAbility, 1, static_cast<int32>(EGASAbilityInputID::Secondry_Attack), this)));
 		}
 		if (Ability_1)
 		{
 			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability_1, 1, static_cast<int32>(Ability_1.GetDefaultObject()->AbilityInputID), this)));
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability_1, 1, static_cast<int32>(EGASAbilityInputID::Ability_1), this)));
 		}
 		if (Ability_2)
 		{
 			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability_2, 1, static_cast<int32>(Ability_2.GetDefaultObject()->AbilityInputID), this)));
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability_2, 1, static_cast<int32>(EGASAbilityInputID::Ability_2), this)));
 		}
 		if (UltimateAbility)
 		{
 			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(UltimateAbility, 1, static_cast<int32>(UltimateAbility.GetDefaultObject()->AbilityInputID), this)));
+				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(UltimateAbility, 1, static_cast<int32>(EGASAbilityInputID::Ultimate), this)));
 		}
 		if (ReloadAbility)
 		{
@@ -326,19 +326,41 @@ void AZeroLockCharacter::SecondryFirePressed()
 	GetAbilitySystemComponent()->TryActivateAbilityByClass(SecondryFireAbility);
 }
 
+void AZeroLockCharacter::SecondryFireReleased()
+{
+}
+
 void AZeroLockCharacter::Ability_1Pressed()
 {
-	GetAbilitySystemComponent()->TryActivateAbilityByClass(Ability_1);
+	//GetAbilitySystemComponent()->TryActivateAbilityByClass(Ability_1);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Ability_1));
+}
+
+void AZeroLockCharacter::Ability_1Released()
+{
+	GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(EGASAbilityInputID::Ability_1));
 }
 
 void AZeroLockCharacter::Ability_2Pressed()
 {
-	GetAbilitySystemComponent()->TryActivateAbilityByClass(Ability_2);
+	//GetAbilitySystemComponent()->TryActivateAbilityByClass(Ability_2);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Ability_2));
+}
+
+void AZeroLockCharacter::Ability_2Released()
+{
+	GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(EGASAbilityInputID::Ability_2));
 }
 
 void AZeroLockCharacter::UltimateAbilityPressed()
 {
-	GetAbilitySystemComponent()->TryActivateAbilityByClass(UltimateAbility);
+	//GetAbilitySystemComponent()->TryActivateAbilityByClass(UltimateAbility);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Ultimate));
+}
+
+void AZeroLockCharacter::UltimateAbilityReleased()
+{
+	GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(EGASAbilityInputID::Ultimate));
 }
 
 void AZeroLockCharacter::Reload()
@@ -393,12 +415,16 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(EI_PrimaryFire,ETriggerEvent::Completed,this,&AZeroLockCharacter::PrimaryFireReleased);
 
 		EnhancedInputComponent->BindAction(EI_SecondryFire,ETriggerEvent::Started,this,&AZeroLockCharacter::SecondryFirePressed);
+		EnhancedInputComponent->BindAction(EI_SecondryFire,ETriggerEvent::Completed,this,&AZeroLockCharacter::SecondryFireReleased);
 
 		EnhancedInputComponent->BindAction(EI_Ability1,ETriggerEvent::Started,this,&AZeroLockCharacter::Ability_1Pressed);
+		EnhancedInputComponent->BindAction(EI_Ability1,ETriggerEvent::Completed,this,&AZeroLockCharacter::Ability_1Released);
 
 		EnhancedInputComponent->BindAction(EI_Ability2,ETriggerEvent::Started,this,&AZeroLockCharacter::Ability_2Pressed);
+		EnhancedInputComponent->BindAction(EI_Ability2,ETriggerEvent::Completed,this,&AZeroLockCharacter::Ability_2Released);
 
 		EnhancedInputComponent->BindAction(EI_Ultimate,ETriggerEvent::Started,this,&AZeroLockCharacter::UltimateAbilityPressed);
+		EnhancedInputComponent->BindAction(EI_Ultimate,ETriggerEvent::Completed,this,&AZeroLockCharacter::UltimateAbilityReleased);
 		
 		EnhancedInputComponent->BindAction(EI_Reload,ETriggerEvent::Started,this,&AZeroLockCharacter::Reload);
 

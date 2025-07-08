@@ -194,12 +194,16 @@ public:
 	FTimerHandle PrimaryFireTickHandle;
 
 	void SecondryFirePressed();
+	void SecondryFireReleased();
 
 	void Ability_1Pressed();
+	void Ability_1Released();
 
 	void Ability_2Pressed();
+	void Ability_2Released();
 
 	void UltimateAbilityPressed();
+	void UltimateAbilityReleased();
 
 	void Reload();
 	
