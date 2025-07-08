@@ -8,7 +8,7 @@
 #include "Abilities/GameplayAbilityTargetActor_Trace.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
-#include "GAS/Tasks/GAST_WaitTargetData.h"
+//#include "GAS/Tasks/GAST_WaitTargetData.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 // Helper Macros
 #if 1
