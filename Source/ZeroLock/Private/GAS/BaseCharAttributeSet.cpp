@@ -50,8 +50,8 @@ void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 		// Store a local copy of the amount of Damage done and clear the Damage attribute.
 		const float LocalDamageDone = GetDamage();
 
-		FString TheFloatStr = "Dam=" + FString::SanitizeFloat(LocalDamageDone);
-		GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
+		//FString TheFloatStr = "Dam=" + FString::SanitizeFloat(LocalDamageDone);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
 
 		SetDamage(0.f);
 

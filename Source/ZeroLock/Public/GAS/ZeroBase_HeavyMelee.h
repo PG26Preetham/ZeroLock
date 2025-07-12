@@ -21,13 +21,23 @@ public:
 	UFUNCTION()
 	void MeleeDistanceFinished();
 
-	
+
+	UFUNCTION()
+	void WaitOver();
+	UFUNCTION()
+	void OnInputRelased(float TimeHeld);
 	/** Actually activate ability, do not call this directly. We'll call it from APAHeroCharacter::ActivateAbilitiesWithTags(). */
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 	class UGAST_MeleeMoveTo* MeleeMoveTask;
 
 	class UGAST_PlayMontageAndWaitForEvent* MeleePlayMontageAndWaitForEvent;
+
+	class UAbilityTask_WaitInputRelease* InputRTask;
+
+	class UAbilityTask_WaitDelay* TaskWaitDelay;
+
+	float MeleeMinHoldTime = 0.2f;
 
 	UPROPERTY(BlueprintReadWrite,EditAnywhere)
 	float MeleeTime = 2;
@@ -39,9 +49,13 @@ public:
 	TSubclassOf<class UGameplayEffect> HeavyMeleeDamageEffect;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
+	TSubclassOf<class UGameplayEffect> LightMeleeDamageEffect;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> ParryEffect;
 
+	void MeleeDamageExec(TSubclassOf<class UGameplayEffect> MeleeDamageEffect,UAnimMontage* MeleeMontage);
 	
-	
+	void StartHeavyMelee();
 	
 };

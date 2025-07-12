@@ -8,8 +8,10 @@
 #include "AbilitySystemInterface.h"
 #include <GameplayEffectTypes.h>
 #include "GameplayAbilitySpec.h"
+#include "ZeroLock.h"
 #include "ZeroLockCharacter.generated.h"
 
+//enum class EGASAbilityInputID;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -116,6 +118,8 @@ protected:
 	void MeleeReleased();
 	void ParryPressed();
 
+
+public:
 	float MeleePressedTime;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Melee, meta = (AllowPrivateAccess = "true"))
 	float MeleeMinHoldTime;
@@ -134,6 +138,8 @@ protected:
 
 
 	void HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
+	void AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData);
+	
 	// To add mapping context
 	virtual void BeginPlay();
 
@@ -178,6 +184,8 @@ public:
 
 	virtual void InitializeAttributes();
 	virtual void GiveAbilities();
+
+	void GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant,EGASAbilityInputID InputToBindTo);
 
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -250,6 +258,8 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FHealthChangeDelgate HealthChangeDelegate;
+	UPROPERTY(BlueprintAssignable)
+	FHealthChangeDelgate AmmoChangeDelegate;
 	UPROPERTY(BlueprintAssignable)
 	FStunChanged StunChangedDelegate;
 public:

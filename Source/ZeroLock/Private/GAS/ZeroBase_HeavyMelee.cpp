@@ -5,23 +5,13 @@
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Camera/CameraComponent.h"
 #include "GAS/Tasks/GAST_MeleeMoveTo.h"
 #include "GAS/Tasks/GAST_PlayMontageAndWaitForEvent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
-// Helper Macros
-#if 1
-float MacroDuration = 2.f;
-#define ZLOG(x) GEngine->AddOnScreenDebugMessage(-1, MacroDuration ? MacroDuration : -1.f, FColor::Yellow, x);
-#define ZPOINT(x, c) DrawDebugPoint(GetWorld(), x, 10, c, !MacroDuration, MacroDuration);
-#define ZLINE(x1, x2, c) DrawDebugLine(GetWorld(), x1, x2, c, !MacroDuration, MacroDuration);
-#define ZCAPSULE(x, c) DrawDebugCapsule(GetWorld(), x, CapHH(), CapR(), FQuat::Identity, c, !MacroDuration, MacroDuration);
-#else
-#define ZLOG(x)
-#define ZPOINT(x, c)
-#define ZLINE(x1, x2, c)
-#define ZCAPSULE(x, c)
-#endif
+
 class AZeroLockCharacter;
 
 UZeroBase_HeavyMelee::UZeroBase_HeavyMelee()
@@ -32,15 +22,61 @@ UZeroBase_HeavyMelee::UZeroBase_HeavyMelee()
 void UZeroBase_HeavyMelee::OnFinish()
 {
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-
 }
 
 void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	if (Hero->HeavyMeleeMontage)
+	MeleeDamageExec(HeavyMeleeDamageEffect,Hero->HeavyMeleeMontage);
+}
+
+void UZeroBase_HeavyMelee::WaitOver()
+{
+	if (InputRTask->IsActive())
 	{
-		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,FName("HeavyMelee"),Hero->HeavyMeleeMontage);
+		InputRTask->EndTask();
+	}
+	StartHeavyMelee();
+}
+
+void UZeroBase_HeavyMelee::OnInputRelased(float TimeHeld)
+{
+	if (TaskWaitDelay->IsActive())
+	{
+		TaskWaitDelay->EndTask();
+	}
+	if (TimeHeld >= MeleeMinHoldTime)
+	{
+		StartHeavyMelee();
+	}
+	else
+	{
+		AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+		MeleeDamageExec(LightMeleeDamageEffect,Hero->LightMeleeMontage);
+	}
+}
+
+
+void UZeroBase_HeavyMelee::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+                                           const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                           const FGameplayEventData* TriggerEventData)
+{
+	TaskWaitDelay = UAbilityTask_WaitDelay::WaitDelay(this,MeleeMinHoldTime);
+	TaskWaitDelay->OnFinish.AddDynamic(this,&UZeroBase_HeavyMelee::WaitOver);
+	TaskWaitDelay->ReadyForActivation();
+
+	InputRTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this, true);
+	InputRTask->OnRelease.AddDynamic(this,&UZeroBase_HeavyMelee::OnInputRelased);
+	InputRTask->ReadyForActivation();
+}
+
+void UZeroBase_HeavyMelee::MeleeDamageExec(TSubclassOf<class UGameplayEffect> MeleeDamageEffect,
+	UAnimMontage* MeleeMontage)
+{
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	if (MeleeMontage)
+	{
+		UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,FName("HeavyMelee"),MeleeMontage);
 		MontageTask->OnCompleted.AddDynamic(this,&UZeroBase_HeavyMelee::OnFinish);
 		MontageTask->OnCancelled.AddDynamic(this,&UZeroBase_HeavyMelee::OnFinish);
 		MontageTask->ReadyForActivation();
@@ -72,7 +108,7 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 			HitActors.Add(Villan);
 			if (Villan->GetAbilitySystemComponent()->HasMatchingGameplayTag(ParryTag))
 			{
-				//ZLOG("Found Parry");
+				ZLOG("Found Parry");
 				if (AbilitySystemComp && ParryEffect)
 				{
 					FGameplayEffectContextHandle EffectContext =AbilitySystemComp->MakeEffectContext();
@@ -89,7 +125,7 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 				}
 				break;
 			}
-			if (AbilitySystemComp && HeavyMeleeDamageEffect)
+			if (AbilitySystemComp && MeleeDamageEffect)
 			{
 				//ZLOG("Found Damage");
 				FGameplayEffectContextHandle EffectContext =AbilitySystemComp->MakeEffectContext();
@@ -98,7 +134,7 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 				FVector KnockbackDir = (Villan->GetActorLocation() - Hero->GetActorLocation()).GetSafeNormal();
 				KnockbackDir.Z=0;
 				Villan->LaunchCharacter(KnockbackDir * 1000,false,false);
-				FGameplayEffectSpecHandle SpecHandle = AbilitySystemComp->MakeOutgoingSpec(HeavyMeleeDamageEffect, 1, EffectContext);
+				FGameplayEffectSpecHandle SpecHandle = AbilitySystemComp->MakeOutgoingSpec(MeleeDamageEffect, 1, EffectContext);
 
 				if (SpecHandle.IsValid())
 				{
@@ -108,20 +144,20 @@ void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 			}
 		}
 	}
-	if (!Hero->HeavyMeleeMontage)
+	if (!MeleeMontage)
 	{
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 	}
 }
 
-void UZeroBase_HeavyMelee::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+void UZeroBase_HeavyMelee::StartHeavyMelee()
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	UAbilitySystemComponent* AbilitySystemComp = Hero->GetAbilitySystemComponent();
+	//UAbilitySystemComponent* AbilitySystemComp = Hero->GetAbilitySystemComponent();
 	Hero->FOVChange(130,0.25);
 	MeleeMoveTask = UGAST_MeleeMoveTo::MeleeToLocation(this,FName("HeavyMelee"),MeleeTime,MeleeSpeed);
 	MeleeMoveTask->OnMeleeMoveFinished.AddDynamic(this,&UZeroBase_HeavyMelee::MeleeDistanceFinished);
 	MeleeMoveTask->ReadyForActivation();
 }
+
+

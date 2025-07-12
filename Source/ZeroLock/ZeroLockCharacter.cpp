@@ -89,6 +89,8 @@ void AZeroLockCharacter::BeginPlay()
 	AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
+	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
+	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
@@ -198,47 +200,13 @@ void AZeroLockCharacter::GiveAbilities()
 			DefaultAbilitiesHandles.Add(
 				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(PrimaryFireAbility, 1, static_cast<int32>(PrimaryFireAbility.GetDefaultObject()->AbilityInputID), this)));
 		}
-		if (SecondryFireAbility)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(SecondryFireAbility, 1, static_cast<int32>(EGASAbilityInputID::Secondry_Attack), this)));
-		}
-		if (Ability_1)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability_1, 1, static_cast<int32>(EGASAbilityInputID::Ability_1), this)));
-		}
-		if (Ability_2)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(Ability_2, 1, static_cast<int32>(EGASAbilityInputID::Ability_2), this)));
-		}
-		if (UltimateAbility)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(UltimateAbility, 1, static_cast<int32>(EGASAbilityInputID::Ultimate), this)));
-		}
-		if (ReloadAbility)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(ReloadAbility, 1, static_cast<int32>(ReloadAbility.GetDefaultObject()->AbilityInputID), this)));
-		}
-		if (HeavyMeleeAbility)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(HeavyMeleeAbility, 1, static_cast<int32>(HeavyMeleeAbility.GetDefaultObject()->AbilityInputID), this)));
-		}
-		if (LightMeleeAbility)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(LightMeleeAbility, 1, static_cast<int32>(LightMeleeAbility.GetDefaultObject()->AbilityInputID), this)));
-		
-		}
-		if (ParryAbility)
-		{
-			DefaultAbilitiesHandles.Add(
-				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(ParryAbility, 1, static_cast<int32>(ParryAbility.GetDefaultObject()->AbilityInputID), this)));
-		}
+		GrantAbilityOfClassX(SecondryFireAbility,EGASAbilityInputID::Secondry_Attack);
+		GrantAbilityOfClassX(Ability_1,EGASAbilityInputID::Ability_1);
+		GrantAbilityOfClassX(Ability_2,EGASAbilityInputID::Ability_2);
+		GrantAbilityOfClassX(UltimateAbility,EGASAbilityInputID::Ultimate);
+		GrantAbilityOfClassX(ReloadAbility,EGASAbilityInputID::Reload);
+		GrantAbilityOfClassX(HeavyMeleeAbility,EGASAbilityInputID::Melee);
+		GrantAbilityOfClassX(ParryAbility,EGASAbilityInputID::Parry);
 		
 	}
 	if (HasAuthority() && AbilitySystemComp)
@@ -249,6 +217,29 @@ void AZeroLockCharacter::GiveAbilities()
 			AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(StartupAbility, 1, static_cast<int32>(StartupAbility.GetDefaultObject()->AbilityInputID), this));
 
 
+		}
+	}
+}
+
+
+
+
+void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant,EGASAbilityInputID InputToBindTo)
+{
+	if (AbilityToGrant)
+	{
+		EGASAbilityInputID AbiltyInputID = InputToBindTo;
+		if (AbilityToGrant.GetDefaultObject()->TargetStyle == EGASTargetConfirmationStyle::Passive)
+		{
+			AbiltyInputID = EGASAbilityInputID::None;
+			DefaultAbilitiesHandles.Add(
+			AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this)));
+			GetAbilitySystemComponent()->TryActivateAbilityByClass(AbilityToGrant);
+		}
+		else
+		{
+			DefaultAbilitiesHandles.Add(
+			AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this)));
 		}
 	}
 }
@@ -316,7 +307,7 @@ void AZeroLockCharacter::PrimaryFireTickFunction()
 	else
 	{
 		PrimaryFireReleased();
-		Reload();
+		//Reload();
 	}
 	
 }
@@ -365,7 +356,7 @@ void AZeroLockCharacter::UltimateAbilityReleased()
 
 void AZeroLockCharacter::Reload()
 {
-	GetAbilitySystemComponent()->TryActivateAbilityByClass(ReloadAbility);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Reload));
 }
 
 void AZeroLockCharacter::HealthChanged(float currentH , float MaxH)
@@ -508,12 +499,23 @@ void AZeroLockCharacter::Parry(FGameplayTag GameplayTag, int NewCount)
 void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData)
 {
 	
-	float currentH= OnAttributeChangeData.NewValue;
+	float currentH= AttributeSet->GetCurrentHealth();
 	float MaxH = AttributeSet->GetMaximumHealth();
 	
 	if (HealthChangeDelegate.IsBound())
 	{
 		HealthChangeDelegate.Broadcast(currentH, MaxH);
+	}
+}
+
+void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData)
+{
+	float currentA= AttributeSet->GetCurrentAmmo();
+	float MaxA = AttributeSet->GetMaxAmmo();
+	
+	if (AmmoChangeDelegate.IsBound())
+	{
+		AmmoChangeDelegate.Broadcast(currentA, MaxA);
 	}
 }
 
@@ -576,32 +578,15 @@ void AZeroLockCharacter::CrouchReleased()
 
 void AZeroLockCharacter::MeleePressed()
 {
-	bMeleeUsed = true;
-	MeleePressedTime = GetWorld()->GetTimeSeconds();
-	GetWorldTimerManager().SetTimer(MeleePressedTimer,this,&AZeroLockCharacter::MeleeReleased,MeleeMinHoldTime,false);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Melee));
 }
 
 void AZeroLockCharacter::MeleeReleased()
 {
-	
-	GetWorldTimerManager().ClearTimer(MeleePressedTimer);
-	if (!bMeleeUsed)
-	{
-		return;
-	}
-	float meleeTimeAfterPressed = (GetWorld()->GetTimeSeconds() - MeleePressedTime);
-	if (meleeTimeAfterPressed >=MeleeMinHoldTime)
-	{
-		AbilitySystemComp->TryActivateAbilityByClass(HeavyMeleeAbility);
-	}
-	else
-	{
-		AbilitySystemComp->TryActivateAbilityByClass(LightMeleeAbility);
-	}
-	bMeleeUsed = false;
+	GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(EGASAbilityInputID::Melee));	
 }
 
 void AZeroLockCharacter::ParryPressed()
 {
-	AbilitySystemComp->TryActivateAbilityByClass(ParryAbility);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Parry));
 }

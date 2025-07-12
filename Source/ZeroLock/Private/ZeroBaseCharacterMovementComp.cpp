@@ -3,7 +3,7 @@
 
 #include "ZeroBaseCharacterMovementComp.h"
 #include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
-
+#include"ZeroLock/ZeroLock.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "ZeroLock/ZeroLockCharacter.h"
@@ -14,19 +14,6 @@
 #include "Components/SplineComponent.h"
 
 // Helper Macros
-#if 0
-float MacroDuration = 2.f;
-#define ZLOG(x) GEngine->AddOnScreenDebugMessage(-1, MacroDuration ? MacroDuration : -1.f, FColor::Yellow, x);
-#define ZPOINT(x, c) DrawDebugPoint(GetWorld(), x, 10, c, !MacroDuration, MacroDuration);
-#define ZLINE(x1, x2, c) DrawDebugLine(GetWorld(), x1, x2, c, !MacroDuration, MacroDuration);
-#define ZCAPSULE(x, c) DrawDebugCapsule(GetWorld(), x, CapHH(), CapR(), FQuat::Identity, c, !MacroDuration, MacroDuration);
-#else
-#define ZLOG(x)
-#define ZPOINT(x, c)
-#define ZLINE(x1, x2, c)
-#define ZCAPSULE(x, c)
-#endif
-
 
 
 #pragma region SavedMove
@@ -612,20 +599,20 @@ ZPOINT(SurfaceHit.Location, FColor::Blue);
 	FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR(), CapHH());
 	if (GetWorld()->OverlapAnyTestByProfile(ClearCapLoc, FQuat::Identity, "BlockAll", CapShape, Params))
 	{
-ZCAPSULE(ClearCapLoc, FColor::Red)
+//ZCAPSULE(ClearCapLoc, FColor::Red)
 		return false;
 	}
 	else
 	{
-ZCAPSULE(ClearCapLoc, FColor::Green)
+//ZCAPSULE(ClearCapLoc, FColor::Green)
 	}
 
 	
 	FVector TransitionTarget = ClearCapLoc;
-ZCAPSULE(TransitionTarget, FColor::Yellow)
+//ZCAPSULE(TransitionTarget, FColor::Yellow)
 
 	// Perform Transition to Mantle
-ZCAPSULE(UpdatedComponent->GetComponentLocation(), FColor::Red)
+//ZCAPSULE(UpdatedComponent->GetComponentLocation(), FColor::Red)
 
 	float UpSpeed = Velocity | FVector::UpVector;
 	float TransDistance = FVector::Dist(TransitionTarget, UpdatedComponent->GetComponentLocation());

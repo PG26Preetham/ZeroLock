@@ -19,15 +19,10 @@ UZero_BaseWeaponAbility::UZero_BaseWeaponAbility()
 
 void UZero_BaseWeaponAbility::Fire()
 {
-	FGameplayTag ReloadTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Weapon.Reloading"),false);
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (Hero)
 	{
-		if (Hero->GetAbilitySystemComponent()->HasMatchingGameplayTag(ReloadTag))
-		{
-			
-			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		}
+		
 		if (ProjectileClass)
 		{
 				
@@ -55,6 +50,7 @@ void UZero_BaseWeaponAbility::Fire()
 			if (proj)
 			{
 				proj->SetOwner(Hero);
+				proj->OwnerCharacter = Hero;
 			}
 			CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -68,10 +64,7 @@ void UZero_BaseWeaponAbility::ActivateAbility(const FGameplayAbilitySpecHandle H
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	//if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
-	//{
-	//	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-	//}
+	
 	if (GetCurrentActivationInfo().ActivationMode == EGameplayAbilityActivationMode::Authority)
 	{
 		Fire();
