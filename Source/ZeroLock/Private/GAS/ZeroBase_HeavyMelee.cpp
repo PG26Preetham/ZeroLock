@@ -27,7 +27,7 @@ void UZeroBase_HeavyMelee::OnFinish()
 void UZeroBase_HeavyMelee::MeleeDistanceFinished()
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	MeleeDamageExec(HeavyMeleeDamageEffect,Hero->HeavyMeleeMontage);
+	MeleeDamageExec(HeavyMeleeDamageEffect,Hero->HeavyMeleeMontage,1000);
 }
 
 void UZeroBase_HeavyMelee::WaitOver()
@@ -70,8 +70,10 @@ void UZeroBase_HeavyMelee::ActivateAbility(const FGameplayAbilitySpecHandle Hand
 	InputRTask->ReadyForActivation();
 }
 
+
+
 void UZeroBase_HeavyMelee::MeleeDamageExec(TSubclassOf<class UGameplayEffect> MeleeDamageEffect,
-	UAnimMontage* MeleeMontage)
+	UAnimMontage* MeleeMontage, float KnockForce)
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (MeleeMontage)
@@ -111,36 +113,17 @@ void UZeroBase_HeavyMelee::MeleeDamageExec(TSubclassOf<class UGameplayEffect> Me
 				ZLOG("Found Parry");
 				if (AbilitySystemComp && ParryEffect)
 				{
-					FGameplayEffectContextHandle EffectContext =AbilitySystemComp->MakeEffectContext();
-					EffectContext.AddSourceObject(this);
-
-
-					FGameplayEffectSpecHandle SpecHandle = AbilitySystemComp->MakeOutgoingSpec(ParryEffect, 1, EffectContext);
-
-					if (SpecHandle.IsValid())
-					{
-						//AbilitySystemComp->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),Villan->GetAbilitySystemComponent());
-						FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-					}
+					ApplyGameplyEffectToSelf(ParryEffect,AbilitySystemComp);
 				}
 				break;
 			}
 			if (AbilitySystemComp && MeleeDamageEffect)
 			{
-				//ZLOG("Found Damage");
-				FGameplayEffectContextHandle EffectContext =AbilitySystemComp->MakeEffectContext();
-				EffectContext.AddSourceObject(this);
+				ApplyGameplayEffectToTarget(MeleeDamageEffect,Villan->GetAbilitySystemComponent(),AbilitySystemComp);
 				
 				FVector KnockbackDir = (Villan->GetActorLocation() - Hero->GetActorLocation()).GetSafeNormal();
 				KnockbackDir.Z=0;
-				Villan->LaunchCharacter(KnockbackDir * 1000,false,false);
-				FGameplayEffectSpecHandle SpecHandle = AbilitySystemComp->MakeOutgoingSpec(MeleeDamageEffect, 1, EffectContext);
-
-				if (SpecHandle.IsValid())
-				{
-					
-					FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),Villan->GetAbilitySystemComponent());
-				}
+				Villan->LaunchCharacter(KnockbackDir * KnockForce,false,false);
 			}
 		}
 	}

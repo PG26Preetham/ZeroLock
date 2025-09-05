@@ -54,7 +54,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> ParryEffect;
 
-	void MeleeDamageExec(TSubclassOf<class UGameplayEffect> MeleeDamageEffect,UAnimMontage* MeleeMontage);
+	void MeleeDamageExec(TSubclassOf<class UGameplayEffect> MeleeDamageEffect,UAnimMontage* MeleeMontage,float KnockForce =0);
 	
 	void StartHeavyMelee();
 	

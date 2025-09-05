@@ -13,26 +13,30 @@
 #include "ZeroLock/ZeroLock.h"
 UBase_GA_TargetActors::UBase_GA_TargetActors()
 {
+	
 }
 
 void UBase_GA_TargetActors::TargetConfirmed(const FGameplayAbilityTargetDataHandle& Data)
 {
+	ZLOG("TargetConfirmed");
 	AbilityConfirmedAction(Data);
 }
 
 void UBase_GA_TargetActors::TargetCancelled(const FGameplayAbilityTargetDataHandle& Data)
 {
+	ZLOG("TargetCancelled");
 	AbilityCancelledAction(Data);
 }
 
 void UBase_GA_TargetActors::TargetInputRelease(float TimeHeld)
 {
-	ZLOG("InputRelease");
+	
 	if (WaitTargetTask->IsActive())
 	{
 		AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 		if (Hero)
 		{
+			
 			Hero->GetAbilitySystemComponent()->TargetConfirm();
 		}
 	}

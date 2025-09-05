@@ -7,6 +7,7 @@
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
 
+class UBaseCharAbilitySystemComponent;
 /**
  * 
  */
@@ -23,4 +24,15 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	EGASTargetConfirmationStyle TargetStyle = EGASTargetConfirmationStyle::Instant;
+
+public:
+	UFUNCTION()
+	void ApplyGameplayEffectToTarget(TSubclassOf<UGameplayEffect> GEToApply,UAbilitySystemComponent* TargetASC,UAbilitySystemComponent* SourceASC);
+
+	UFUNCTION()
+	void ApplyGameplyEffectToSelf(TSubclassOf<UGameplayEffect> GEToApply,UAbilitySystemComponent* SourseASC);
+
+
+	UFUNCTION()
+	UAbilitySystemComponent* GetOwnerASC();
 };
