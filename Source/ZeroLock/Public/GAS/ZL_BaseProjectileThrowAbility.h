@@ -6,6 +6,7 @@
 #include "GAS/BaseGameplayAbility.h"
 #include "ZL_BaseProjectileThrowAbility.generated.h"
 
+class ARealProjectile;
 /**
  * 
  */
@@ -38,6 +39,17 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag ProjectileMissTag;
 
+	// Server spawns real projectile
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnProjectile(FVector const& Location, FRotator const& Rotation,APredictedProjectile* PredProj);
+
+
+
+	UPROPERTY(EditDefaultsOnly, Category="Projectile")
+	TSubclassOf<APredictedProjectile> PredictedProjectileClass;
+
+	UPROPERTY(EditDefaultsOnly, Category="Projectile")
+	TSubclassOf<ARealProjectile> RealProjectileClass;
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	

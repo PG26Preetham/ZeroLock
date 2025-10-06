@@ -6,6 +6,8 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "network/PredictedProjectile.h"
+#include "network/RealProjectile.h"
 #include "Weapon/Zero_BaseProjectile.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
@@ -37,12 +39,16 @@ void UZL_BaseProjectileThrowAbility::FireProjectile()
 			SpawnParameters.Owner = Hero;
 			SpawnParameters.Instigator = Hero->GetInstigator();
 			SpawnParameters.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			AZero_BaseProjectile* proj =GetWorld()->SpawnActor<AZero_BaseProjectile>(ProjectileClass,Location,Rotation,SpawnParameters);
-			if (proj)
+			//if (GetActorInfo().IsLocallyControlled() && PredictedProjectileClass)
+			//{
+			//	PredictedProjectile = GetAvatarActorFromActorInfo()->GetWorld()->SpawnActor<APredictedProjectile>(PredictedProjectileClass,Location,Rotation,SpawnParameters);
+			//	
+			//}
+
+			// 🔹 2. Ask Server to spawn real projectile
+			if (GetActorInfo().IsNetAuthority())
 			{
-				GEngine->AddOnScreenDebugMessage(0, 5.f, FColor::Red, "Fire");
-				proj->SetOwner(Hero);
-				proj->OwnerCharacter = Hero;
+				Server_SpawnProjectile(Location,Rotation,PredictedProjectile);
 			}
 		}
 	}
@@ -59,6 +65,33 @@ void UZL_BaseProjectileThrowAbility::MissOnEventRecived(FGameplayEventData Paylo
 {
 	ZLOG("EventMiss");
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+
+
+
+
+
+void UZL_BaseProjectileThrowAbility::Server_SpawnProjectile_Implementation(FVector const& Location,
+	FRotator const& Rotation, APredictedProjectile* PredProj)
+{
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	if (Hero)
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = Hero;
+		SpawnParameters.Instigator = Hero->GetInstigator();
+		SpawnParameters.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (RealProjectileClass)
+		{
+			ARealProjectile* RealProj = GetWorld()->SpawnActor<ARealProjectile>(RealProjectileClass, Location,Rotation, SpawnParameters);
+			if (RealProj)
+			{
+				RealProj->OwningAbility = this; // store back reference
+				RealProj->OwningPredProj = PredProj;
+			}
+		}
+	}
 }
 
 void UZL_BaseProjectileThrowAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,

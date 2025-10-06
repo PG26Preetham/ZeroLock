@@ -7,6 +7,7 @@
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
 
+class APredictedProjectile;
 class UBaseCharAbilitySystemComponent;
 /**
  * 
@@ -32,7 +33,9 @@ public:
 	UFUNCTION()
 	void ApplyGameplyEffectToSelf(TSubclassOf<UGameplayEffect> GEToApply,UAbilitySystemComponent* SourseASC);
 
-
+	UPROPERTY()
+	APredictedProjectile* PredictedProjectile;
+	
 	UFUNCTION()
 	UAbilitySystemComponent* GetOwnerASC();
 };
