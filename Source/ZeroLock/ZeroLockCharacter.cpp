@@ -367,6 +367,23 @@ void AZeroLockCharacter::HealthChanged(float currentH , float MaxH)
 	}
 }
 
+void AZeroLockCharacter::OnTakeDamage(float currentH)
+{
+	if (DamageRecievedDelegate.IsBound())
+	{
+		DamageRecievedDelegate.Broadcast(currentH);
+	}
+	if (currentH <= 0.0f)
+	{
+		 HandleDeath();
+	}
+}
+
+void AZeroLockCharacter::HandleDeath()
+{
+	//Do death logic and respawn logic
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -502,10 +519,12 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	float currentH= AttributeSet->GetCurrentHealth();
 	float MaxH = AttributeSet->GetMaximumHealth();
 	
+	
 	if (HealthChangeDelegate.IsBound())
 	{
 		HealthChangeDelegate.Broadcast(currentH, MaxH);
 	}
+	OnTakeDamage(currentH);
 }
 
 void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData)

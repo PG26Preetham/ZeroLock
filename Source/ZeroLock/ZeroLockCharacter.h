@@ -21,6 +21,8 @@ struct FInputActionValue;
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealthChangeDelgate,float ,currentHealth,float,MaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStunChanged,bool,IsStunned);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDamageRecievedDelegate,float,currentHealth);
+
 
 UCLASS(config=Game)
 class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
@@ -262,9 +264,18 @@ public:
 	FHealthChangeDelgate AmmoChangeDelegate;
 	UPROPERTY(BlueprintAssignable)
 	FStunChanged StunChangedDelegate;
+	UPROPERTY(BlueprintAssignable)
+	FDamageRecievedDelegate DamageRecievedDelegate;
 public:
 	UFUNCTION()
 	void HealthChanged(float currentH , float MaxH);
+
+	UFUNCTION()
+	void OnTakeDamage(float currentH);
+
+	UFUNCTION()
+	void HandleDeath();
+	
 
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "Animation/melee")
 	UAnimMontage* LightMeleeMontage;
