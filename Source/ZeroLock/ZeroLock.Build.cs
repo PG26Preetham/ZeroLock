@@ -18,7 +18,8 @@ public class ZeroLock : ModuleRules
 			"Paper2D",
 			"AIModule",
 			"NavigationSystem",
-			"UMG"
+			"UMG",
+			"CommonUI"
 		});
 	}
 }

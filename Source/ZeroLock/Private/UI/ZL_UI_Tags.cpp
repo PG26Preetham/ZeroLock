@@ -1,0 +1,10 @@
+﻿#include"UI/ZL_UI_Tags.h"
+
+namespace ZerolockUIGameplayTags
+{
+
+	UE_DEFINE_GAMEPLAY_TAG(TAG_UI_LAYER_GAME, "UI.Layer.Game");
+	UE_DEFINE_GAMEPLAY_TAG(TAG_UI_LAYER_ITEMSHOP, "UI.Layer.Itemshop");
+	UE_DEFINE_GAMEPLAY_TAG(TAG_UI_LAYER_MENU, "UI.Layer.Menu");
+	UE_DEFINE_GAMEPLAY_TAG(TAG_UI_LAYER_POPUP, "UI.Layer.PopUp");
+}
