@@ -9,7 +9,8 @@ public class ZeroEditorModule : ModuleRules
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core", 
+                "ScriptableEditorWidgets"
             }
         );
 
@@ -19,7 +20,12 @@ public class ZeroEditorModule : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore",
+                "ZeroLock",
+                "GameplayAbilities",
+                "Blutility",
+                "UMG",
+                "UMGEditor",
             }
         );
     }

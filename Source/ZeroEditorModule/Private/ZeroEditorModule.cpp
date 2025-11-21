@@ -1,5 +1,6 @@
 ﻿#include "ZeroEditorModule.h"
 #include "LevelEditor.h"
+#include "GAS/BaseGameplayAbility.h"
 
 #define LOCTEXT_NAMESPACE "FZeroEditorModuleModule"
 
@@ -20,6 +21,8 @@ void FZeroEditorModuleModule::StartupModule()
 
 	//adding it in
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
+
+	CreatePropertyTool();
     
 }
 
@@ -40,6 +43,12 @@ void FZeroEditorModuleModule::FillMenu(FMenuBuilder& MenuBuilder)
 			//UE_LOG(LogZeroEditor, Log, TEXT("FZeroEditorModuleModule::FillMenu"));
 		}))
 		);
+}
+
+void FZeroEditorModuleModule::CreatePropertyTool()
+{
+	TArray<UObject*> Abilities;
+	GetObjectsWithOuter(UBaseGameplayAbility::StaticClass(), Abilities, true);
 }
 
 void FZeroEditorModuleModule::ShutdownModule()
