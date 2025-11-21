@@ -13,3 +13,13 @@ void UBaseCharAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& Abilit
 	}
 	
 }
+
+void UBaseCharAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+
+	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
+	{
+		OnNewAbilityAdded.Broadcast(Spec);
+	}
+}

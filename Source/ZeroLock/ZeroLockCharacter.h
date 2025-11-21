@@ -317,6 +317,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void FOVChange(float newFOV,float duration);
 
-	
+
+
+	TMap<EGASAbilityInputID,FGameplayTag> inputTags;
+
+	void InitInputTagsMap();
 };
 

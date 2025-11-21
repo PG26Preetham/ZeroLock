@@ -21,6 +21,7 @@ void AZL_HUDClass::BeginPlay()
 	}
 	if (GetOwningPlayerController())
 	{
+		if (!GetOwningPlayerController()->IsLocalController()) return;
 		RootLayer = Cast<UZL_BaseUILayout>(CreateWidget(GetOwningPlayerController(),BaseUILayer));
 		if (RootLayer)
 		{

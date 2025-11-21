@@ -17,6 +17,7 @@
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
+#include "GAS/ZL_GameplayTags.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
@@ -93,6 +94,8 @@ void AZeroLockCharacter::BeginPlay()
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
+	AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
+		
 	
 }
 
@@ -191,13 +194,14 @@ void AZeroLockCharacter::InitializeAttributes()
 
 void AZeroLockCharacter::NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec)
 {
-	if (HasAuthority()) return;
+	if (!IsLocallyControlled()) return;
+	
 	
 	UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(AbilitySpec.GetPrimaryInstance());
 	EGASAbilityInputID InputID = static_cast<EGASAbilityInputID>(AbilitySpec.InputID);
 	if (Ability)
 	{
-		ZLOG("AbilityLocalBrodcast");
+		
 		AbilitiesArray.Add(FMyAbilityMap(Ability, InputID));
 		BroadcastAbilitiesToUI(Ability,InputID);
 	}
@@ -205,11 +209,8 @@ void AZeroLockCharacter::NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec)
 
 void AZeroLockCharacter::GiveAbilities()
 {
-	if (AbilitySystemComp)
-	{
-		AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
-		
-	}
+	InitInputTagsMap();
+	
 	if (HasAuthority() && AbilitySystemComp)
 	{
 		for (TSubclassOf<UBaseGameplayAbility>& StartupAbility : DefaultAbilities)
@@ -260,16 +261,24 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 		
 		EGASAbilityInputID AbiltyInputID = InputToBindTo;
 		FGameplayAbilitySpecHandle GrantedHandle;
+		FGameplayAbilitySpec GrantedSpec=FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this);
+		if (inputTags.Contains(AbiltyInputID))
+		{
+			GrantedSpec.DynamicAbilityTags.AddTag(inputTags.FindRef(InputToBindTo));
+		}
+		
+		
 		if (AbilityToGrant.GetDefaultObject()->TargetStyle == EGASTargetConfirmationStyle::Passive)
 		{
-			EGASAbilityInputID AbiltyInputIDX = EGASAbilityInputID::None;			
-			GrantedHandle =AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputIDX), this));
+			EGASAbilityInputID AbiltyInputIDX = EGASAbilityInputID::None;
+			GrantedSpec.InputID = static_cast<int32>(AbiltyInputIDX);
+			GrantedHandle =AbilitySystemComp->GiveAbility(GrantedSpec);
 			DefaultAbilitiesHandles.Add(GrantedHandle);
 			GetAbilitySystemComponent()->TryActivateAbilityByClass(AbilityToGrant);
 		}
 		else
 		{
-			GrantedHandle = AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID),this));
+			GrantedHandle = AbilitySystemComp->GiveAbility(GrantedSpec);
 			DefaultAbilitiesHandles.Add(GrantedHandle);
 		}
 		FGameplayAbilitySpec* Spec = GetAbilitySystemComponent()->FindAbilitySpecFromHandle(GrantedHandle);
@@ -429,6 +438,14 @@ void AZeroLockCharacter::OnRep_AbilityUIData()
 	{
 		AddAbilityIconDelegate.Broadcast(unit.Ability,unit.InputID);
 	}
+}
+
+void AZeroLockCharacter::InitInputTagsMap()
+{
+	inputTags.Add(EGASAbilityInputID::Secondry_Attack,ZerolockGameplayTagsForBinding::TAG_INPUT_SECONDRY);
+	inputTags.Add(EGASAbilityInputID::Ability_1,ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1);
+	inputTags.Add(EGASAbilityInputID::Ability_2,ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_2);
+	inputTags.Add(EGASAbilityInputID::Ultimate,ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE);
 }
 
 

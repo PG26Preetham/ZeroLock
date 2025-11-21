@@ -10,7 +10,7 @@
 
 void UZL_HUD_AbilityIcon::Setup(const UBaseGameplayAbility* abilityToBindTo)
 {
-	ZLOG("AbilityIconPrint");
+	
 	if (abilityToBindTo == nullptr) return;
 
 	AbilityToBindTo = abilityToBindTo;

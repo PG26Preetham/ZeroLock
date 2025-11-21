@@ -8,6 +8,7 @@
 #include "ZL_Abilities_Bar.generated.h"
 
 
+class UCommonTextBlock;
 class AZeroLockCharacter;
 class UZL_HUD_AbilityIcon;
 /**
@@ -28,6 +29,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	TObjectPtr<UZL_HUD_AbilityIcon> Ultimate;
 
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	TObjectPtr<UCommonTextBlock> AbilitiesList;
+
 	virtual void NativeOnInitialized() override;
 
 	virtual void NativeOnActivated() override;
@@ -35,15 +39,28 @@ public:
 	virtual void NativePreConstruct() override;
 	
 	TMap<EGASAbilityInputID , UZL_HUD_AbilityIcon*> AbilityIconMap;
+	TMap<FGameplayTag , UZL_HUD_AbilityIcon*> AbilityTagMap;
 
 	UFUNCTION()
 	void GrantIconToAbilities(const UBaseGameplayAbility* AbilitytoAdd,EGASAbilityInputID SlotToAddIn);
+
 	UFUNCTION()
+	void GrantIconToAbilityWithTag(const UBaseGameplayAbility* AbilitytoAdd,FGameplayTag TagToAddTO);
+	UFUNCTION(BlueprintCallable)
 	void GrantIconToAbilitiesX();
+
+	UFUNCTION(BlueprintCallable)
+	void GrantIconToAbilitiesNew1();
+
+	UFUNCTION(BlueprintCallable)
+	void GrantIconToAbilitiesNew2();
 	
 
 
 	AZeroLockCharacter* Hero;
+
+	UFUNCTION()
+	void GrantIconToAbilitiesY(UBaseGameplayAbility* AbilitytoAdd, EGASAbilityInputID SlotToAddIn);
 	UFUNCTION()
 	void AddDelegates();
 

@@ -17,6 +17,9 @@ class ZEROLOCK_API UBaseCharAbilitySystemComponent : public UAbilitySystemCompon
 
 	UFUNCTION()
 	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;
+
+
+	virtual void OnRep_ActivateAbilities() override;
 public:
 	UPROPERTY(BlueprintAssignable)
 	FNewAbilityAddedDelegate OnNewAbilityAdded;
