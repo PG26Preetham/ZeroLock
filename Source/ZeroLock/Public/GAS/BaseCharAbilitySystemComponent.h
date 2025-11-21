@@ -9,9 +9,16 @@
 /**
  * 
  */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNewAbilityAddedDelegate,FGameplayAbilitySpec& ,AbilitySpec);
 UCLASS()
 class ZEROLOCK_API UBaseCharAbilitySystemComponent : public UAbilitySystemComponent
 {
 	GENERATED_BODY()
+
+	UFUNCTION()
+	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;
+public:
+	UPROPERTY(BlueprintAssignable)
+	FNewAbilityAddedDelegate OnNewAbilityAdded;
 	
 };

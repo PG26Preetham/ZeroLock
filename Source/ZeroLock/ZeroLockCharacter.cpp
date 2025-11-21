@@ -2,6 +2,7 @@
 
 #include "ZeroLockCharacter.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -17,6 +18,7 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -91,6 +93,7 @@ void AZeroLockCharacter::BeginPlay()
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
+	
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
@@ -186,8 +189,27 @@ void AZeroLockCharacter::InitializeAttributes()
 	}
 }
 
+void AZeroLockCharacter::NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec)
+{
+	if (HasAuthority()) return;
+	
+	UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(AbilitySpec.GetPrimaryInstance());
+	EGASAbilityInputID InputID = static_cast<EGASAbilityInputID>(AbilitySpec.InputID);
+	if (Ability)
+	{
+		ZLOG("AbilityLocalBrodcast");
+		AbilitiesArray.Add(FMyAbilityMap(Ability, InputID));
+		BroadcastAbilitiesToUI(Ability,InputID);
+	}
+}
+
 void AZeroLockCharacter::GiveAbilities()
 {
+	if (AbilitySystemComp)
+	{
+		AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
+		
+	}
 	if (HasAuthority() && AbilitySystemComp)
 	{
 		for (TSubclassOf<UBaseGameplayAbility>& StartupAbility : DefaultAbilities)
@@ -200,13 +222,15 @@ void AZeroLockCharacter::GiveAbilities()
 			DefaultAbilitiesHandles.Add(
 				AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(PrimaryFireAbility, 1, static_cast<int32>(PrimaryFireAbility.GetDefaultObject()->AbilityInputID), this)));
 		}
-		GrantAbilityOfClassX(SecondryFireAbility,EGASAbilityInputID::Secondry_Attack);
-		GrantAbilityOfClassX(Ability_1,EGASAbilityInputID::Ability_1);
-		GrantAbilityOfClassX(Ability_2,EGASAbilityInputID::Ability_2);
-		GrantAbilityOfClassX(UltimateAbility,EGASAbilityInputID::Ultimate);
+		
+		GrantAbilityOfClassX(SecondryFireAbility,EGASAbilityInputID::Secondry_Attack,true);
+		GrantAbilityOfClassX(Ability_1,EGASAbilityInputID::Ability_1,true);
+		GrantAbilityOfClassX(Ability_2,EGASAbilityInputID::Ability_2,true);
+		GrantAbilityOfClassX(UltimateAbility,EGASAbilityInputID::Ultimate,true);
 		GrantAbilityOfClassX(ReloadAbility,EGASAbilityInputID::Reload);
 		GrantAbilityOfClassX(HeavyMeleeAbility,EGASAbilityInputID::Melee);
 		GrantAbilityOfClassX(ParryAbility,EGASAbilityInputID::Parry);
+
 		
 	}
 	if (HasAuthority() && AbilitySystemComp)
@@ -221,27 +245,42 @@ void AZeroLockCharacter::GiveAbilities()
 	}
 }
 
+void AZeroLockCharacter::BroadcastAbilitiesToUI(UBaseGameplayAbility* Ability , EGASAbilityInputID InputID)
+{	
+		AbilitiesArray.Add(FMyAbilityMap(Ability , InputID));
+}
 
 
 
-void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant,EGASAbilityInputID InputToBindTo)
+
+void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant,EGASAbilityInputID InputToBindTo, bool brodcast)
 {
 	if (AbilityToGrant)
 	{
+		
 		EGASAbilityInputID AbiltyInputID = InputToBindTo;
+		FGameplayAbilitySpecHandle GrantedHandle;
 		if (AbilityToGrant.GetDefaultObject()->TargetStyle == EGASTargetConfirmationStyle::Passive)
 		{
-			AbiltyInputID = EGASAbilityInputID::None;
-			DefaultAbilitiesHandles.Add(
-			AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this)));
+			EGASAbilityInputID AbiltyInputIDX = EGASAbilityInputID::None;			
+			GrantedHandle =AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputIDX), this));
+			DefaultAbilitiesHandles.Add(GrantedHandle);
 			GetAbilitySystemComponent()->TryActivateAbilityByClass(AbilityToGrant);
 		}
 		else
 		{
-			DefaultAbilitiesHandles.Add(
-			AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this)));
+			GrantedHandle = AbilitySystemComp->GiveAbility(FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID),this));
+			DefaultAbilitiesHandles.Add(GrantedHandle);
 		}
+		FGameplayAbilitySpec* Spec = GetAbilitySystemComponent()->FindAbilitySpecFromHandle(GrantedHandle);
+		UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(Spec->Ability);
+		if (Ability)
+		{
+			Ability->SetInputID(InputToBindTo);
+		}
+		
 	}
+	
 }
 
 void AZeroLockCharacter::PossessedBy(AController* NewController)
@@ -382,6 +421,14 @@ void AZeroLockCharacter::OnTakeDamage(float currentH)
 void AZeroLockCharacter::HandleDeath()
 {
 	//Do death logic and respawn logic
+}
+
+void AZeroLockCharacter::OnRep_AbilityUIData()
+{
+	for (FMyAbilityMap unit : AbilitiesArray)
+	{
+		AddAbilityIconDelegate.Broadcast(unit.Ability,unit.InputID);
+	}
 }
 
 

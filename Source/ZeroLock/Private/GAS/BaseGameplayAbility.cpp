@@ -14,8 +14,13 @@ UBaseGameplayAbility::UBaseGameplayAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
+void UBaseGameplayAbility::SetSlot(EGameplayAbilitySlot slot)
+{
+	Slot = slot;
+}
+
 void UBaseGameplayAbility::ApplyGameplayEffectToTarget(TSubclassOf<UGameplayEffect> GEToApply,
-	UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC)
+                                                       UAbilitySystemComponent* TargetASC, UAbilitySystemComponent* SourceASC)
 {
 	if (GEToApply == nullptr || TargetASC == nullptr || SourceASC == nullptr)
 	{
@@ -72,6 +77,11 @@ UAbilitySystemComponent* UBaseGameplayAbility::GetOwnerASC()
 		return Hero->GetAbilitySystemComponent();
 	}
 	return nullptr;
+}
+
+void UBaseGameplayAbility::SetInputID(EGASAbilityInputID in)
+{
+	AbilityInputID=in;
 }
 
 

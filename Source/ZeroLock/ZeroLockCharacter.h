@@ -9,6 +9,7 @@
 #include <GameplayEffectTypes.h>
 #include "GameplayAbilitySpec.h"
 #include "ZeroLock.h"
+#include "GAS/BaseGameplayAbility.h"
 #include "ZeroLockCharacter.generated.h"
 
 //enum class EGASAbilityInputID;
@@ -22,7 +23,19 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealthChangeDelgate,float ,currentHealth,float,MaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStunChanged,bool,IsStunned);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDamageRecievedDelegate,float,currentHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAddAbilityIconDelegate,UBaseGameplayAbility*,AbilitytoAdd,EGASAbilityInputID,slotToAddIn);
 
+USTRUCT()
+struct FMyAbilityMap
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	UBaseGameplayAbility* Ability;
+
+	UPROPERTY()
+	EGASAbilityInputID InputID;
+};
 
 UCLASS(config=Game)
 class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
@@ -185,9 +198,13 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent()const override;
 
 	virtual void InitializeAttributes();
+	UFUNCTION()
+	void NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec);
 	virtual void GiveAbilities();
 
-	void GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant,EGASAbilityInputID InputToBindTo);
+	virtual void BroadcastAbilitiesToUI(UBaseGameplayAbility* Ability , EGASAbilityInputID InputID);
+
+	void GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant,EGASAbilityInputID InputToBindTo,bool brodcast = false);
 
 
 	virtual void PossessedBy(AController* NewController) override;
@@ -266,6 +283,11 @@ public:
 	FStunChanged StunChangedDelegate;
 	UPROPERTY(BlueprintAssignable)
 	FDamageRecievedDelegate DamageRecievedDelegate;
+	UPROPERTY(BlueprintAssignable)
+	FAddAbilityIconDelegate AddAbilityIconDelegate;
+
+	
+	
 public:
 	UFUNCTION()
 	void HealthChanged(float currentH , float MaxH);
@@ -275,8 +297,16 @@ public:
 
 	UFUNCTION()
 	void HandleDeath();
+
 	
 
+	UPROPERTY()
+	TArray<FMyAbilityMap> AbilitiesArray;
+
+
+	UFUNCTION()
+	void OnRep_AbilityUIData();
+	
 	UPROPERTY(BlueprintReadWrite,EditDefaultsOnly, Category = "Animation/melee")
 	UAnimMontage* LightMeleeMontage;
 

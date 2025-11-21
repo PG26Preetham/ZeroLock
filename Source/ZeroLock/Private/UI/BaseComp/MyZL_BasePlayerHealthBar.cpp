@@ -21,5 +21,4 @@ void UMyZL_BasePlayerHealthBar::AddToDelegate()
 void UMyZL_BasePlayerHealthBar::OnBarValueChanged(float NewValue, float MaxValue)
 {
 	Super::OnBarValueChanged(NewValue, MaxValue);
-	ZLOG("HealthChanged");
 }

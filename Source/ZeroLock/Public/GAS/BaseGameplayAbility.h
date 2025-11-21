@@ -7,11 +7,21 @@
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
 
+class UImage;
 class APredictedProjectile;
 class UBaseCharAbilitySystemComponent;
 /**
  * 
  */
+
+UENUM(BlueprintType)
+enum class EGameplayAbilitySlot : uint8
+{
+	AbilitySlot1 UMETA(DisplayName = "Ability Slot 1"),
+	AbilitySlot2 UMETA(DisplayName = "Ability Slot 2"),
+	AbilitySlot3 UMETA(DisplayName = "Ability Slot 3"),
+	UltimateSlot UMETA(DisplayName = "Ultimate Slot "),
+};
 UCLASS()
 class ZEROLOCK_API UBaseGameplayAbility : public UGameplayAbility
 {
@@ -19,6 +29,8 @@ class ZEROLOCK_API UBaseGameplayAbility : public UGameplayAbility
 
 public:
 	UBaseGameplayAbility();
+
+	void SetSlot(EGameplayAbilitySlot slot);
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
 	EGASAbilityInputID AbilityInputID = EGASAbilityInputID::None;
@@ -38,4 +50,22 @@ public:
 	
 	UFUNCTION()
 	UAbilitySystemComponent* GetOwnerASC();
+
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
+	TObjectPtr<UTexture2D> IconImage;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
+	FString AbilityName;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
+	FString AbilityDescription;
+
+
+	UPROPERTY()
+	EGameplayAbilitySlot Slot;
+
+	UFUNCTION()
+	void SetInputID(EGASAbilityInputID in);
+	
 };
