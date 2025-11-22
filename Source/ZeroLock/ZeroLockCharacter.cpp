@@ -174,6 +174,11 @@ class UAbilitySystemComponent* AZeroLockCharacter::GetAbilitySystemComponent() c
 	return AbilitySystemComp;
 }
 
+UBaseCharAbilitySystemComponent* AZeroLockCharacter::GetMyAbilitySystemComp() const
+{
+	return AbilitySystemComp;
+}
+
 void AZeroLockCharacter::InitializeAttributes()
 {
 	

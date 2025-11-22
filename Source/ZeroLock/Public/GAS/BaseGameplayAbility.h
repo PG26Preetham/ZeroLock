@@ -67,5 +67,7 @@ public:
 
 	UFUNCTION()
 	void SetInputID(EGASAbilityInputID in);
+
+	virtual UGameplayEffect* GetCooldownGameplayEffect() const override;
 	
 };

@@ -197,6 +197,8 @@ public:
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent()const override;
 
+	virtual UBaseCharAbilitySystemComponent* GetMyAbilitySystemComp()const;
+
 	virtual void InitializeAttributes();
 	UFUNCTION()
 	void NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec);

@@ -52,6 +52,7 @@ void UZL_GA_Drifter_Teleport::OnInputPressed(float TimeWaited)
 		Hero->SetActorLocation(Villan->GetActorLocation()+ FVector(0,0,200));
 		//Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
 	}
+	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 
 }

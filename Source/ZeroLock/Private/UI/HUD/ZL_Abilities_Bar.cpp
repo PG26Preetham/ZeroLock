@@ -9,6 +9,7 @@
 #include "ZeroLock/ZeroLockCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "CommonTextBlock.h"
+#include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/ZL_GameplayTags.h"
 
 void UZL_Abilities_Bar::NativeOnInitialized()
@@ -16,7 +17,11 @@ void UZL_Abilities_Bar::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	InitMap();
 	AddDelegates();
-	GrantIconToAbilitiesX();
+	if (Hero->HasAuthority())
+	{
+		GrantIconToAbilitiesX();
+	}
+	
 }
 
 void UZL_Abilities_Bar::NativeOnActivated()
@@ -33,18 +38,11 @@ void UZL_Abilities_Bar::NativePreConstruct()
 	
 }
 
-void UZL_Abilities_Bar::GrantIconToAbilities(const UBaseGameplayAbility* AbilitytoAdd, EGASAbilityInputID SlotToAddIn)
-{
-	if (!AbilitytoAdd) return;
-	FString AbilityID=FString::FromInt(static_cast<int32>(AbilitytoAdd->AbilityInputID));
-	UZL_HUD_AbilityIcon* Icon =AbilityIconMap.FindRef(SlotToAddIn);
-	if (Icon)
-	{
-		Icon->Setup(AbilitytoAdd);
-	}
-}
 
-void UZL_Abilities_Bar::GrantIconToAbilityWithTag(const UBaseGameplayAbility* AbilitytoAdd, FGameplayTag TagToAddTO)
+
+
+void UZL_Abilities_Bar::GrantIconToAbilityWithTag(const UBaseGameplayAbility* AbilitytoAdd, FGameplayTag TagToAddTO,
+	FGameplayAbilitySpec* InSpec, FGameplayAbilitySpecHandle InSpecHandle)
 {
 	if (!AbilitytoAdd) return;
 	FString AbilityID=FString::FromInt(static_cast<int32>(AbilitytoAdd->AbilityInputID));
@@ -52,7 +50,7 @@ void UZL_Abilities_Bar::GrantIconToAbilityWithTag(const UBaseGameplayAbility* Ab
 	UZL_HUD_AbilityIcon* Icon =AbilityTagMap.FindRef(TagToAddTO);
 	if (Icon)
 	{
-		Icon->Setup(AbilitytoAdd);
+		Icon->Setup(AbilitytoAdd,InSpec,InSpecHandle);
 	}
 }
 
@@ -74,7 +72,7 @@ void UZL_Abilities_Bar::GrantIconToAbilitiesX()
 			{
 				if (AbilityTagMap.Contains(Tag))
 				{
-					GrantIconToAbilityWithTag(Ability, Tag);
+					GrantIconToAbilityWithTag(Ability, Tag,Spec,AbilitySpecHandle);
 					break;
 				}
 			}
@@ -84,49 +82,24 @@ void UZL_Abilities_Bar::GrantIconToAbilitiesX()
 	AbilitiesList->SetText(FText::FromString(HeroName));
 }
 
-void UZL_Abilities_Bar::GrantIconToAbilitiesNew1()
+void UZL_Abilities_Bar::NewAbilityAdded(FGameplayAbilitySpec& AbilitySpec)
 {
-	FString HeroName = "";
-	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
-	for (FMyAbilityMap abilityMap : Hero->AbilitiesArray)
+	//GrantIconToAbilitiesX();
+	FGameplayAbilitySpec* Spec = &AbilitySpec;
+	FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySpec.Handle;
+	const UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(Spec->Ability);
+	if (Spec && Ability)
 	{
-		UBaseGameplayAbility* Ability = abilityMap.Ability;
-
-		if (Ability)
-		{
-			HeroName += "/ " + Ability->AbilityName;
-			GrantIconToAbilities(Ability,abilityMap.InputID);
-		}
-	}
-}
-
-void UZL_Abilities_Bar::GrantIconToAbilitiesNew2()
-{
-	FString HeroName = "";
-	const TArray<FGameplayAbilitySpec>& AbilitySpecs = Hero->GetAbilitySystemComponent()->GetActivatableAbilities();
-	for (const FGameplayAbilitySpec& Spec : AbilitySpecs)
-	{
-		UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(Spec.GetPrimaryInstance()); // may be nullptr if InstancedPerExecution
-
-		if (Ability)
-		{
-			HeroName += "/ " + Ability->AbilityName;
-			GrantIconToAbilities(Ability,Ability->AbilityInputID);
-		}
 		
+		for (const FGameplayTag& Tag : Spec->GetDynamicSpecSourceTags())
+		{
+			if (AbilityTagMap.Contains(Tag))
+			{
+				GrantIconToAbilityWithTag(Ability, Tag,Spec,AbilitySpecHandle);
+				break;
+			}
+		}
 	}
-}
-
-
-void UZL_Abilities_Bar::GrantIconToAbilitiesY(UBaseGameplayAbility* AbilitytoAdd, EGASAbilityInputID SlotToAddIn)
-{
-	if (!AbilitytoAdd) return;
-	UZL_HUD_AbilityIcon* Icon =AbilityIconMap.FindRef(SlotToAddIn);
-	if (Icon)
-	{
-		Icon->Setup(AbilitytoAdd);
-	}
-	
 }
 
 void UZL_Abilities_Bar::AddDelegates()
@@ -134,7 +107,7 @@ void UZL_Abilities_Bar::AddDelegates()
 	Hero = Cast<AZeroLockCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0));
 	if (Hero)
 	{
-		
+		Hero->GetMyAbilitySystemComp()->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAdded);
 		//Hero->AddAbilityIconDelegate.AddUniqueDynamic(this,&ThisClass::GrantIconToAbilitiesY);
 	}
 	

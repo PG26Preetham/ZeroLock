@@ -84,5 +84,10 @@ void UBaseGameplayAbility::SetInputID(EGASAbilityInputID in)
 	AbilityInputID=in;
 }
 
+UGameplayEffect* UBaseGameplayAbility::GetCooldownGameplayEffect() const
+{
+	return Super::GetCooldownGameplayEffect();
+}
+
 
 

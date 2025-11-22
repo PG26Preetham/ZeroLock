@@ -19,7 +19,9 @@ public class ZeroEditorModule : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore", "ZeroLock","Core","InputCore","GameplayAbilities",
+                "GameplayTags",
+                "GameplayTasks"
             }
         );
     }

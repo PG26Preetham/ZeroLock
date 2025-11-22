@@ -57,8 +57,8 @@ void UZL_BaseProjectileThrowAbility::FireProjectile()
 
 void UZL_BaseProjectileThrowAbility::OnEventRecived(FGameplayEventData Payload)
 {
-	ZLOG("EventRecieved");
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
+	
 }
 
 void UZL_BaseProjectileThrowAbility::MissOnEventRecived(FGameplayEventData Payload)
