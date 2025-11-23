@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ZL_GameplayTags.h"
 #include "Abilities/GameplayAbility.h"
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
@@ -51,6 +52,8 @@ public:
 	UFUNCTION()
 	UAbilitySystemComponent* GetOwnerASC();
 
+	//virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
 	TObjectPtr<UTexture2D> IconImage;
@@ -60,6 +63,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
 	FString AbilityDescription;
+	
+
+	TArray<FGameplayTag> AbilitySlotTags{ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1,ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_2,ZerolockGameplayTagsForBinding::TAG_INPUT_SECONDRY,ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE};
 
 
 	UPROPERTY()
@@ -68,6 +74,19 @@ public:
 	UFUNCTION()
 	void SetInputID(EGASAbilityInputID in);
 
-	virtual UGameplayEffect* GetCooldownGameplayEffect() const override;
+	virtual void ApplyCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const override;
+
+	virtual const FGameplayTagContainer* GetCooldownTags() const override;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Cooldown")
+	FGameplayTagContainer CooldownTags;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Cooldown")
+	FScalableFloat CooldownDuration;
+
+	// Temp container that we will return the pointer to in GetCooldownTags().
+	// This will be a union of our CooldownTags and the Cooldown GE's cooldown tags.
+	UPROPERTY(Transient)
+	FGameplayTagContainer TempCooldownTags;
 	
 };

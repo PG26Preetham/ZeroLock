@@ -23,14 +23,21 @@ class ZEROLOCK_API UZL_HUD_AbilityIcon : public UCommonActivatableWidget
 
 public:
 	void Setup(const UBaseGameplayAbility* abilityToBindTo ,FGameplayAbilitySpec* InSpec , FGameplayAbilitySpecHandle SpecHandle);
+
+
+	void SetCoolDownTextToTextBlock(float intime);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(BindWidget))
 	TObjectPtr<UCommonTextBlock> AbilityName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(BindWidget))
 	TObjectPtr<UCommonTextBlock> AbilityDescription;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(BindWidget))
+	TObjectPtr<UCommonTextBlock> CoolDownTimerText;
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	TObjectPtr<UImage> AbilityIcon;
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	TObjectPtr<UImage> BackgroundIcon;
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr< const UBaseGameplayAbility> AbilityToBindTo;
@@ -40,16 +47,33 @@ public:
 
 	bool alreadyRegstered =false;
 
+
 	
 	FGameplayAbilitySpec* AbilitySpec;
 
+	bool bIsAbilityOnCoolDown =false;
+	float durationOfCooldown =0.0f;
+
 	FGameplayAbilitySpecHandle AbilitySpecHandleToStore;
+
+	float TimeRemaining ;
+	float TotalDuration;
+	float AbilityStartTime;
+
+	const FGameplayTagContainer* AbilityCooldownTags;
 
 protected:
 	virtual void NativeOnInitialized() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	void AbilityActivated(UGameplayAbility* GameplayAbility);
+	void AbilityCooldownStartEvent();
+	void AbilityCooldownEndEvent();
+	void GetAbilityCooldownAndRemaining(float& Duration ,float& timeleft);
+	bool GetCooldownRemainingForTag(float& mTimeRemaining, float& CooldownDuration)const;
 	void OnCooldownTagChanged(FGameplayTag GameplayTag, int I);
 	virtual void AddToDelegate();
+
+	float GetTimeRemaining();
 
 	virtual void AbilityActivatedEvent();
 };

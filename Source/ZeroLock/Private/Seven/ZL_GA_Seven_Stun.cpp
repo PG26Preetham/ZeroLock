@@ -19,7 +19,7 @@ void UZL_GA_Seven_Stun::AbilityConfirmedAction(const FGameplayAbilityTargetDataH
 	
 	if (Data.Num() == 0 || !Data.Get(0))
 	{
-		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
 		return;
 	}
 

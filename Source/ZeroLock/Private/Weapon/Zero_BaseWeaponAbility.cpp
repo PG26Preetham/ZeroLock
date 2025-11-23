@@ -52,7 +52,7 @@ void UZero_BaseWeaponAbility::Fire()
 				proj->SetOwner(Hero);
 				proj->OwnerCharacter = Hero;
 			}
-			CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
+			CommitAbilityCost(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 		}
 	}

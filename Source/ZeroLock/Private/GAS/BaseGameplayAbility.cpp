@@ -3,7 +3,10 @@
 
 #include "GAS/BaseGameplayAbility.h"
 
+#include "GameplayTagsManager.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
+#include "GAS/ZL_GameplayTags.h"
+#include "GAS/ZL_GE_BaseCooldown.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 UBaseGameplayAbility::UBaseGameplayAbility()
@@ -12,6 +15,7 @@ UBaseGameplayAbility::UBaseGameplayAbility()
 	BlockAbilitiesWithTag.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities"),false));
 	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLLock.Abilities"),false));
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	CooldownGameplayEffectClass = UZL_GE_BaseCooldown::StaticClass();
 }
 
 void UBaseGameplayAbility::SetSlot(EGameplayAbilitySlot slot)
@@ -79,15 +83,43 @@ UAbilitySystemComponent* UBaseGameplayAbility::GetOwnerASC()
 	return nullptr;
 }
 
+
+
 void UBaseGameplayAbility::SetInputID(EGASAbilityInputID in)
 {
 	AbilityInputID=in;
 }
 
-UGameplayEffect* UBaseGameplayAbility::GetCooldownGameplayEffect() const
+void UBaseGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
 {
-	return Super::GetCooldownGameplayEffect();
+	UGameplayEffect* CooldownGE = GetCooldownGameplayEffect();
+	if (CooldownGE)
+	{
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
+		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(CooldownTags);
+		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName(  "Ability.Cooldown.Duration" )), CooldownDuration.GetValueAtLevel(GetAbilityLevel()));
+		FActiveGameplayEffectHandle GEHandle=ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
+		if (GEHandle.IsValid())
+		{
+			ZLOG("CustomSetByCaller");
+		}
+	}
 }
+
+const FGameplayTagContainer* UBaseGameplayAbility::GetCooldownTags() const
+{
+	FGameplayTagContainer* MutableTags = const_cast<FGameplayTagContainer*>(&TempCooldownTags);
+	MutableTags->Reset(); // MutableTags writes to the TempCooldownTags on the CDO so clear it in case the ability cooldown tags change (moved to a different slot)
+	const FGameplayTagContainer* ParentTags = Super::GetCooldownTags();
+	if (ParentTags)
+	{
+		MutableTags->AppendTags(*ParentTags);
+	}
+	MutableTags->AppendTags(CooldownTags);
+	return MutableTags;
+}
+
 
 
 

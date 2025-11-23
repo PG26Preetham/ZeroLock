@@ -48,9 +48,15 @@ void UZL_Abilities_Bar::GrantIconToAbilityWithTag(const UBaseGameplayAbility* Ab
 	FString AbilityID=FString::FromInt(static_cast<int32>(AbilitytoAdd->AbilityInputID));
 
 	UZL_HUD_AbilityIcon* Icon =AbilityTagMap.FindRef(TagToAddTO);
+	AbilityTagMap.Remove(TagToAddTO);
+	if (AbilityTagMap.IsEmpty())
+	{
+		Hero->GetMyAbilitySystemComp()->OnNewAbilityAdded.RemoveDynamic(this,&ThisClass::UZL_Abilities_Bar::NewAbilityAdded);
+	}
 	if (Icon)
 	{
 		Icon->Setup(AbilitytoAdd,InSpec,InSpecHandle);
+		//Icon->SetupTag(TagToAddTO);
 	}
 }
 
@@ -125,4 +131,6 @@ void UZL_Abilities_Bar::InitMap()
 	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1,Ability2);
 	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1,Ability3);
 	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE,Ultimate);
+
+	
 }
