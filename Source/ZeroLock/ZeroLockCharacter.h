@@ -199,6 +199,8 @@ public:
 
 	virtual UBaseCharAbilitySystemComponent* GetMyAbilitySystemComp()const;
 
+	virtual UBaseCharAttributeSet* GetMyAttributeSet()const;
+
 	virtual void InitializeAttributes();
 	UFUNCTION()
 	void NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec);
@@ -300,7 +302,15 @@ public:
 	UFUNCTION()
 	void HandleDeath();
 
-	
+	UPROPERTY(Replicated)
+	bool bIsDead = false;
+
+	UFUNCTION()
+	void OnDied(AController* Killer, AController* Victim);
+
+	void ResetCharacter(FVector Location);
+	void PassiveAbilityRestart(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant);
+	void ResetAllAbilities();
 
 	UPROPERTY()
 	TArray<FMyAbilityMap> AbilitiesArray;
@@ -325,4 +335,5 @@ public:
 
 	void InitInputTagsMap();
 };
+
 
