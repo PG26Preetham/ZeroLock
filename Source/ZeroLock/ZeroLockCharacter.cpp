@@ -13,6 +13,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Zero_BasePlayerController.h"
+#include "Gamemode/Zero_BaseGameModeBase.h"
 #include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/BaseCharAttributeSet.h"
@@ -95,7 +97,9 @@ void AZeroLockCharacter::BeginPlay()
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 	AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
-		
+	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);
+
+	
 	
 }
 
@@ -158,20 +162,23 @@ void AZeroLockCharacter::ClearJumpInput(float DeltaTime)
 
 void AZeroLockCharacter::Death()
 {
-	APlayerController* PC = Cast<APlayerController>(GetController());
 	
-		AbilitySystemComp->CancelAllAbilities();
-		
-		if (PC)
-		{
-			DisableInput(PC);
-		}
 	
 }
 
 class UAbilitySystemComponent* AZeroLockCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComp;
+}
+
+UBaseCharAbilitySystemComponent* AZeroLockCharacter::GetMyAbilitySystemComp() const
+{
+	return AbilitySystemComp;
+}
+
+UBaseCharAttributeSet* AZeroLockCharacter::GetMyAttributeSet() const
+{
+	return AttributeSet;
 }
 
 void AZeroLockCharacter::InitializeAttributes()
@@ -335,6 +342,15 @@ void AZeroLockCharacter::PrimaryFireReleased()
 	//GetWorldTimerManager().
 }
 
+bool AZeroLockCharacter::IsAlive()
+{
+	if (AttributeSet)
+	{
+		return AttributeSet->GetCurrentHealth() > 0;
+	}
+	return false;
+}
+
 void AZeroLockCharacter::ChangeFireRate()
 {
 	if (!bIsPrimaryPressed) return;
@@ -421,16 +437,137 @@ void AZeroLockCharacter::OnTakeDamage(float currentH)
 	{
 		DamageRecievedDelegate.Broadcast(currentH);
 	}
-	if (currentH <= 0.0f)
+
+}
+
+void AZeroLockCharacter::AddLastHit(AZeroLockCharacter* Character)
+{
+	if (!IsAlive())return;
+	if (!Character) return;
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	LastHitCharacter = Character;
+
+	if (AssistTimeMap.Contains(Character))
 	{
-		 HandleDeath();
+		AssistTimeMap.Remove(Character);
+		AssistTimeMap.Add(Character,CurrentTime);
+	}
+	if (!AssistListCharacters.Contains(Character))
+	{
+		AssistListCharacters.Add(Character);
+	}
+	ClearAssistList(CurrentTime);
+	
+}
+
+void AZeroLockCharacter::ClearAssistList(float currentTime)
+{
+	TArray<AZeroLockCharacter*> ToRemove;
+
+	for (auto& Pair : AssistTimeMap)
+	{
+		if (currentTime - Pair.Value > AssistWindow)
+		{
+			ToRemove.Add(Pair.Key);
+		}
+	}
+
+	for (AZeroLockCharacter* Entry : ToRemove)
+	{
+		AssistListCharacters.Remove(Entry);
+		AssistTimeMap.Remove(Entry);
+	}
+}
+
+void AZeroLockCharacter::OnDied(AController* Killer, AController* Victim)
+{
+	ZLOG("Death");
+	if (!AbilitySystemComp->GetOwner()->HasAuthority()) return;
+
+	// Cancel abilities
+	AbilitySystemComp->CancelAllAbilities();
+
+	// Remove all buffs/debuffs
+	AbilitySystemComp->RemoveActiveEffectsWithTags(FGameplayTagContainer());
+
+	// notify GameMode
+	if (AZero_BaseGameModeBase* GM = GetWorld()->GetAuthGameMode<AZero_BaseGameModeBase>())
+	{
+		GM->Killed(Killer, Victim);
+	}
+		
+}
+
+
+
+void AZeroLockCharacter::ResetCharacter()
+{
+	
+	ZLOG("ResetCharacter");
+	AZero_BasePlayerController* PC = Cast<AZero_BasePlayerController>(GetController());
+	SetActorLocation(PC->SelectedStartLocation);
+	float Max = AttributeSet->GetMaximumHealth();
+	AttributeSet->SetCurrentHealth(Max);
+
+	
+
+	// Reactivate abilities if needed (passive abilities)
+	AbilitySystemComp->InitAbilityActorInfo(this, this);
+
+	ResetAllAbilities();
+	if (PC) EnableInput(PC);
+	bIsDead = false;
+}
+
+void AZeroLockCharacter::PassiveAbilityRestart(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant)
+{
+	if (!AbilityToGrant) return;
+	if (AbilityToGrant.GetDefaultObject()->TargetStyle == EGASTargetConfirmationStyle::Passive)
+	{
+		AbilitySystemComp->TryActivateAbilityByClass(AbilityToGrant);
+	}
+}
+
+void AZeroLockCharacter::ResetAllAbilities()
+{
+	PassiveAbilityRestart(SecondryFireAbility);
+	PassiveAbilityRestart(Ability_1);
+	PassiveAbilityRestart(Ability_2);
+	PassiveAbilityRestart(UltimateAbility);
+	for (TSubclassOf<UBaseGameplayAbility> ability : DefaultAbilities)
+	{
+		PassiveAbilityRestart(ability);
 	}
 }
 
 void AZeroLockCharacter::HandleDeath()
 {
-	//Do death logic and respawn logic
+	if (bIsDead) return;
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	
+	AbilitySystemComp->CancelAllAbilities();
+	// Remove all buffs/debuffs
+	AbilitySystemComp->RemoveActiveEffectsWithTags(FGameplayTagContainer());
+	bIsDead = true;
+		
+	if (PC)
+	{
+		DisableInput(PC);
+
+		ServerHandleDeath(PC);
+	}
+		
+
 }
+
+void AZeroLockCharacter::ServerHandleDeath_Implementation(APlayerController* PC)
+{
+	if (AZero_BaseGameModeBase* GM = GetWorld()->GetAuthGameMode<AZero_BaseGameModeBase>())
+	{
+		GM->HandlePlayerDeath(this, PC);
+	}
+}
+
 
 void AZeroLockCharacter::OnRep_AbilityUIData()
 {
@@ -525,6 +662,8 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 void AZeroLockCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AZeroLockCharacter,bIsDead);
+	DOREPLIFETIME(AZeroLockCharacter,StartLocation);
 }
 
 void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
@@ -587,6 +726,10 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	if (HealthChangeDelegate.IsBound())
 	{
 		HealthChangeDelegate.Broadcast(currentH, MaxH);
+	}
+	if (currentH <= 0.0f && currentH < MaxH)
+	{
+		//HandleDeath();
 	}
 	OnTakeDamage(currentH);
 }

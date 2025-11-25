@@ -5,6 +5,7 @@
 
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Chaos/Deformable/MuscleActivationConstraints.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "ZeroLock/ZeroLockCharacter.h"
@@ -39,31 +40,72 @@ void UBaseCharAttributeSet::PreAttributeChange(const FGameplayAttribute & Attrib
 void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData & Data)
 {
 	Super::PostGameplayEffectExecute(Data);
-	//AZeroLockCharacter* TargetChar = Cast<AZeroLockCharacter>(GetOwningActor());
 	
-	
+	FGameplayEffectContextHandle Context = Data.EffectSpec.GetContext();
+	UAbilitySystemComponent* Source = Context.GetOriginalInstigatorAbilitySystemComponent();
+	const FGameplayTagContainer& SourceTags = *Data.EffectSpec.CapturedSourceTags.GetAggregatedTags();
+	FGameplayTagContainer SpecAssetTags;
+	Data.EffectSpec.GetAllAssetTags(SpecAssetTags);
 
-	
+	// Get the Target actor, which should be our owner
+	AActor* TargetActor = nullptr;
+	AController* TargetController = nullptr;
+	AZeroLockCharacter* TargetCharacter = nullptr;
+	if (Data.Target.AbilityActorInfo.IsValid() && Data.Target.AbilityActorInfo->AvatarActor.IsValid())
+	{
+		TargetActor = Data.Target.AbilityActorInfo->AvatarActor.Get();
+		TargetController = Data.Target.AbilityActorInfo->PlayerController.Get();
+		TargetCharacter = Cast<AZeroLockCharacter>(TargetActor);
+	}
+
+	// Get the Source actor
+	AActor* SourceActor = nullptr;
+	AController* SourceController = nullptr;
+	AZeroLockCharacter* SourceCharacter = nullptr;
+	if (Source && Source->AbilityActorInfo.IsValid() && Source->AbilityActorInfo->AvatarActor.IsValid())
+	{
+		SourceActor = Source->AbilityActorInfo->AvatarActor.Get();
+		SourceController = Source->AbilityActorInfo->PlayerController.Get();
+		if (SourceController == nullptr && SourceActor != nullptr)
+		{
+			if (APawn* Pawn = Cast<APawn>(SourceActor))
+			{
+				SourceController = Pawn->GetController();
+			}
+		}
+
+		// Use the controller to find the source pawn
+		if (SourceController)
+		{
+			SourceCharacter = Cast<AZeroLockCharacter>(SourceController->GetPawn());
+		}
+		else
+		{
+			SourceCharacter = Cast<AZeroLockCharacter>(SourceActor);
+		}
+	}
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
-		
-		// Store a local copy of the amount of Damage done and clear the Damage attribute.
 		const float LocalDamageDone = GetDamage();
-
-		//FString TheFloatStr = "Dam=" + FString::SanitizeFloat(LocalDamageDone);
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0, FColor::Blue, *TheFloatStr);
-
 		SetDamage(0.f);
-
 		if (LocalDamageDone > 0.0f)
 		{
-			const float NewHealth = GetCurrentHealth() - LocalDamageDone;
-			SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));
-		//	TargetCharacter->HealthChanged(GetCurrentHealth(),GetMaximumHealth());
-		
-			if (GetCurrentHealth() <= 0)
+			bool wasAlive = true;
+			if (TargetCharacter)
 			{
-				//TargetCharacter->Death();
+				wasAlive = TargetCharacter->IsAlive();
+			}
+			const float NewHealth = GetCurrentHealth() - LocalDamageDone;
+			SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));		
+			if (wasAlive && TargetCharacter)
+			{
+				TargetCharacter->AddLastHit(SourceCharacter);
+				if (!TargetCharacter->IsAlive())
+				{
+					//TargetDeath
+					TargetCharacter->HandleDeath();
+				}
+				
 			}
 		}
 	}

@@ -6,6 +6,7 @@
 // Helper Macros
 #if 1
 #define ZLOG(x) GEngine->AddOnScreenDebugMessage(-1, 2.f ? 2.f : -1.f, FColor::Yellow, x);
+#define ZLOG_COLOR_TIME(x,c,t) GEngine->AddOnScreenDebugMessage(-1,t,c,x);
 #define ZPOINT(x, c) DrawDebugPoint(GetWorld(), x, 10, c, !2.f, 2.f);
 #define ZLINE(x1, x2, c) DrawDebugLine(GetWorld(), x1, x2, c, !2.f, 2.f);
 #define ZCAPSULE(x, c) DrawDebugCapsule(GetWorld(), x, CapHH(), CapR(), FQuat::Identity, c, !MacroDuration, MacroDuration);

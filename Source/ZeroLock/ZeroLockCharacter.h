@@ -197,6 +197,10 @@ public:
 	
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent()const override;
 
+	virtual UBaseCharAbilitySystemComponent* GetMyAbilitySystemComp()const;
+
+	virtual UBaseCharAttributeSet* GetMyAttributeSet()const;
+
 	virtual void InitializeAttributes();
 	UFUNCTION()
 	void NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec);
@@ -214,6 +218,9 @@ public:
 	void PrimaryFirePressed();
 	void PrimaryFireReleased();
 	float TimeOfLastShot;
+
+	UFUNCTION(BlueprintCallable)
+	bool IsAlive();
 
 	void ChangeFireRate();
 
@@ -298,7 +305,37 @@ public:
 	UFUNCTION()
 	void HandleDeath();
 
+	UFUNCTION(Server, Reliable)
+	void ServerHandleDeath(APlayerController* PC);
 	
+	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	AZeroLockCharacter* LastHitCharacter;
+
+	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	TArray<TObjectPtr<AZeroLockCharacter>> AssistListCharacters;
+
+	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	TMap<AZeroLockCharacter*, float> AssistTimeMap;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Assist")
+	float AssistWindow = 10.f;
+
+	FTimerHandle AssistWindowTimerHandle;
+
+	void AddLastHit(AZeroLockCharacter* Character);
+	void ClearAssistList(float currentTime);
+
+	UPROPERTY(Replicated)
+	bool bIsDead = false;
+
+	UFUNCTION()
+	void OnDied(AController* Killer, AController* Victim);
+
+	void ResetCharacter();
+	void PassiveAbilityRestart(TSubclassOf<class UBaseGameplayAbility> AbilityToGrant);
+	void ResetAllAbilities();
+
+	UPROPERTY(Replicated)
+	FVector StartLocation;
 
 	UPROPERTY()
 	TArray<FMyAbilityMap> AbilitiesArray;
@@ -323,4 +360,5 @@ public:
 
 	void InitInputTagsMap();
 };
+
 

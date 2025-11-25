@@ -8,6 +8,7 @@
 #include "ZL_Abilities_Bar.generated.h"
 
 
+struct FGameplayAbilitySpec;
 class UCommonTextBlock;
 class AZeroLockCharacter;
 class UZL_HUD_AbilityIcon;
@@ -41,26 +42,19 @@ public:
 	TMap<EGASAbilityInputID , UZL_HUD_AbilityIcon*> AbilityIconMap;
 	TMap<FGameplayTag , UZL_HUD_AbilityIcon*> AbilityTagMap;
 
-	UFUNCTION()
-	void GrantIconToAbilities(const UBaseGameplayAbility* AbilitytoAdd,EGASAbilityInputID SlotToAddIn);
-
-	UFUNCTION()
-	void GrantIconToAbilityWithTag(const UBaseGameplayAbility* AbilitytoAdd,FGameplayTag TagToAddTO);
+	
+	void GrantIconToAbilityWithTag(const UBaseGameplayAbility* AbilitytoAdd,FGameplayTag TagToAddTO,FGameplayAbilitySpec* InSpec , FGameplayAbilitySpecHandle InSpecHandle);
 	UFUNCTION(BlueprintCallable)
 	void GrantIconToAbilitiesX();
 
-	UFUNCTION(BlueprintCallable)
-	void GrantIconToAbilitiesNew1();
-
-	UFUNCTION(BlueprintCallable)
-	void GrantIconToAbilitiesNew2();
 	
 
 
+	UPROPERTY()
 	AZeroLockCharacter* Hero;
 
 	UFUNCTION()
-	void GrantIconToAbilitiesY(UBaseGameplayAbility* AbilitytoAdd, EGASAbilityInputID SlotToAddIn);
+	void NewAbilityAdded(FGameplayAbilitySpec& AbilitySpec);
 	UFUNCTION()
 	void AddDelegates();
 

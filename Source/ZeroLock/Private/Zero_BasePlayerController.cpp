@@ -3,3 +3,44 @@
 
 #include "Zero_BasePlayerController.h"
 
+#include "Zero_BasePlayerState.h"
+#include "Net/UnrealNetwork.h"
+
+void AZero_BasePlayerController::ServerSetSelectedHero_Implementation(TSubclassOf<AZeroLockCharacter> HeroClass)
+{
+	SelectedHeroClass = HeroClass;
+}
+
+void AZero_BasePlayerController::ClientSelectHero(TSubclassOf<AZeroLockCharacter> HeroClass)
+{
+	ServerSetSelectedHero(HeroClass);
+}
+
+void AZero_BasePlayerController::ServerSetStartLocation_Implementation(FVector loc)
+{
+	SelectedStartLocation = loc;
+}
+
+void AZero_BasePlayerController::ClientSetStartLocation(FVector loc)
+{
+	ServerSetStartLocation(loc);
+}
+
+void AZero_BasePlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+	AZero_BasePlayerState* PS = Cast<AZero_BasePlayerState>(PlayerState);
+	if (!PS) return;
+
+	if (OnPSInit.IsBound())
+	{
+		OnPSInit.Broadcast(PS);	
+	}
+}
+
+void AZero_BasePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AZero_BasePlayerController,SelectedHeroClass);
+	DOREPLIFETIME(AZero_BasePlayerController,SelectedStartLocation);
+}

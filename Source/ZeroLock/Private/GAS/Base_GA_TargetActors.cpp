@@ -19,6 +19,7 @@ UBase_GA_TargetActors::UBase_GA_TargetActors()
 void UBase_GA_TargetActors::TargetConfirmed(const FGameplayAbilityTargetDataHandle& Data)
 {
 	ZLOG("TargetConfirmed");
+	CommitAbility(CurrentSpecHandle,CurrentActorInfo,CurrentActivationInfo);
 	AbilityConfirmedAction(Data);
 }
 
