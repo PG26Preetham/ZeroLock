@@ -16,4 +16,6 @@ void AZero_BaseGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AZero_BaseGameState, TeamRedScore);
 	DOREPLIFETIME(AZero_BaseGameState, TeamBlueScore);
+	DOREPLIFETIME(AZero_BaseGameState, TeamRedArray);
+	DOREPLIFETIME(AZero_BaseGameState, TeamBlueArray);
 }

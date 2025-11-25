@@ -6,6 +6,7 @@
 #include "GameFramework/GameState.h"
 #include "Zero_BaseGameState.generated.h"
 
+class AZero_BasePlayerState;
 /**
  * 
  */
@@ -23,6 +24,13 @@ public:
 	int32 TeamBlueScore = 0;
 
 	void AddKill(int32 TeamID);
+
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	TArray<AZero_BasePlayerState*> TeamRedArray;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
+	TArray<AZero_BasePlayerState*> TeamBlueArray;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

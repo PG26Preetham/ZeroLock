@@ -16,9 +16,9 @@ class ZEROLOCK_API AZero_BaseGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-
 	AZero_BaseGameModeBase();
 
+	/** Hero selection */
 	UPROPERTY(EditDefaultsOnly, Category="Heroes")
 	TSubclassOf<AZeroLockCharacter> DefaultHeroClass;
 
@@ -27,12 +27,13 @@ public:
 	virtual APawn* SpawnDefaultPawnFor_Implementation(AController* NewPlayer, AActor* StartSpot) override;
 
 	// Death + Respawn
-	void HandlePlayerDeath(APawn* DeadPawn, AController* DeadController);
-	void RespawnPlayer(AZeroLockCharacter* RespawnHero);
+	void HandlePlayerDeath(AZeroLockCharacter* DeadPawn, AController* DeadController);
+	void RespawnPlayer(AController* Controller); // changed to accept Controller (safe)
 
 private:
 	void AssignTeam(class AZero_BasePlayerState* PS);
-	APawn* SpawnPawnDefault(TSubclassOf<APawn> PawnClass, AController* Controller, AActor* StartSpot);
+	APawn* SpawnPawnDefault(TSubclassOf<AZeroLockCharacter> PawnClass, AController* Controller, AActor* StartSpot);
+
 
 public:
 	void Killed(AController* Killer, AController* Victim);

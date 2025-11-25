@@ -13,6 +13,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Zero_BasePlayerController.h"
 #include "Gamemode/Zero_BaseGameModeBase.h"
 #include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
@@ -97,7 +98,8 @@ void AZeroLockCharacter::BeginPlay()
 	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 	AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
 	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);
-		
+
+	
 	
 }
 
@@ -340,6 +342,15 @@ void AZeroLockCharacter::PrimaryFireReleased()
 	//GetWorldTimerManager().
 }
 
+bool AZeroLockCharacter::IsAlive()
+{
+	if (AttributeSet)
+	{
+		return AttributeSet->GetCurrentHealth() > 0;
+	}
+	return false;
+}
+
 void AZeroLockCharacter::ChangeFireRate()
 {
 	if (!bIsPrimaryPressed) return;
@@ -428,6 +439,46 @@ void AZeroLockCharacter::OnTakeDamage(float currentH)
 	}
 
 }
+
+void AZeroLockCharacter::AddLastHit(AZeroLockCharacter* Character)
+{
+	if (!IsAlive())return;
+	if (!Character) return;
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	LastHitCharacter = Character;
+
+	if (AssistTimeMap.Contains(Character))
+	{
+		AssistTimeMap.Remove(Character);
+		AssistTimeMap.Add(Character,CurrentTime);
+	}
+	if (!AssistListCharacters.Contains(Character))
+	{
+		AssistListCharacters.Add(Character);
+	}
+	ClearAssistList(CurrentTime);
+	
+}
+
+void AZeroLockCharacter::ClearAssistList(float currentTime)
+{
+	TArray<AZeroLockCharacter*> ToRemove;
+
+	for (auto& Pair : AssistTimeMap)
+	{
+		if (currentTime - Pair.Value > AssistWindow)
+		{
+			ToRemove.Add(Pair.Key);
+		}
+	}
+
+	for (AZeroLockCharacter* Entry : ToRemove)
+	{
+		AssistListCharacters.Remove(Entry);
+		AssistTimeMap.Remove(Entry);
+	}
+}
+
 void AZeroLockCharacter::OnDied(AController* Killer, AController* Victim)
 {
 	ZLOG("Death");
@@ -449,12 +500,12 @@ void AZeroLockCharacter::OnDied(AController* Killer, AController* Victim)
 
 
 
-void AZeroLockCharacter::ResetCharacter(FVector Location)
+void AZeroLockCharacter::ResetCharacter()
 {
 	
 	ZLOG("ResetCharacter");
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	SetActorLocation(Location);
+	AZero_BasePlayerController* PC = Cast<AZero_BasePlayerController>(GetController());
+	SetActorLocation(PC->SelectedStartLocation);
 	float Max = AttributeSet->GetMaximumHealth();
 	AttributeSet->SetCurrentHealth(Max);
 
@@ -501,17 +552,22 @@ void AZeroLockCharacter::HandleDeath()
 		
 	if (PC)
 	{
-		//ZLOG("Death");
 		DisableInput(PC);
-		if (HasAuthority())
-		{
-			if (AZero_BaseGameModeBase* GM = GetWorld()->GetAuthGameMode<AZero_BaseGameModeBase>())
-			{
-				GM->HandlePlayerDeath(this, PC);
-			}
-		}
+
+		ServerHandleDeath(PC);
+	}
+		
+
+}
+
+void AZeroLockCharacter::ServerHandleDeath_Implementation(APlayerController* PC)
+{
+	if (AZero_BaseGameModeBase* GM = GetWorld()->GetAuthGameMode<AZero_BaseGameModeBase>())
+	{
+		GM->HandlePlayerDeath(this, PC);
 	}
 }
+
 
 void AZeroLockCharacter::OnRep_AbilityUIData()
 {
@@ -607,6 +663,7 @@ void AZeroLockCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AZeroLockCharacter,bIsDead);
+	DOREPLIFETIME(AZeroLockCharacter,StartLocation);
 }
 
 void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
@@ -672,7 +729,7 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	}
 	if (currentH <= 0.0f && currentH < MaxH)
 	{
-		HandleDeath();
+		//HandleDeath();
 	}
 	OnTakeDamage(currentH);
 }

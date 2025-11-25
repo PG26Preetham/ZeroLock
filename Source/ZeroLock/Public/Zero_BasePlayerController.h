@@ -6,7 +6,11 @@
 #include "GameFramework/PlayerController.h"
 #include "Zero_BasePlayerController.generated.h"
 
+
+class AZero_BasePlayerState;
 class AZeroLockCharacter;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerStateChanged, AZero_BasePlayerState*, PS);
 /**
  * 
  */
@@ -19,11 +23,23 @@ public:
 
 	UPROPERTY(Replicated)
 	TSubclassOf<AZeroLockCharacter> SelectedHeroClass;
+	UPROPERTY(Replicated)
+	FVector SelectedStartLocation;
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetSelectedHero(TSubclassOf<AZeroLockCharacter> HeroClass);
 
 	void ClientSelectHero(TSubclassOf<AZeroLockCharacter> HeroClass);
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetStartLocation(FVector loc);
+
+	void ClientSetStartLocation(FVector loc);
+
+	virtual void OnRep_PlayerState() override;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerStateChanged OnPSInit;
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

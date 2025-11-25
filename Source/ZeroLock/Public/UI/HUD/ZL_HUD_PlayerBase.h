@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_HUD_PlayerBase.generated.h"
 
+class UZL_Abilities_Bar;
 class UMyZL_BasePlayerHealthBar;
 class UZL_HUD_CrosshairBase;
 class UCommonActivatableWidgetSwitcher;
@@ -27,6 +28,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category="HealthBar", meta=(BindWidget))
 	TObjectPtr<UMyZL_BasePlayerHealthBar> HealthBar;
+
+	UPROPERTY(BlueprintReadOnly, Category="AbilityBar", meta=(BindWidget))
+	TObjectPtr<UZL_Abilities_Bar> AbilityBar;
 
 
 	UFUNCTION()
