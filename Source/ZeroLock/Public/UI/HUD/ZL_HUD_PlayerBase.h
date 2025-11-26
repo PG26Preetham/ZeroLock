@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_HUD_PlayerBase.generated.h"
 
+class UZL_HUD_Weapon;
 class UZL_Abilities_Bar;
 class UMyZL_BasePlayerHealthBar;
 class UZL_HUD_CrosshairBase;
@@ -31,6 +32,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category="AbilityBar", meta=(BindWidget))
 	TObjectPtr<UZL_Abilities_Bar> AbilityBar;
+
+	UPROPERTY(BlueprintReadOnly, Category="WeaponBar", meta=(BindWidget))
+	TObjectPtr<UZL_HUD_Weapon> WeaponBar;
 
 
 	UFUNCTION()

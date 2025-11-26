@@ -506,8 +506,17 @@ void AZeroLockCharacter::ResetCharacter()
 	ZLOG("ResetCharacter");
 	AZero_BasePlayerController* PC = Cast<AZero_BasePlayerController>(GetController());
 	SetActorLocation(PC->SelectedStartLocation);
-	float Max = AttributeSet->GetMaximumHealth();
-	AttributeSet->SetCurrentHealth(Max);
+
+	if (!AbilitySystemComp->GetOwner()->HasAuthority()) return;
+
+	// Cancel abilities
+	AbilitySystemComp->CancelAllAbilities();
+
+	// Remove all buffs/debuffs
+	AbilitySystemComp->RemoveActiveEffectsWithTags(FGameplayTagContainer());
+	AbilitySystemComp->RemoveActiveEffects(FGameplayEffectQuery()); 
+
+	
 
 	
 
@@ -515,6 +524,9 @@ void AZeroLockCharacter::ResetCharacter()
 	AbilitySystemComp->InitAbilityActorInfo(this, this);
 
 	ResetAllAbilities();
+
+	float Max = AttributeSet->GetMaximumHealth();
+	AttributeSet->SetCurrentHealth(Max);
 	if (PC) EnableInput(PC);
 	bIsDead = false;
 }

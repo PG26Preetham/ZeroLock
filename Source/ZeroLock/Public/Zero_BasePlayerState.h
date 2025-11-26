@@ -4,9 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "ZeroLock/ZeroLock.h"
 #include "Zero_BasePlayerState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatChanged,int32,newStatValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamChanged,ETeamID,newStatValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerIconChanged,UTexture2D*,Playerimage);
 /**
  * 
  */
@@ -30,15 +33,24 @@ public:
 
 
 	UPROPERTY(ReplicatedUsing = OnRep_TeamID, BlueprintReadOnly)
-	int32 TeamID = -1;
+	ETeamID TeamID = ETeamID::TeamNull;
 
 
 	// TEAM SETTER (SERVER ONLY)
-	void SetTeamID(int32 NewTeamID);
+	void SetTeamID(ETeamID id_team);
 	
 	void AddKill();
 	void AddDeath();
 	void AddAssist();
+
+	// Replicated image/icon (can be UTexture2D, UMaterial, etc.)
+	UPROPERTY(ReplicatedUsing=OnRep_PlayerImage, BlueprintReadOnly)
+	UTexture2D* PlayerImage;
+
+	// Update the image on the server
+	UFUNCTION(BlueprintCallable)
+	void SetPlayerIconImage(UTexture2D* NewImage);
+	
 
 
 public:
@@ -49,7 +61,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStatChanged OnDeathsChanged;
 	UPROPERTY(BlueprintAssignable)
-	FOnStatChanged OnTeamChanged;
+	FOnTeamChanged OnTeamChanged;
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayerIconChanged OnPlayerIconChanged;
 
 protected:
 
@@ -64,6 +78,9 @@ protected:
 
 	UFUNCTION()
 	void OnRep_TeamID();
+
+	UFUNCTION()
+	void OnRep_PlayerImage();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 

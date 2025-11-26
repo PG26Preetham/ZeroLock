@@ -5,6 +5,7 @@
 
 #include "Zero_BasePlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "ZeroLock/ZeroLockCharacter.h"
 
 void AZero_BasePlayerController::ServerSetSelectedHero_Implementation(TSubclassOf<AZeroLockCharacter> HeroClass)
 {
@@ -36,6 +37,22 @@ void AZero_BasePlayerController::OnRep_PlayerState()
 	{
 		OnPSInit.Broadcast(PS);	
 	}
+}
+
+void AZero_BasePlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	if (AZero_BasePlayerState* PS = Cast<AZero_BasePlayerState>(PlayerState))
+	{
+		if (AZeroLockCharacter* hero = Cast<AZeroLockCharacter>(InPawn))
+		{
+			if (hero->Icon)
+			{
+				PS->SetPlayerIconImage(hero->Icon);
+			}
+		}
+	}
+	
 }
 
 void AZero_BasePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

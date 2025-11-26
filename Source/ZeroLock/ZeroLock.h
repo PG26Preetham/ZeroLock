@@ -40,3 +40,11 @@ enum class EGASTargetConfirmationStyle : uint8
 	Confirm,
 	Passive
 };
+
+UENUM(BlueprintType)
+enum class ETeamID : uint8
+{
+	TeamNull = 0,
+	TeamBlue,
+	TeamRed
+};
