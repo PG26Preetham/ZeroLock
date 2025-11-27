@@ -35,7 +35,7 @@ void AZeroSoul::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPr
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("Pepelaugh"));
+	//UE_LOG(LogTemp, Warning, TEXT("Pepelaugh"));
 	
 }
 

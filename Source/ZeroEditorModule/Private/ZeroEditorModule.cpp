@@ -35,48 +35,47 @@ void FZeroEditorModuleModule::AddMenu(FMenuBarBuilder& MenuBarBuilder)
 
 void FZeroEditorModuleModule::FillMenu(FMenuBuilder& MenuBuilder)
 {
-	MenuBuilder.AddMenuEntry(FText::FromString("BaseAbilityList"),
-		FText::FromString("Base Ability List"),
-		FSlateIcon(),
-		FUIAction(FExecuteAction::CreateRaw(this,&FZeroEditorModuleModule::PrintAllAbilities)));
+	// MenuBuilder.AddMenuEntry(FText::FromString("BaseAbilityList"),
+	// 	FText::FromString("Base Ability List"),
+	// 	FSlateIcon(),
+	// 	FUIAction(FExecuteAction::CreateRaw(this,&FZeroEditorModuleModule::PrintAllAbilities)));
 }
 
-void FZeroEditorModuleModule::PrintAllAbilities()
-{
-	TArray<UClass*> foundClasses;
-
-		for (TObjectIterator<UClass> classIterator; classIterator; ++classIterator)
-		{
-			UClass* Class = *classIterator;
-
-			if (Class && Class->IsChildOf(UBaseGameplayAbility::StaticClass()) && Class != UBaseGameplayAbility::StaticClass())
-			{
-				foundClasses.Add(Class);
-			}
-		}
-    
-		for (UClass* Class : foundClasses)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Found Class: %s"), *Class->GetName());
-			// Iterate through properties using TFieldIterator
-			for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
-			{
-				FProperty* Property = *PropertyIt;
-        
-				FString PropertyName = Property->GetName();
-				FString PropertyTypeName = Property->GetClass()->GetName();
-        
-				UE_LOG(LogTemp, Log, TEXT("Property: %s, Type: %s"), *PropertyName, *PropertyTypeName);
-            
-				// Get more detailed information
-				//UE_LOG(LogTemp, Log, TEXT("  - CPP Type: %s"), *Property->GetCPPType());
-				//UE_LOG(LogTemp, Log, TEXT("  - Size: %d bytes"), Property->GetSize());
-				//UE_LOG(LogTemp, Log, TEXT("  - Offset: %d"), Property->GetOffset_ForInternal());
-				//UE_LOG(LogTemp, Log, TEXT("  - Array Dim: %d"), Property->ArrayDim);
-			}
-		}
-
-}
+// void FZeroEditorModuleModule::PrintAllAbilities()
+// {
+// 	TArray<UClass*> foundClasses;
+// 		for (TObjectIterator<UClass> classIterator; classIterator; ++classIterator)
+// 		{
+// 			UClass* Class = *classIterator;
+//
+// 			if (Class && Class->IsChildOf(UBaseGameplayAbility::StaticClass()) && Class != UBaseGameplayAbility::StaticClass())
+// 			{
+// 				foundClasses.Add(Class);
+// 			}
+// 		}
+//     
+// 		for (UClass* Class : foundClasses)
+// 		{
+// 			UE_LOG(LogTemp, Warning, TEXT("Found Class: %s"), *Class->GetName());
+// 			// Iterate through properties using TFieldIterator
+// 			for (TFieldIterator<FProperty> PropertyIt(Class); PropertyIt; ++PropertyIt)
+// 			{
+// 				FProperty* Property = *PropertyIt;
+//         
+// 				FString PropertyName = Property->GetName();
+// 				FString PropertyTypeName = Property->GetClass()->GetName();
+//         
+// 				UE_LOG(LogTemp, Log, TEXT("Property: %s, Type: %s"), *PropertyName, *PropertyTypeName);
+//             
+// 				// Get more detailed information
+// 				//UE_LOG(LogTemp, Log, TEXT("  - CPP Type: %s"), *Property->GetCPPType());
+// 				//UE_LOG(LogTemp, Log, TEXT("  - Size: %d bytes"), Property->GetSize());
+// 				//UE_LOG(LogTemp, Log, TEXT("  - Offset: %d"), Property->GetOffset_ForInternal());
+// 				//UE_LOG(LogTemp, Log, TEXT("  - Array Dim: %d"), Property->ArrayDim);
+// 			}
+// 		}
+//
+// }
 
 void FZeroEditorModuleModule::CreatePropertyTool()
 {
