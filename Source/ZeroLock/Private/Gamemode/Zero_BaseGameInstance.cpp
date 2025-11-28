@@ -74,6 +74,8 @@ void UZero_BaseGameInstance::HandleLoginCompleted(int32 LocalUserNum, bool bWasS
 	{
 		ZLOG_COLOR_TIME("Login callback completed!",FColor::Emerald,30);
 		UE_LOG(LogTemp, Log, TEXT("Login callback completed!"));;
+		
+		
 		InitSessionsDelegates();
 	}
 	else //Login failed
@@ -89,7 +91,7 @@ void UZero_BaseGameInstance::HandleLoginCompleted(int32 LocalUserNum, bool bWasS
 void UZero_BaseGameInstance::Init()
 {
 	Super::Init();
-	Login();
+	//Login();
 	//InitSessionsDelegates();
 }
 
@@ -140,7 +142,42 @@ void UZero_BaseGameInstance::HostSession(const FString& SessionName, int32 MaxPl
 
     Settings.Set(FName("SESSION_NAME"), SessionName, EOnlineDataAdvertisementType::ViaOnlineService);
 
-    SessionInterface->CreateSession(0, NAME_GameSession, Settings);
+    SessionInterface->CreateSession(0, FName("Preetham"), Settings);
+}
+
+
+void UZero_BaseGameInstance::CreateLobby(FName KeyName, FString KeyValue) 
+{
+   // Tutorial 7: Create lobby - this code is similar to creating session, notice that bIsDedicated is false, bUseLobbiesIfAvailable and UseLobbiesVoiceChatIfAvailable is true
+ 
+    IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
+ 
+    CreateLobbyDelegateHandle =
+        Session->AddOnCreateSessionCompleteDelegate_Handle(FOnCreateSessionCompleteDelegate::CreateUObject(
+            this,
+            &ThisClass::OnCreateSessionComplete));
+ 
+    TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
+    SessionSettings->NumPublicConnections = 2; //We will test our sessions with 2 players to keep things simple
+    SessionSettings->bShouldAdvertise = true; //This creates a public match and will be searchable.
+    SessionSettings->bUsesPresence = false;   //No presence on dedicated server. This requires a local user.
+    SessionSettings->bAllowJoinViaPresence = false;
+    SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
+    SessionSettings->bAllowInvites = false;    //Allow inviting players into session. This requires presence and a local user. 
+    SessionSettings->bAllowJoinInProgress = false; //Once the session is started, no one can join.
+    SessionSettings->bIsDedicated = false; //Session created on dedicated server.
+    SessionSettings->bUseLobbiesIfAvailable = true; //For P2P we will use a lobby instead of a session
+    SessionSettings->bUseLobbiesVoiceChatIfAvailable = true; //We will also enable voice
+    SessionSettings->bUsesStats = true; //Needed to keep track of player stats.
+    SessionSettings->Settings.Add(KeyName, FOnlineSessionSetting((KeyValue), EOnlineDataAdvertisementType::ViaOnlineService));
+ 
+    UE_LOG(LogTemp, Log, TEXT("Creating Lobby..."));
+ 
+    if (!Session->CreateSession(0,FName("Preetham"), *SessionSettings))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to create Lobby!"));
+    }
 }
 
 void UZero_BaseGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -151,15 +188,16 @@ void UZero_BaseGameInstance::OnCreateSessionComplete(FName SessionName, bool bWa
     if (!bWasSuccessful) return;
 
     // Travel to lobby
-    UGameplayStatics::OpenLevel(GetWorld(), FName("Lobby"), true, TEXT("listen"));
+    UGameplayStatics::OpenLevel(GetWorld(), FName("ThirdPersonMap"), true, TEXT("listen"));
 }
 
 void UZero_BaseGameInstance::FindSessions()
 {
     if (!SessionInterface.IsValid()) return;
 
+	ZLOG("Getting List of servers");
     SessionSearch = MakeShareable(new FOnlineSessionSearch());
-    SessionSearch->MaxSearchResults = 10000;
+    SessionSearch->MaxSearchResults = 10;
 
     // Critical for EOS
     SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);

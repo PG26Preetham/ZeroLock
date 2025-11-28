@@ -16,7 +16,7 @@ void AZL_EOS_PlayerController::BeginPlay()
 {
 	Super::BeginPlay();
     ZLOG("PlayerController EOS");
-   // Login();
+   Login();
 }
 
 void AZL_EOS_PlayerController::Login()

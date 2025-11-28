@@ -35,6 +35,6 @@ class ZEROLOCK_API AZL_HUDClass : public AHUD
 protected:
 
 	UFUNCTION(BlueprintCallable)
-	void PushHUD();
+	virtual void PushHUD();
 	
 };

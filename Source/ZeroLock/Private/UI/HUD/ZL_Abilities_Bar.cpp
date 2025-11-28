@@ -17,6 +17,7 @@ void UZL_Abilities_Bar::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	InitMap();
 	AddDelegates();
+	if (!Hero) return;
 	if (Hero->HasAuthority())
 	{
 		GrantIconToAbilitiesX();

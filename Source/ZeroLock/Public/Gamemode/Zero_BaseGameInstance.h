@@ -45,7 +45,9 @@ public:
 	void HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
 
 	FDelegateHandle LoginDelegateHandle;
+	FDelegateHandle CreateLobbyDelegateHandle;
 	virtual void Init() override;
+	
 	// -------- UI EVENTS --------
 	UPROPERTY(BlueprintAssignable)
 	FOnSessionSearchResults OnSessionSearchResults;
@@ -58,6 +60,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void HostSession(const FString& SessionName, int32 MaxPlayers = 4);
+	UFUNCTION(BlueprintCallable)
+	void CreateLobby(FName KeyName, FString KeyValue);
 
 	UFUNCTION(BlueprintCallable)
 	void FindSessions();
