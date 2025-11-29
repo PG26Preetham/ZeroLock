@@ -68,13 +68,18 @@ void UZero_BaseGameInstance::Login()
 void UZero_BaseGameInstance::HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId,
 	const FString& Error)
 {
+	if (OnLoginResult.IsBound())
+	{
+		OnLoginResult.Broadcast(bWasSuccessful);
+	}
 	IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
 	IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
 	if (bWasSuccessful)
 	{
 		ZLOG_COLOR_TIME("Login callback completed!",FColor::Emerald,30);
 		UE_LOG(LogTemp, Log, TEXT("Login callback completed!"));;
-		
+
+		FString Name = Identity->GetPlayerNickname(0);
 		
 		InitSessionsDelegates();
 	}
@@ -131,18 +136,25 @@ void UZero_BaseGameInstance::HostSession(const FString& SessionName, int32 MaxPl
     {
         SessionInterface->DestroySession(NAME_GameSession);
     }
+	// Bind delegate
+	CreateCompleteHandle =
+		SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(
+			FOnCreateSessionCompleteDelegate::CreateUObject(
+				this, &UZero_BaseGameInstance::OnCreateSessionComplete));
 
     FOnlineSessionSettings Settings;
-    Settings.bIsLANMatch = false;
-    Settings.NumPublicConnections = MaxPlayers;
-    Settings.bAllowJoinInProgress = true;
-    Settings.bUsesPresence = true;
-    Settings.bUseLobbiesIfAvailable = true;
-    Settings.bShouldAdvertise = true;
+	Settings.bIsLANMatch = false; 
+	Settings.bUsesPresence = true; // Required for EOS Lobbies visibility
+	Settings.bAllowJoinInProgress = true;
+	Settings.bAllowInvites = true;
+	Settings.bShouldAdvertise = true;
+	Settings.bUseLobbiesIfAvailable = true; // Use EOS Lobbies interface
+	Settings.NumPublicConnections = 4;
 
+	Settings.Set(FName("ZeroLockLobbies"),true, EOnlineDataAdvertisementType::ViaOnlineService);
     Settings.Set(FName("SESSION_NAME"), SessionName, EOnlineDataAdvertisementType::ViaOnlineService);
 
-    SessionInterface->CreateSession(0, FName("Preetham"), Settings);
+    SessionInterface->CreateSession(0, *SessionName, Settings);
 }
 
 
@@ -188,51 +200,73 @@ void UZero_BaseGameInstance::OnCreateSessionComplete(FName SessionName, bool bWa
     if (!bWasSuccessful) return;
 
     // Travel to lobby
-    UGameplayStatics::OpenLevel(GetWorld(), FName("ThirdPersonMap"), true, TEXT("listen"));
+   // UGameplayStatics::OpenLevel(GetWorld(), FName("ThirdPersonMap"), true, TEXT("listen"));
 }
 
 void UZero_BaseGameInstance::FindSessions()
 {
-    if (!SessionInterface.IsValid()) return;
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (!Subsystem) return;
 
-	ZLOG("Getting List of servers");
-    SessionSearch = MakeShareable(new FOnlineSessionSearch());
-    SessionSearch->MaxSearchResults = 10;
+	SessionInterface = Subsystem->GetSessionInterface();
+	if (!SessionInterface.IsValid()) return;
 
-    // Critical for EOS
-    SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+	// Bind delegate
+	FOnFindSessionCompleted =
+		SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(
+			FOnFindSessionsCompleteDelegate::CreateUObject(
+				this, &UZero_BaseGameInstance::OnFindSessionsComplete));
 
-    SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	// Init search
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->MaxSearchResults = 10;
+	SessionSearch->bIsLanQuery = false;
+	SessionSearch->QuerySettings.Set(FName("ZeroLockLobbies"),true, EOnlineComparisonOp::Equals);
+
+	// IMPORTANT: no filters → show all lobbies
+	// SessionSearch->QuerySettings.Set()   <-- DO NOT add anything
+
+	// Start search
+	SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 }
 
 void UZero_BaseGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
-    TArray<FSessionInfo> OutList;
+	
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (!Subsystem) return;
 
-    if (!bWasSuccessful || !SessionSearch.IsValid())
-    {
-        OnSessionSearchResults.Broadcast(OutList);
-        return;
-    }
+	SessionInterface = Subsystem->GetSessionInterface();
+	if (SessionInterface.IsValid())
+	{
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FOnFindSessionCompleted);
+	}
 
-    CachedResults = SessionSearch->SearchResults;
+	UE_LOG(LogTemp, Warning, TEXT("Find Sessions Completed! Success = %d"), bWasSuccessful);
 
-    for (const auto& Result : CachedResults)
-    {
-        FSessionInfo Info;
+	if (bWasSuccessful)ZLOG("Found Sessions -");
+	
+	
+	if (!bWasSuccessful || !SessionSearch.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("No sessions found."));
+		return;
+	}
+	FString printf =FString::FromInt( SessionSearch->SearchResults.Num());
+	ZLOG(printf);
+	for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
+	{
+		auto& Result = SessionSearch->SearchResults[i];
 
-        FString Name;
-        Result.Session.SessionSettings.Get(FName("SESSION_NAME"), Name);
-        Info.SessionName = Name;
+		FString LobbyName ="defValue";
+		Result.Session.SessionSettings.Get(FName("SESSION_NAME"), LobbyName);
+		ZLOG(LobbyName);
+		UE_LOG(LogTemp, Warning, TEXT("[%d] Lobby: %s | Host: %s"),
+			i,
+			*LobbyName,
+			*Result.Session.OwningUserName);
+	}
 
-        Info.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
-        Info.CurrentPlayers = Info.MaxPlayers - Result.Session.NumOpenPublicConnections;
-        Info.Ping = Result.PingInMs;
-
-        OutList.Add(Info);
-    }
-
-    OnSessionSearchResults.Broadcast(OutList);
 }
 
 void UZero_BaseGameInstance::JoinSessionBP(int32 Index)

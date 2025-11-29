@@ -30,6 +30,7 @@ struct FSessionInfo
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSessionSearchResults, const TArray<FSessionInfo>&, Results);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnJoinResult, bool, bSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLoginResult, bool, bSuccess);
 /**
  * 
  */
@@ -46,6 +47,7 @@ public:
 
 	FDelegateHandle LoginDelegateHandle;
 	FDelegateHandle CreateLobbyDelegateHandle;
+	FDelegateHandle FOnFindSessionCompleted;
 	virtual void Init() override;
 	
 	// -------- UI EVENTS --------
@@ -68,6 +70,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void JoinSessionBP(int32 Index);
+	
+	UPROPERTY(BlueprintAssignable)
+	FOnLoginResult OnLoginResult;
 
 
 private:

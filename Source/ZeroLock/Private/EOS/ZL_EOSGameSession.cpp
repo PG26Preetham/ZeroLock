@@ -23,16 +23,19 @@ void AZL_EOSGameSession::BeginPlay()
 {
     Super::BeginPlay();
     ZLOG("Session begin play");
-   
-        ZLOG("Server start");
-        UE_LOG(LogTemp, Log, TEXT("Creating session..."));
-        CreateSession("KeyName", "KeyValue"); // Should parametrize Key/Value pair for custom attribute(s)- Could have called CreateSession() as parameter default values set in function prototype. 
+   if (IsRunningDedicatedServer())
+   {
+       ZLOG("Server start");
+       UE_LOG(LogTemp, Log, TEXT("Creating session..."));
+       CreateSession("KeyName", "KeyValue"); // Should parametrize Key/Value pair for custom attribute(s)- Could have called CreateSession() as parameter default values set in function prototype. 
     
-  /*  else{
+   }
+      
+   else{
         ZLOG("nOT server");
         UE_LOG(LogTemp, Log, TEXT("Not Server"));
          UE_LOG(LogTemp, Warning, TEXT("Failed to Call creat session"));
-    }*/
+    }
 }
 
 
