@@ -96,6 +96,26 @@ void UZero_BaseGameInstance::HandleLoginCompleted(int32 LocalUserNum, bool bWasS
 void UZero_BaseGameInstance::Init()
 {
 	Super::Init();
+	   IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+        if (!Subsystem)return;
+    
+        // Get the Identity Interface
+        IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
+        if (!Identity.IsValid())
+        {
+           return;
+
+        }
+    
+        // Check login status
+        ELoginStatus::Type LoginStatus = Identity->GetLoginStatus(0);
+        if (LoginStatus == ELoginStatus::LoggedIn)
+        {
+            HandleLoginCompleted(0,true,*Identity->GetUniquePlayerId(0),"AlreadyLoggedIN");
+        }
+    
+        UE_LOG(LogTemp, Log, TEXT("User is NOT logged in to EOS."));
+        return ;
 	//Login();
 	//InitSessionsDelegates();
 }
@@ -200,7 +220,11 @@ void UZero_BaseGameInstance::OnCreateSessionComplete(FName SessionName, bool bWa
     if (!bWasSuccessful) return;
 
     // Travel to lobby
-   // UGameplayStatics::OpenLevel(GetWorld(), FName("ThirdPersonMap"), true, TEXT("listen"));
+    UGameplayStatics::OpenLevel(GetWorld(), FName("ThirdPersonMap"), true, TEXT("listen"));
+  //  FString Map = "Game/Content/ThirdPerson/Maps/ThirdPersonMap?listen"; //Hardcoding map name here, should be passed by parameter
+        ///   FURL TravelURL;
+        //   TravelURL.Map = Map;
+         //  GetWorld()->Listen(TravelURL);
 }
 
 void UZero_BaseGameInstance::FindSessions()
