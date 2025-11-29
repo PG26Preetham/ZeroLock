@@ -11,17 +11,18 @@ AZero_BasePlayerState::AZero_BasePlayerState()
 	Kills = 0;
 	Assists = 0;
 	Deaths = 0;
-	TeamID = 0;
+	TeamID = ETeamID::TeamNull;
 
 	bReplicates = true; // Make sure this actor replicates
 }
 
-void AZero_BasePlayerState::SetTeamID(int32 NewTeamID)
+
+void AZero_BasePlayerState::SetTeamID(ETeamID id_team)
 {
 	if (HasAuthority())
 	{
-		TeamID = NewTeamID;
-			//ZLOG_COLOR_TIME("SERVER_Set_TEAM",FColor::Blue,10);
+		TeamID = id_team;
+		//ZLOG_COLOR_TIME("SERVER_Set_TEAM",FColor::Blue,10);
 		if (OnTeamChanged.IsBound())
 		{
 			OnTeamChanged.Broadcast(TeamID);
@@ -68,6 +69,16 @@ void AZero_BasePlayerState::AddAssist()
 	}
 }
 
+void AZero_BasePlayerState::SetPlayerIconImage(UTexture2D* NewImage)
+{
+	if (HasAuthority())
+	{
+		
+	}
+}
+
+
+
 void AZero_BasePlayerState::OnRep_Kills()
 {
 	if (OnKillsChanged.IsBound())
@@ -104,6 +115,14 @@ void AZero_BasePlayerState::OnRep_TeamID()
 	}
 }
 
+void AZero_BasePlayerState::OnRep_PlayerImage()
+{
+	if (OnPlayerIconChanged.IsBound())
+	{
+		OnPlayerIconChanged.Broadcast(PlayerImage);
+	}
+}
+
 void AZero_BasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -112,4 +131,5 @@ void AZero_BasePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME(AZero_BasePlayerState, Assists);
 	DOREPLIFETIME(AZero_BasePlayerState, Deaths);
 	DOREPLIFETIME(AZero_BasePlayerState, TeamID);
+	DOREPLIFETIME(AZero_BasePlayerState, PlayerImage);
 }

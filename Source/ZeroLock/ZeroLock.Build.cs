@@ -19,7 +19,13 @@ public class ZeroLock : ModuleRules
 			"AIModule",
 			"NavigationSystem",
 			"UMG",
-			"CommonUI"
+			"CommonUI",
+			"OnlineSubsystem",
+			"OnlineSubsystemEOS",
+			"OnlineSubsystemUtils",
+			"HTTP",
+			"OpenSSL"
+
 		});
 	}
 }

@@ -20,6 +20,26 @@ AZero_BaseGameModeBase::AZero_BaseGameModeBase()
     // Optionally set DefaultPawnClass if you want a fallback, but your SpawnDefaultPawnFor_Implementation handles this.
 }
 
+void AZero_BaseGameModeBase::BeginPlay()
+{
+    Super::BeginPlay();
+    AZero_BaseGameState* GS = GetGameState<AZero_BaseGameState>();
+    if (!GS) return;
+
+    // Bind with parameter
+    FTimerDelegate TimerDel;
+    TimerDel.BindUFunction(this, FName("UpdateGameTime"), GS);
+
+    // Run every 1 second
+    GetWorldTimerManager().SetTimer(GameTimerHandle, TimerDel, 1.0f, true);
+}
+
+void AZero_BaseGameModeBase::UpdateGameTime(AZero_BaseGameState* GS)
+{
+   if (!GS) return;
+    GS->IncrementGameTime();
+}
+
 /** Called when a player logs in (server-side) */
 void AZero_BaseGameModeBase::PostLogin(APlayerController* NewPlayer)
 {
@@ -44,8 +64,8 @@ void AZero_BaseGameModeBase::PostLogin(APlayerController* NewPlayer)
         {
             if (AZero_BasePlayerState* ZPS = Cast<AZero_BasePlayerState>(Player))
             {
-                if (ZPS->TeamID == 0) TeamRedCount++;
-                else if (ZPS->TeamID == 1) TeamBlueCount++;
+                if (ZPS->TeamID == ETeamID::TeamRed) TeamRedCount++;
+                else if (ZPS->TeamID ==ETeamID::TeamBlue) TeamBlueCount++;
             }
         }
         UE_LOG(LogTemp, Log, TEXT("[GM] PostLogin: Team counts -> Red: %d, Blue: %d"), TeamRedCount, TeamBlueCount);
@@ -225,16 +245,18 @@ void AZero_BaseGameModeBase::AssignTeam(class AZero_BasePlayerState* PS)
     // Count existing players per team (server-side)
     int32 TeamRedCount = 0;
     int32 TeamBlueCount = 0;
-
-    for (APlayerState* Player : GameState->PlayerArray)
+    AZero_BaseGameState* GS = GetGameState<AZero_BaseGameState>();
+    if (!GS) return;
+    
+    for (APlayerState* Player : GS->PlayerArray)
     {
         if (AZero_BasePlayerState* TeamPlayerPS = Cast<AZero_BasePlayerState>(Player))
         {
-            if (TeamPlayerPS->TeamID == 0)
+            if (TeamPlayerPS->TeamID == ETeamID::TeamRed)
             {
                 TeamRedCount++;
             }
-            else if (TeamPlayerPS->TeamID == 1)
+            else if (TeamPlayerPS->TeamID == ETeamID::TeamBlue)
             {
                 TeamBlueCount++;
             }
@@ -242,8 +264,9 @@ void AZero_BaseGameModeBase::AssignTeam(class AZero_BasePlayerState* PS)
     }
 
     // Assign to the smaller team
-    const int32 NewTeam = (TeamRedCount <= TeamBlueCount) ? 0 : 1;
+    const ETeamID NewTeam = (TeamRedCount <= TeamBlueCount) ? ETeamID::TeamRed : ETeamID::TeamBlue;
     PS->SetTeamID(NewTeam);
+    GS->AddPSToTeamArray(PS, NewTeam);
 
 }
 

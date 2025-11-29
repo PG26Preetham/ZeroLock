@@ -41,6 +41,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerStateChanged OnPSInit;
 
+	virtual void OnPossess(APawn* InPawn) override;
+
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	

@@ -5,6 +5,7 @@
 
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Zero_BasePlayerState.h"
 #include "Chaos/Deformable/MuscleActivationConstraints.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -86,28 +87,38 @@ void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 	}
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
-		const float LocalDamageDone = GetDamage();
-		SetDamage(0.f);
-		if (LocalDamageDone > 0.0f)
+		AZero_BasePlayerState* Target_PS = TargetCharacter->GetPlayerState<AZero_BasePlayerState>();
+		AZero_BasePlayerState* Source_PS = SourceCharacter->GetPlayerState<AZero_BasePlayerState>();
+		if (Target_PS && Source_PS)
 		{
-			bool wasAlive = true;
-			if (TargetCharacter)
+			if (Target_PS->TeamID != Source_PS->TeamID)
 			{
-				wasAlive = TargetCharacter->IsAlive();
-			}
-			const float NewHealth = GetCurrentHealth() - LocalDamageDone;
-			SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));		
-			if (wasAlive && TargetCharacter)
-			{
-				TargetCharacter->AddLastHit(SourceCharacter);
-				if (!TargetCharacter->IsAlive())
+				const float LocalDamageDone = GetDamage();
+				SetDamage(0.f);
+				if (LocalDamageDone > 0.0f)
 				{
-					//TargetDeath
-					TargetCharacter->HandleDeath();
-				}
+					bool wasAlive = true;
+					if (TargetCharacter)
+					{
+						wasAlive = TargetCharacter->IsAlive();
+					}
+					
+					if (wasAlive && TargetCharacter)
+					{
+						const float NewHealth = GetCurrentHealth() - LocalDamageDone;
+						SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));	
+						TargetCharacter->AddLastHit(SourceCharacter);
+						if (!TargetCharacter->IsAlive())
+						{
+							//TargetDeath
+							TargetCharacter->HandleDeath();
+						}
 				
+					}
+				}
 			}
 		}
+		
 	}
 	else if (Data.EvaluatedData.Attribute == GetMaximumHealthAttribute())
 	{

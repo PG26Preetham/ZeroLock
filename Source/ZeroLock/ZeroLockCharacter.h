@@ -358,6 +358,10 @@ public:
 
 	TMap<EGASAbilityInputID,FGameplayTag> inputTags;
 
+
+	UPROPERTY(EditDefaultsOnly, Category = "Icon")
+	UTexture2D* Icon;
+
 	void InitInputTagsMap();
 };
 

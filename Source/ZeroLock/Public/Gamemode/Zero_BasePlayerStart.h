@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerStart.h"
+#include "ZeroLock/ZeroLock.h"
 #include "Zero_BasePlayerStart.generated.h"
 
 UCLASS()
@@ -16,5 +17,5 @@ class ZEROLOCK_API AZero_BasePlayerStart : public APlayerStart
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 TeamID = 0;
+	ETeamID TeamID;
 };

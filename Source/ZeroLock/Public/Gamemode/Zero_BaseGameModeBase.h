@@ -18,6 +18,13 @@ class ZEROLOCK_API AZero_BaseGameModeBase : public AGameModeBase
 public:
 	AZero_BaseGameModeBase();
 
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void UpdateGameTime(AZero_BaseGameState* GS);
+
+	FTimerHandle GameTimerHandle;
+
 	/** Hero selection */
 	UPROPERTY(EditDefaultsOnly, Category="Heroes")
 	TSubclassOf<AZeroLockCharacter> DefaultHeroClass;

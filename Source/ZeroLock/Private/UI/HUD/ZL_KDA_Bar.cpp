@@ -41,8 +41,13 @@ void UZL_KDA_Bar::AddPS_Delegates(AZero_BasePlayerState* PS)
 
 void UZL_KDA_Bar::AddDelegates()
 {
+	
 	if (AZero_BasePlayerController* PC = Cast<AZero_BasePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
 	{
+		if (PC->HasAuthority())
+		{
+			AddPS_Delegates(PC->GetPlayerState<AZero_BasePlayerState>());
+		}
 		PC->OnPSInit.AddUniqueDynamic(this,&UZL_KDA_Bar::AddPS_Delegates);
 	}
 }
