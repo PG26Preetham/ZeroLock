@@ -290,6 +290,28 @@ void UZero_BaseGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			*LobbyName,
 			*Result.Session.OwningUserName);
 	}
+	
+	FOnlineSessionSearchResult& FirstResult = SessionSearch->SearchResults[0];
+	if (!FirstResult.IsValid())
+	{
+		ZLOG("first session error not valid");
+		return;
+	}
+	if (SessionInterface.IsValid())
+	{
+		FOnJoinSessionCompleteDelegate JoinDelegate;
+		JoinDelegate = FOnJoinSessionCompleteDelegate::CreateUObject(this, &UZero_BaseGameInstance::OnJoinSessionComplete);
+		SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinDelegate);
+
+		if (SessionInterface->JoinSession(0, NAME_GameSession, FirstResult))
+		{
+			ZLOG("Joining first instance");
+		}
+		else
+		{
+			ZLOG("Joining failed");
+		}
+	}
 
 }
 
