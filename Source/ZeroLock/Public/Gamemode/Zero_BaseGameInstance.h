@@ -48,6 +48,7 @@ public:
 	FDelegateHandle LoginDelegateHandle;
 	FDelegateHandle CreateLobbyDelegateHandle;
 	FDelegateHandle FOnFindSessionCompleted;
+	FDelegateHandle FindSessionsDelegateHandle;
 	virtual void Init() override;
 	
 	// -------- UI EVENTS --------
@@ -65,6 +66,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CreateLobby(FName KeyName, FString KeyValue);
 
+	void HandleFindSessionsCompleted(bool bWasSuccessful, TSharedRef<FOnlineSessionSearch> Search);
 	UFUNCTION(BlueprintCallable)
 	void FindSessions();
 

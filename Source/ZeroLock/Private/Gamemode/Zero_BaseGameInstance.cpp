@@ -212,6 +212,11 @@ void UZero_BaseGameInstance::CreateLobby(FName KeyName, FString KeyValue)
     }
 }
 
+void UZero_BaseGameInstance::HandleFindSessionsCompleted(bool bWasSuccessful, TSharedRef<FOnlineSessionSearch> Search)
+{
+}
+
+
 void UZero_BaseGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
     UE_LOG(LogTemp, Warning, TEXT("Create Session Completed: %s Success: %d"),
@@ -271,7 +276,7 @@ void UZero_BaseGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 	if (bWasSuccessful)ZLOG("Found Sessions -");
 	
 	
-	if (!bWasSuccessful || !SessionSearch.IsValid())
+	if (!bWasSuccessful || !SessionSearch.IsValid() )
 	{
 		UE_LOG(LogTemp, Error, TEXT("No sessions found."));
 		return;
