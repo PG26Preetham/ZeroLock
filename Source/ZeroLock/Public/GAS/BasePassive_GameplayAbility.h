@@ -14,15 +14,19 @@ class ZEROLOCK_API UBasePassive_GameplayAbility : public UBaseGameplayAbility
 {
 	GENERATED_BODY()
 
+public:
 
 	UBasePassive_GameplayAbility();
 
-	public:
+	virtual void OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	UFUNCTION()
-	void OnEventRecived(FGameplayEventData Payload);
+	virtual void OnEventRecived(FGameplayEventData Payload);
+	
+	UFUNCTION()
+	void OnHeroEventRecived(const FGameplayEventData& GameplayEventData);
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
-	class UAbilityTask_WaitGameplayEvent* WaitGameplayEvent;
+	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Ability")
 	TSubclassOf<UGameplayEffect> PassiveEffectToApply;

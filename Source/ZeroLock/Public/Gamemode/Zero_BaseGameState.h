@@ -10,7 +10,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamArrayUpdated , AZero_BasePlay
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameTimeUpdated , int , gameTime);
 
 enum class ETeamID : uint8;
-class AZero_BasePlayerState;
+//class AZero_BasePlayerState;
 /**
  * 
  */

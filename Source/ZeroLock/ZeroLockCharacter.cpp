@@ -281,7 +281,7 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 			GrantedSpec.InputID = static_cast<int32>(AbiltyInputIDX);
 			GrantedHandle =AbilitySystemComp->GiveAbility(GrantedSpec);
 			DefaultAbilitiesHandles.Add(GrantedHandle);
-			GetAbilitySystemComponent()->TryActivateAbilityByClass(AbilityToGrant);
+			//GetAbilitySystemComponent()->TryActivateAbilityByClass(AbilityToGrant);
 		}
 		else
 		{
@@ -595,6 +595,11 @@ void AZeroLockCharacter::InitInputTagsMap()
 	inputTags.Add(EGASAbilityInputID::Ability_1,ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1);
 	inputTags.Add(EGASAbilityInputID::Ability_2,ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_2);
 	inputTags.Add(EGASAbilityInputID::Ultimate,ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE);
+}
+
+void AZeroLockCharacter::HandleWeaponHitEvent(const FGameplayEventData& EventData)
+{
+	OnWeaponHitEventReceived.Broadcast(EventData);
 }
 
 

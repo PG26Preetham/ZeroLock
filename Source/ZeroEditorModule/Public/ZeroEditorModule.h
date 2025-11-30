@@ -14,6 +14,7 @@ public:
 
     void AddMenu(FMenuBarBuilder& MenuBarBuilder);
     void FillMenu(FMenuBuilder& MenuBuilder);
+    void PrintAllAbilities();
 
     void CreatePropertyTool();
     

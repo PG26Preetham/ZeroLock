@@ -24,6 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHealthChangeDelgate,float ,current
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FStunChanged,bool,IsStunned);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDamageRecievedDelegate,float,currentHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAddAbilityIconDelegate,UBaseGameplayAbility*,AbilitytoAdd,EGASAbilityInputID,slotToAddIn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHeroGameplayEventDelegate, const FGameplayEventData&, EventData);
 
 USTRUCT()
 struct FMyAbilityMap
@@ -363,6 +364,14 @@ public:
 	UTexture2D* Icon;
 
 	void InitInputTagsMap();
+
+
+	UPROPERTY(BlueprintAssignable, Category = "GAS|Events")
+	FHeroGameplayEventDelegate OnWeaponHitEventReceived;
+    
+	// Function you call when the actual hit happens
+	UFUNCTION(BlueprintCallable)
+	void HandleWeaponHitEvent(const FGameplayEventData& EventData);
 };
 
 
