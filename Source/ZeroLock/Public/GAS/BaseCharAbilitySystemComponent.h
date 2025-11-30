@@ -23,5 +23,24 @@ class ZEROLOCK_API UBaseCharAbilitySystemComponent : public UAbilitySystemCompon
 public:
 	UPROPERTY(BlueprintAssignable)
 	FNewAbilityAddedDelegate OnNewAbilityAdded;
-	
+
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyWeaponDamage(UAbilitySystemComponent* TargetASC,float DamageValue);
+
+	UFUNCTION(BlueprintCallable)
+	void ApplySpiritDamage(UAbilitySystemComponent* TargetASC,float DamageValue);
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyMeleeDamage(UAbilitySystemComponent* TargetASC,float DamageValue);
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/WeaponDamage")
+	TSubclassOf<UGameplayEffect> GE_WeaponClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/SpiritDamage")
+	TSubclassOf<UGameplayEffect> GE_SpiritClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/MeleeDamage")
+	TSubclassOf<UGameplayEffect> GE_MeleeClass;
 };

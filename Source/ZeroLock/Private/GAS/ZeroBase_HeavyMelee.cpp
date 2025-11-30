@@ -8,6 +8,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Camera/CameraComponent.h"
+#include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/Tasks/GAST_MeleeMoveTo.h"
 #include "GAS/Tasks/GAST_PlayMontageAndWaitForEvent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
@@ -119,8 +120,8 @@ void UZeroBase_HeavyMelee::MeleeDamageExec(TSubclassOf<class UGameplayEffect> Me
 			}
 			if (AbilitySystemComp && MeleeDamageEffect)
 			{
-				ApplyGameplayEffectToTarget(MeleeDamageEffect,Villan->GetAbilitySystemComponent(),AbilitySystemComp);
-				
+				//ApplyGameplayEffectToTarget(MeleeDamageEffect,Villan->GetAbilitySystemComponent(),AbilitySystemComp);
+				Hero->GetMyAbilitySystemComp()->ApplyMeleeDamage(Villan->GetMyAbilitySystemComp(),90);
 				FVector KnockbackDir = (Villan->GetActorLocation() - Hero->GetActorLocation()).GetSafeNormal();
 				KnockbackDir.Z=0;
 				Villan->LaunchCharacter(KnockbackDir * KnockForce,false,false);
