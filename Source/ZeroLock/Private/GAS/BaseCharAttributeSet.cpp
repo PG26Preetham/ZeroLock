@@ -16,6 +16,8 @@ UBaseCharAttributeSet::UBaseCharAttributeSet()
 	MaximumHealth = 0.0f;
 	CurrentHealth = 0.0f;
 	HealthRegeneration = 0.0f;
+	HealingBonus = 0.0f;
+	HealingReduction = 0.0f;
 	CurrentSpeed = 0.0f;
 	CurrentJump = 0.0f;
 	Soul =0;
@@ -24,8 +26,19 @@ UBaseCharAttributeSet::UBaseCharAttributeSet()
 	CurrentAmmo = 0.0f;
 	MaxAmmo = 0.0f;
 	WeaponResistance=0.0f;
+	WeaponResistanceReduction =0.0f;
+	FlatWeapon =0.0f;
+	WeaponLifeSteal = 0.0f;
 	SpiritDamage = 0.0f;
 	SpiritResistance = 0.0f;
+	SpiritResistanceReduction = 0.0f;
+	FlatSpirit=0.0f;
+	SpiritLifeSteal =0.0f;
+	MeleeDamage = 0.0f;
+	MeleeResistance = 0.0f;
+	MeleeResistanceReduction = 0.0f;
+	MeleeLifeSteal = 0.0f;
+	
 }
 void UBaseCharAttributeSet::PreAttributeChange(const FGameplayAttribute & Attribute, float & NewValue)
 {
@@ -202,16 +215,28 @@ void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaximumHealth, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, HealthRegeneration, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,HealingReduction, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,HealingBonus, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentSpeed, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentJump, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, Soul, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FireRate, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponDamage,COND_None,REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FlatWeapon,COND_None,REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentAmmo, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaxAmmo, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponResistance, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponResistanceReduction, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,WeaponLifeSteal, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritDamage, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritResistance, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritResistanceReduction, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FlatSpirit, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,SpiritLifeSteal, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeDamage, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeResistance, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeLifeSteal, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeResistanceReduction, COND_None, REPNOTIFY_OnChanged);
 	
 }
 
@@ -259,6 +284,18 @@ void UBaseCharAttributeSet::OnRep_HealthRegeneration(const FGameplayAttributeDat
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, HealthRegeneration, OldValue);
 }
+
+
+void UBaseCharAttributeSet::OnRep_HealingReduction(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, HealingReduction, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_HealingBonus(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, HealingBonus, OldValue);
+}
+
 void UBaseCharAttributeSet::OnRep_Souls(const FGameplayAttributeData & OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, Soul, OldValue);
@@ -289,6 +326,27 @@ void UBaseCharAttributeSet::OnRep_WeaponResistance(const FGameplayAttributeData&
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, WeaponResistance, OldValue);
 }
 
+void UBaseCharAttributeSet::OnRep_FlatWeapon(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,FlatWeapon,OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_WeaponLifeSteal(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,WeaponLifeSteal, OldValue);
+}
+
+
+void UBaseCharAttributeSet::OnRep_FlatSpirit(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,FlatSpirit,OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_WeaponResistanceReduction(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,WeaponResistanceReduction,OldValue);
+}
+
 void UBaseCharAttributeSet::OnRep_SpiritDamage(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, SpiritDamage, OldValue);
@@ -299,3 +357,32 @@ void UBaseCharAttributeSet::OnRep_SpiritResistance(const FGameplayAttributeData&
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, SpiritResistance, OldValue);
 }
 
+void UBaseCharAttributeSet::OnRep_SpiritResistanceReduction(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,SpiritResistanceReduction, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_SpiritLifeSteal(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,SpiritLifeSteal, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MeleeDamage(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,MeleeDamage, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MeleeResistance(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,MeleeResistance, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MeleeLifeSteal(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,MeleeLifeSteal, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MeleeResistanceReduction(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,MeleeResistanceReduction, OldValue);
+}

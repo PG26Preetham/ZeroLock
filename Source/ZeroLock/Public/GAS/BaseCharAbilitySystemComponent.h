@@ -34,6 +34,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyMeleeDamage(UAbilitySystemComponent* TargetASC,float DamageValue);
 
+	UFUNCTION(BlueprintCallable)
+	void ApplyHeal(UAbilitySystemComponent* TargetASC,float HealValue);
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/WeaponDamage")
 	TSubclassOf<UGameplayEffect> GE_WeaponClass;
@@ -43,4 +46,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/MeleeDamage")
 	TSubclassOf<UGameplayEffect> GE_MeleeClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/Healing")
+	TSubclassOf<UGameplayEffect> GE_HealingClass;
 };

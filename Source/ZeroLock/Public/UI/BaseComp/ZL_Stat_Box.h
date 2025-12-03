@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "GameplayEffectTypes.h"
 #include "ZL_Stat_Box.generated.h"
 
+class UAttributeSet;
 class UCommonTextBlock;
 class UImage;
 /**
@@ -23,6 +25,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	TObjectPtr<UImage> StatIcon;
 
+	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
+	TObjectPtr<UCommonTextBlock> StatName;
+
 	virtual void NativeOnInitialized() override;
 
 	UFUNCTION()
@@ -30,6 +35,11 @@ public:
 	UFUNCTION()
 	void NewValueChangedFloat(float newValue);
 
-	
-	
+	UFUNCTION()
+	void SetIcon(UTexture2D* Icon);
+	void AtrributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
+
+
+	UFUNCTION()
+	void InitGameplayAttribute(FGameplayAttribute AttributeToBind,UAbilitySystemComponent* FromASC,UAttributeSet* FromAS);
 };

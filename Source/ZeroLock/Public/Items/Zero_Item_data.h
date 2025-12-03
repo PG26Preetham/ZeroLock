@@ -11,6 +11,25 @@ class UBaseGameplayAbility;
 /**
  * 
  */
+
+UENUM(BlueprintType)
+enum class EZeroLockItemType : uint8
+{
+	Weapon UMETA(DisplayName="WeaponItems"),
+	Spirit UMETA(DisplayName="SpiritItems"),
+	Health UMETA(DisplayName="HealthItems")
+	
+	
+};
+UENUM(BlueprintType)
+enum class EZeroLockItemTier : uint8
+{
+	Tier1 UMETA(DisplayName="Tier1"),
+	Tier2 UMETA(DisplayName="Tier2"),
+	Tier3 UMETA(DisplayName="Tier3"),
+	Tier4 UMETA(DisplayName="Tier4")
+};
+
 UCLASS()
 class ZEROLOCK_API UZero_Item_data : public UPrimaryDataAsset
 {
@@ -40,4 +59,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FString ItemName;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	EZeroLockItemType ItemType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<UZero_Item_data*> NextItemsToUpgrade;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	EZeroLockItemTier ItemTierType;
 };

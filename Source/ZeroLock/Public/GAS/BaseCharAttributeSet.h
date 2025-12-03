@@ -54,6 +54,14 @@ public:
 	FGameplayAttributeData MaximumHealth;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaximumHealth)
 
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_HealingReduction)
+	FGameplayAttributeData HealingReduction;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, HealingReduction)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_HealingBonus)
+	FGameplayAttributeData HealingBonus;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, HealingBonus)
+
 		// Holds the value for Health Regeneration.
 	UPROPERTY(BlueprintReadOnly, Category = "Health Attribute Set", ReplicatedUsing = OnRep_HealthRegeneration)
 	FGameplayAttributeData HealthRegeneration;
@@ -83,6 +91,18 @@ public:
 	FGameplayAttributeData WeaponResistance;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, WeaponResistance)
 
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_FlatWeapon)
+	FGameplayAttributeData FlatWeapon;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, FlatWeapon)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_WeaponResistanceReduction)
+	FGameplayAttributeData WeaponResistanceReduction;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, WeaponResistanceReduction)
+	
+	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_WeaponLifeSteal)
+	FGameplayAttributeData WeaponLifeSteal;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, WeaponLifeSteal)
+
 	
 	UPROPERTY(BlueprintReadOnly,Category = "Weapon Attribute Set", ReplicatedUsing= OnRep_CurrentAmmo)
 	FGameplayAttributeData CurrentAmmo;
@@ -97,9 +117,42 @@ public:
 	FGameplayAttributeData SpiritDamage;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, SpiritDamage)
 
+	UPROPERTY(BlueprintReadOnly,Category = "Spirit Attribute Set", ReplicatedUsing= OnRep_FlatSpirit)
+	FGameplayAttributeData FlatSpirit;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, FlatSpirit)
+
+	
+
 	UPROPERTY(BlueprintReadOnly,Category = "Spirit Attribute Set", ReplicatedUsing= OnRep_SpiritResistance)
 	FGameplayAttributeData SpiritResistance;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, SpiritResistance)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Spirit Attribute Set", ReplicatedUsing= OnRep_SpiritResistanceReduction)
+	FGameplayAttributeData SpiritResistanceReduction;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, SpiritResistanceReduction)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Spirit Attribute Set", ReplicatedUsing= OnRep_SpiritLifeSteal)
+	FGameplayAttributeData SpiritLifeSteal;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, SpiritLifeSteal)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Melee Attribute Set", ReplicatedUsing= OnRep_MeleeDamage)
+	FGameplayAttributeData MeleeDamage;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MeleeDamage)
+	
+	UPROPERTY(BlueprintReadOnly,Category = "Melee Attribute Set", ReplicatedUsing= OnRep_MeleeResistance)
+	FGameplayAttributeData MeleeResistance;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MeleeResistance)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Melee Attribute Set", ReplicatedUsing= OnRep_MeleeResistanceReduction)
+	FGameplayAttributeData MeleeResistanceReduction;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MeleeResistanceReduction)
+
+	UPROPERTY(BlueprintReadOnly,Category = "Melee Attribute Set", ReplicatedUsing= OnRep_MeleeLifeSteal)
+	FGameplayAttributeData MeleeLifeSteal;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MeleeLifeSteal)
+
+	
+	
 	
 
 protected:
@@ -123,6 +176,12 @@ protected:
 		virtual void OnRep_HealthRegeneration(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
+	virtual void OnRep_HealingReduction(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_HealingBonus(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
 	virtual void OnRep_Souls(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
@@ -143,9 +202,41 @@ protected:
 	virtual void OnRep_WeaponResistance(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
+	virtual void OnRep_FlatWeapon(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_WeaponLifeSteal(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_WeaponResistanceReduction(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
 	virtual void OnRep_SpiritDamage(const FGameplayAttributeData& OldValue);
 
 	UFUNCTION()
 	virtual void OnRep_SpiritResistance(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_SpiritResistanceReduction(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_FlatSpirit(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_SpiritLifeSteal(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MeleeDamage(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MeleeResistance(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MeleeLifeSteal(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_MeleeResistanceReduction(const FGameplayAttributeData& OldValue);
 	
 };
+
+

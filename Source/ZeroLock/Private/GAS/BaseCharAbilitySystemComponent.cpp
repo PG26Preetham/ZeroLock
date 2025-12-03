@@ -89,3 +89,21 @@ void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* 
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
 }
+
+void UBaseCharAbilitySystemComponent::ApplyHeal(UAbilitySystemComponent* TargetASC, float HealValue)
+{
+	if (!TargetASC || !GE_HealingClass)return;
+
+	FGameplayEffectContextHandle Context = MakeEffectContext();
+	Context.AddSourceObject(GetAvatarActor());
+
+	FGameplayEffectSpecHandle SpecHandle =
+		MakeOutgoingSpec(GE_HealingClass, 1.f, Context);
+
+	if (!SpecHandle.IsValid())
+		return;
+
+	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.HealCalc.Healing",false), HealValue);
+
+	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+}
