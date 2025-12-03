@@ -151,6 +151,21 @@ public:
 	FGameplayAttributeData MeleeLifeSteal;
 	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MeleeLifeSteal)
 
+
+	UPROPERTY(BlueprintReadOnly,Category="CooldownAndDuration",ReplicatedUsing= OnRep_CooldownReduction)
+	FGameplayAttributeData CooldownReduction;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, CooldownReduction)
+
+	UPROPERTY(BlueprintReadOnly,Category="CooldownAndDuration",ReplicatedUsing= OnRep_DebufReduction)
+	FGameplayAttributeData DebufReduction;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, DebufReduction)
+
+	UPROPERTY(BlueprintReadOnly,Category="CooldownAndDuration",ReplicatedUsing= OnRep_DurationExtension)
+	FGameplayAttributeData DurationExtension;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, DurationExtension)
+
+	
+
 	
 	
 	
@@ -236,6 +251,15 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_MeleeResistanceReduction(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_CooldownReduction(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_DebufReduction(const FGameplayAttributeData& OldValue);
+
+	UFUNCTION()
+	virtual void OnRep_DurationExtension(const FGameplayAttributeData& OldValue);
 	
 };
 

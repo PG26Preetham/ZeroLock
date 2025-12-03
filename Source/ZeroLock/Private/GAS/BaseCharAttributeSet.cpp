@@ -219,7 +219,9 @@ void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,HealingBonus, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentSpeed, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, CurrentJump, COND_None, REPNOTIFY_OnChanged);
+	
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, Soul, COND_None, REPNOTIFY_OnChanged);
+	
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FireRate, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponDamage,COND_None,REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FlatWeapon,COND_None,REPNOTIFY_OnChanged);
@@ -228,15 +230,21 @@ void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponResistance, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, WeaponResistanceReduction, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,WeaponLifeSteal, COND_None, REPNOTIFY_OnChanged);
+	
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritDamage, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritResistance, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, SpiritResistanceReduction, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, FlatSpirit, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,SpiritLifeSteal, COND_None, REPNOTIFY_OnChanged);
+	
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeDamage, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeResistance, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeLifeSteal, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,MeleeResistanceReduction, COND_None, REPNOTIFY_OnChanged);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,CooldownReduction, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,DebufReduction, COND_None, REPNOTIFY_OnChanged);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,DurationExtension, COND_None, REPNOTIFY_OnChanged);
 	
 }
 
@@ -385,4 +393,19 @@ void UBaseCharAttributeSet::OnRep_MeleeLifeSteal(const FGameplayAttributeData& O
 void UBaseCharAttributeSet::OnRep_MeleeResistanceReduction(const FGameplayAttributeData& OldValue)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,MeleeResistanceReduction, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_CooldownReduction(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,CooldownReduction, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_DebufReduction(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,DebufReduction, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_DurationExtension(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet,DurationExtension, OldValue);
 }
