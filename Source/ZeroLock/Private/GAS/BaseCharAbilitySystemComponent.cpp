@@ -36,13 +36,14 @@ void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent*
 	FGameplayEffectSpecHandle SpecHandle =
 		MakeOutgoingSpec(GE_WeaponClass, 1.f, Context);
 
-	if (!SpecHandle.IsValid())
-		return;
+	if (!SpecHandle.IsValid())	return;
 
+	//Setting the base damage value 
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.DamageCalc.Weapon",false), DamageValue);
-
+	//Apply the effect 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
 
+	//Sending event to the source
 	FGameplayEventData WeaponHitEventData;
 	WeaponHitEventData.EventTag =FGameplayTag::RequestGameplayTag("Event.WeaponHit",false);
 	WeaponHitEventData.ContextHandle =MakeEffectContext();

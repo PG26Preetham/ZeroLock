@@ -5,6 +5,7 @@
 
 #include "GameplayTagsManager.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
+#include "GAS/BaseCharAttributeSet.h"
 #include "GAS/ZL_GameplayTags.h"
 #include "GAS/ZL_GE_BaseCooldown.h"
 #include "ZeroLock/ZeroLockCharacter.h"
@@ -96,15 +97,29 @@ void UBaseGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle
 	UGameplayEffect* CooldownGE = GetCooldownGameplayEffect();
 	if (CooldownGE)
 	{
+		
 		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
 		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(CooldownTags);
-		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName(  "Ability.Cooldown.Duration" )), CooldownDuration.GetValueAtLevel(GetAbilityLevel()));
+		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName(  "Ability.Cooldown.Duration" )), GetCoolDownTime());
 		FActiveGameplayEffectHandle GEHandle=ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 		if (GEHandle.IsValid())
 		{
 			ZLOG("CustomSetByCaller");
 		}
 	}
+}
+
+float UBaseGameplayAbility::GetCoolDownTime() const
+{
+
+	float cooldownTime = CooldownDuration.GetValueAtLevel(GetAbilityLevel());
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	if (Hero)
+	{
+		float CDR = Hero->GetMyAttributeSet()->GetCooldownReduction();
+		return (cooldownTime*(1-CDR/100));
+	}
+	return cooldownTime;
 }
 
 const FGameplayTagContainer* UBaseGameplayAbility::GetCooldownTags() const

@@ -76,6 +76,8 @@ public:
 
 	virtual void ApplyCooldown(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const override;
 
+	virtual float GetCoolDownTime() const;
+	
 	virtual const FGameplayTagContainer* GetCooldownTags() const override;
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Cooldown")
