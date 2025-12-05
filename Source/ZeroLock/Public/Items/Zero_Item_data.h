@@ -17,7 +17,7 @@ enum class EZeroLockItemType : uint8
 {
 	Weapon UMETA(DisplayName="WeaponItems"),
 	Spirit UMETA(DisplayName="SpiritItems"),
-	Health UMETA(DisplayName="HealthItems")
+	Vitality UMETA(DisplayName="VitalityItems")
 	
 	
 };
@@ -37,35 +37,38 @@ class ZEROLOCK_API UZero_Item_data : public UPrimaryDataAsset
 
 public:
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName ItemID;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Cost = 0;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString Description;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SellRefundPercent = 0.5f;
 
 	// Passive stat buffs
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UGameplayEffect> PassiveEffects;
 
 	// Active or passive abilities
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<TSubclassOf<UBaseGameplayAbility>> GrantedAbilities;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* Icon;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString ItemName;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EZeroLockItemType ItemType;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UZero_Item_data*> NextItemsToUpgrade;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EZeroLockItemTier ItemTierType;
 };
