@@ -22,9 +22,6 @@ public:
 	UCommonTextBlock* ItemName;
 
 	UPROPERTY(meta = (BindWidget))
-	UCommonTextBlock* ItemPrice;
-
-	UPROPERTY(meta = (BindWidget))
 	UImage* ItemIcon;
 
 	UFUNCTION(BlueprintCallable)

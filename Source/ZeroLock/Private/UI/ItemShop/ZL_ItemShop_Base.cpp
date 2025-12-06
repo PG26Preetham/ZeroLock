@@ -3,10 +3,13 @@
 
 #include "UI/ItemShop/ZL_ItemShop_Base.h"
 
+#include "CommonActivatableWidgetSwitcher.h"
+#include "CommonButtonBase.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StreamableManager.h"
 #include "CommonTileView.h"
 #include "Items/Zero_Item_data.h"
+#include "UI/ItemShop/ZL_ItemShopCategory.h"
 #include "ZeroLock/ZeroLock.h"
 
 UZL_ItemShop_Base::UZL_ItemShop_Base()
@@ -17,6 +20,8 @@ void UZL_ItemShop_Base::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
 	LoadItemsAsync();
+	AddDelegates();
+	ItemSwitcher->SetActiveWidget(ItemListView);
 }
 
 void UZL_ItemShop_Base::LoadItemsAsync()
@@ -81,11 +86,68 @@ void UZL_ItemShop_Base::OnItemsLoaded()
 
 		UZero_Item_data* Item = Row->ItemAsset.Get();
 		if (Item)
+		{
 			LoadedItems.AddUnique(Item);
+			AddtoCategory(Item);
+		}
 	}
 
 	// Push loaded items into the CommonUI ListView
 	if (ItemListView)
 		ItemListView->SetListItems(LoadedItems);
 	
+}
+
+void UZL_ItemShop_Base::BTN_All_Pressed() const
+{
+	ItemSwitcher->SetActiveWidget(ItemListView);
+}
+
+void UZL_ItemShop_Base::BTN_Weapon_Pressed() const
+{
+	ItemSwitcher->SetActiveWidget(WeaponCategory);
+}
+
+void UZL_ItemShop_Base::BTN_Spirit_Pressed() const
+{
+	ItemSwitcher->SetActiveWidget(SpiritCategory);
+}
+
+void UZL_ItemShop_Base::BTN_Vitality_Pressed() const
+{
+	ItemSwitcher->SetActiveWidget(VitalityCategory);
+}
+
+void UZL_ItemShop_Base::AddDelegates()
+{
+	BTN_All->OnClicked().AddUObject(this,&ThisClass::BTN_All_Pressed);
+	BTN_Weapon->OnClicked().AddUObject(this,&ThisClass::BTN_Weapon_Pressed);
+	BTN_Spirit->OnClicked().AddUObject(this,&ThisClass::BTN_Spirit_Pressed);
+	BTN_Vitality->OnClicked().AddUObject(this,&ThisClass::BTN_Vitality_Pressed);
+}
+
+void UZL_ItemShop_Base::AddtoCategory(UZero_Item_data* dataItem)
+{
+	if (dataItem->ItemType == EZeroLockItemType::Spirit)
+	{
+		SpiritCategory->AddItemToTier(dataItem);
+		return;
+	}
+	else if (dataItem->ItemType == EZeroLockItemType::Vitality)
+	{
+		VitalityCategory->AddItemToTier(dataItem);
+		return;
+	}
+	else
+	{
+		WeaponCategory->AddItemToTier(dataItem);
+		return;
+	}
+	
+}
+
+void UZL_ItemShop_Base::ActiveSetForSwitcher(UWidget* WidgettoActive)
+{
+	if (!WidgettoActive)return;
+	ItemSwitcher->SetActiveWidget(WidgettoActive);
 }

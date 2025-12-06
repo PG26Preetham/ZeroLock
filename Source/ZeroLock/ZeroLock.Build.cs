@@ -24,7 +24,8 @@ public class ZeroLock : ModuleRules
 			"OnlineSubsystemEOS",
 			"OnlineSubsystemUtils",
 			"HTTP",
-			"OpenSSL"
+			"OpenSSL",
+			"Json"
 
 		});
 	}

@@ -1,0 +1,42 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "CommonActivatableWidget.h"
+#include "ZL_ItemShopCategory.generated.h"
+
+class UZero_Item_data;
+/**
+ * 
+ */
+UCLASS()
+class ZEROLOCK_API UZL_ItemShopCategory : public UCommonActivatableWidget
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(meta = (BindWidget))
+	class UCommonTileView* Tier1_ItemListView;
+	UPROPERTY(meta = (BindWidget))
+	class UCommonTileView* Tier2_ItemListView;
+	UPROPERTY(meta = (BindWidget))
+	class UCommonTileView* Tier3_ItemListView;
+	UPROPERTY(meta = (BindWidget))
+	class UCommonTileView* Tier4_ItemListView;
+
+	UFUNCTION()
+	void AddItemToTier(UZero_Item_data* itemData);
+
+	UPROPERTY()
+	TArray<UZero_Item_data*> Tier1_Items;
+	UPROPERTY()
+	TArray<UZero_Item_data*> Tier2_Items;
+	UPROPERTY()
+	TArray<UZero_Item_data*> Tier3_Items;
+	UPROPERTY()
+	TArray<UZero_Item_data*> Tier4_Items;
+
+	void addtoLists(UZero_Item_data* itemData, TArray<UZero_Item_data*>& items,class UCommonTileView*& listToAdd);
+	
+};

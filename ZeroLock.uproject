@@ -47,6 +47,10 @@
 		{
 			"Name": "Fab",
 			"Enabled": false
+		},
+		{
+			"Name": "AssetRegistryExport",
+			"Enabled": true
 		}
 	]
 }
