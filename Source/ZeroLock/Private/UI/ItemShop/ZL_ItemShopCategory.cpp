@@ -5,6 +5,8 @@
 
 #include "CommonTileView.h"
 #include "Items/Zero_Item_data.h"
+#include "UI/ItemShop/ZL_ITemIcon.h"
+#include "ZeroLock/ZeroLock.h"
 
 void UZL_ItemShopCategory::AddItemToTier(UZero_Item_data* itemData)
 {
@@ -32,4 +34,74 @@ void UZL_ItemShopCategory::addtoLists(UZero_Item_data* itemData, TArray<UZero_It
 {
 	items.AddUnique(itemData);
 	listToAdd->AddItem(itemData);
+}
+
+void UZL_ItemShopCategory::OnItemSelected(UObject* Object)
+{
+}
+
+void UZL_ItemShopCategory::OnItemSelected1(UObject* Object)
+{
+	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
+	if (itemData)
+	{
+		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier1_ItemListView->GetEntryWidgetFromItem(itemData)))
+		{
+			icon->SetOnItemPurchased();
+			OnItemClickedOn.Broadcast(itemData);
+		}
+	}
+}
+
+void UZL_ItemShopCategory::OnItemSelected2(UObject* Object)
+{
+	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
+	if (itemData)
+	{
+		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier2_ItemListView->GetEntryWidgetFromItem(itemData)))
+		{
+			icon->SetOnItemPurchased();
+			OnItemClickedOn.Broadcast(itemData);
+		}
+	}
+}
+
+void UZL_ItemShopCategory::OnItemSelected3(UObject* Object)
+{
+	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
+	if (itemData)
+	{
+		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier3_ItemListView->GetEntryWidgetFromItem(itemData)))
+		{
+			icon->SetOnItemPurchased();
+			OnItemClickedOn.Broadcast(itemData);
+		}
+	}
+}
+
+void UZL_ItemShopCategory::OnItemSelected4(UObject* Object)
+{
+	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
+	if (itemData)
+	{
+		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier4_ItemListView->GetEntryWidgetFromItem(itemData)))
+		{
+			icon->SetOnItemPurchased();
+			OnItemClickedOn.Broadcast(itemData);
+		}
+	}
+}
+
+void UZL_ItemShopCategory::AddDelegates()
+{
+	Tier1_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected1);
+	Tier2_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected2);
+	Tier3_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected3);
+	Tier4_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected4);
+}
+
+void UZL_ItemShopCategory::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	AddDelegates();
 }

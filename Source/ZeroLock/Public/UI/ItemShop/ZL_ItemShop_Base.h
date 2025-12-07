@@ -7,6 +7,8 @@
 #include "ZL_ItemShop_Base.generated.h"
 
 
+class UZero_Item_Inventory_Component;
+class UZL_ITemIcon;
 class UCommonButtonBase;
 class UZL_ItemShopCategory;
 class UCommonActivatableWidgetSwitcher;
@@ -39,6 +41,9 @@ public:
 
 	UPROPERTY()
 	TArray<UZero_Item_data*> LoadedItems;
+
+	UPROPERTY()
+	TMap<UZero_Item_data* , UZL_ITemIcon*> ItemToIconMap;
 	
 	UPROPERTY(meta = (BindWidget))
 	class UCommonTileView* ItemListView;
@@ -58,8 +63,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Shop")
 	void BTN_Vitality_Pressed() const;
 
+
+	//void ItemListView_OnEntryWidgetGenerated(UUserWidget& UserWidget);
 	UFUNCTION()
 	void AddDelegates();
+
+	UFUNCTION()
+	void ItemPressed(UZero_Item_data* Data);
+
+
+	UPROPERTY()
+	UZero_Item_Inventory_Component* HeroItemComponent;
 
 	UPROPERTY(EditAnywhere,meta=(BindWidget))
 	TObjectPtr<UCommonActivatableWidgetSwitcher> ItemSwitcher;

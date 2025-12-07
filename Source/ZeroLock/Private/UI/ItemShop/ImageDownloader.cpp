@@ -7,6 +7,9 @@
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "HAL/PlatformFileManager.h" // Required for IPlatformFile
+
+// Assuming the header file defines FItemDownloadData and UImageDownloader correctly
 
 FString UImageDownloader::SanitizeFilename(const FString& InName)
 {
@@ -45,9 +48,10 @@ FString UImageDownloader::GetFileExtensionFromUrl(const FString& Url)
     int32 DotIndex;
     if (CleanUrl.FindLastChar(TEXT('.'), DotIndex))
     {
-        return CleanUrl.RightChop(DotIndex);
+        // Add the dot back for the file extension (e.g., .png)
+        return CleanUrl.RightChop(DotIndex); 
     }
-    return TEXT("bin"); // Default to binary if no extension found
+    return TEXT(".bin"); // Default to binary if no extension found
 }
 
 void UImageDownloader::StartImageDownload(FString JsonFilePath, FString OutputDirectory)
@@ -87,25 +91,32 @@ void UImageDownloader::StartImageDownload(FString JsonFilePath, FString OutputDi
             {
                 // Extract required fields
                 FString ItemName = JsonObject->GetStringField(TEXT("name"));
-                FString ImageUrl = JsonObject->GetStringField(TEXT("image"));
-                FString WebpUrl = JsonObject->GetStringField(TEXT("image_webp"));
-
+                
                 // Sanitization is important for file paths!
                 FString CleanName = SanitizeFilename(ItemName);
 
-                // Download standard image
-                if (!ImageUrl.IsEmpty())
+                // --- MODIFIED: Extract Shop Images (shop_image and shop_image_webp) ---
+                FString ShopImageUrl = JsonObject->GetStringField(TEXT("shop_image"));
+                FString ShopWebpUrl = JsonObject->GetStringField(TEXT("shop_image_webp"));
+
+                // Download standard shop image
+                if (!ShopImageUrl.IsEmpty())
                 {
-                    FItemDownloadData PngData = { CleanName, ImageUrl, GetFileExtensionFromUrl(ImageUrl), FullOutputPath };
+                    // Use a unique name for the shop image: ItemName_shop
+                    FString FinalName = CleanName + TEXT("_shop"); 
+                    FItemDownloadData PngData = { FinalName, ShopImageUrl, GetFileExtensionFromUrl(ShopImageUrl), FullOutputPath };
                     HandleItemDownload(PngData);
                 }
 
-                // Download webp image
-                if (!WebpUrl.IsEmpty())
+                // Download webp shop image
+                if (!ShopWebpUrl.IsEmpty())
                 {
-                    FItemDownloadData WebpData = { CleanName, WebpUrl, GetFileExtensionFromUrl(WebpUrl), FullOutputPath };
+                    // Use a unique name for the webp shop image: ItemName_shop_webp
+                    FString FinalName = CleanName + TEXT("_shop_webp");
+                    FItemDownloadData WebpData = { FinalName, ShopWebpUrl, GetFileExtensionFromUrl(ShopWebpUrl), FullOutputPath };
                     HandleItemDownload(WebpData);
                 }
+                // ---------------------------------------------------------------------
             }
         }
     }
@@ -129,6 +140,8 @@ void UImageDownloader::HandleItemDownload(FItemDownloadData DownloadData)
 
     // 2. Bind the delegate (callback) to handle the response
     // We capture the DownloadData by value to ensure it's available when the async request finishes
+    // Note: BindStatic is used here as a simplification from your original code.
+    // In a real project, consider using BindUObject to ensure object lifetime management if this were not a static function.
     HttpRequest->OnProcessRequestComplete().BindStatic(&UImageDownloader::OnDownloadComplete, DownloadData);
 
     // 3. Send the request

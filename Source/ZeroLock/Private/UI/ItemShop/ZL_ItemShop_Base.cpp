@@ -9,8 +9,12 @@
 #include "Engine/StreamableManager.h"
 #include "CommonTileView.h"
 #include "Items/Zero_Item_data.h"
+#include "Items/Zero_Item_Inventory_Component.h"
+#include "Kismet/GameplayStatics.h"
+#include "UI/ItemShop/ZL_ITemIcon.h"
 #include "UI/ItemShop/ZL_ItemShopCategory.h"
 #include "ZeroLock/ZeroLock.h"
+#include "ZeroLock/ZeroLockCharacter.h"
 
 UZL_ItemShop_Base::UZL_ItemShop_Base()
 {
@@ -91,7 +95,6 @@ void UZL_ItemShop_Base::OnItemsLoaded()
 			AddtoCategory(Item);
 		}
 	}
-
 	// Push loaded items into the CommonUI ListView
 	if (ItemListView)
 		ItemListView->SetListItems(LoadedItems);
@@ -118,12 +121,36 @@ void UZL_ItemShop_Base::BTN_Vitality_Pressed() const
 	ItemSwitcher->SetActiveWidget(VitalityCategory);
 }
 
+
 void UZL_ItemShop_Base::AddDelegates()
 {
 	BTN_All->OnClicked().AddUObject(this,&ThisClass::BTN_All_Pressed);
 	BTN_Weapon->OnClicked().AddUObject(this,&ThisClass::BTN_Weapon_Pressed);
 	BTN_Spirit->OnClicked().AddUObject(this,&ThisClass::BTN_Spirit_Pressed);
 	BTN_Vitality->OnClicked().AddUObject(this,&ThisClass::BTN_Vitality_Pressed);
+
+	SpiritCategory->OnItemClickedOn.AddDynamic(this,&UZL_ItemShop_Base::ItemPressed);
+	WeaponCategory->OnItemClickedOn.AddDynamic(this,&UZL_ItemShop_Base::ItemPressed);
+	VitalityCategory->OnItemClickedOn.AddDynamic(this,&UZL_ItemShop_Base::ItemPressed);
+	
+}
+
+void UZL_ItemShop_Base::ItemPressed(UZero_Item_data* Data)
+{
+	//ZLOG(ItemListView->GetEntryWidgetFromItem(Data)->GetName());
+	
+	UZL_ITemIcon* Icon = Cast<UZL_ITemIcon>(ItemListView->GetEntryWidgetFromItem(Data));
+	if (Icon)
+	{
+		Icon->SetOnItemPurchased();
+	}
+	if (!HeroItemComponent)
+	{
+		HeroItemComponent =Cast<UZero_Item_Inventory_Component>( UGameplayStatics::GetPlayerPawn(GetWorld(),0)->GetComponentByClass(UZero_Item_Inventory_Component::StaticClass()));
+		if (!HeroItemComponent) return;
+		
+	}
+	HeroItemComponent->ServerBuyItem(Data);
 }
 
 void UZL_ItemShop_Base::AddtoCategory(UZero_Item_data* dataItem)

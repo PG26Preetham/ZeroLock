@@ -28,5 +28,17 @@ public:
 	void SetupFromItem(class UZero_Item_data* ItemData);
 
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UZero_Item_data* ItemDataToStore;
+	
+	UFUNCTION(BlueprintCallable)
+	void SetOnItemPurchased();
+	UFUNCTION(BlueprintCallable)
+	void SetOnItemSold();
+	UFUNCTION(BlueprintCallable)
+	void SetItemCanBeUpgradedTo();
+	
+	
 	
 };

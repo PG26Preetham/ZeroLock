@@ -47,7 +47,8 @@ void UZero_Item_Inventory_Component::ServerBuyItem_Implementation(UZero_Item_dat
 
 	int32 Index = AddItem(NewItem);
 	if (Index == -1) return;
-
+	ZLOG("Item bought");
+	ZLOG(ItemData->ItemName);
 	ApplyItemEffects(Items[Index]);
 }
 
