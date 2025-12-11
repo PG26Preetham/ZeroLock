@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CommonBorder.h"
 #include "CommonUserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
+#include "Components/WidgetComponent.h"
 #include "ZL_ITemIcon.generated.h"
 
 class UImage;
@@ -23,6 +25,15 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UImage* ItemIcon;
+	UPROPERTY(meta = (BindWidget))
+	class UCommonBorder* BackGroundCommon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UCommonBorderStyle> HoverCBStyle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UCommonBorderStyle> NoneHoverStyle;
+
 
 	UFUNCTION(BlueprintCallable)
 	void SetupFromItem(class UZero_Item_data* ItemData);
@@ -38,7 +49,12 @@ public:
 	void SetOnItemSold();
 	UFUNCTION(BlueprintCallable)
 	void SetItemCanBeUpgradedTo();
+	 
 	
+
+	
+	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 	
 	
 };

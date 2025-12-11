@@ -261,14 +261,7 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
 			return;
 		}
 	}
-	if (bCanQuickFall)
-	{
-		if (MovementMode == MOVE_Falling && bWantsToCrouch && !Safe_bPrevWantsToCrouch )
-		{
-			//QuickFallDown();
-			bCanQuickFall = false;
-		}
-	}
+	
 	
 	if(IsCustomMovementMode(CMOVE_Slide) && !bWantsToCrouch)
 	{
@@ -344,7 +337,7 @@ void UZeroBaseCharacterMovementComp::OnMovementModeChanged(EMovementMode Previou
 		ZLOG("MeleeStart");
 	}
 
-	if (MovementMode == MOVE_Falling) bCanQuickFall = true;
+	//if (MovementMode == MOVE_Falling) bCanQuickFall = true;
 
 	if (ZeroMovementModeChangedDelegate.IsBound())
 	{
@@ -796,9 +789,9 @@ void UZeroBaseCharacterMovementComp::PhysZipline(float DeltaTime, int32 Iteratio
 
 void UZeroBaseCharacterMovementComp::QuickFallDown()
 {
-	if (MovementMode != MOVE_Falling) return;
-	Velocity += FVector::DownVector * QuickFallImpulse;
-	bCanQuickFall=false;
+	//if (MovementMode != MOVE_Falling) return;
+	//Velocity += FVector::DownVector * QuickFallImpulse;
+	//bCanQuickFall=false;
 }
 
 
