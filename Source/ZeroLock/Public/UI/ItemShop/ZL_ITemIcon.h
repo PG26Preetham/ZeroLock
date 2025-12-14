@@ -4,18 +4,27 @@
 
 #include "CoreMinimal.h"
 #include "CommonBorder.h"
+#include "CommonButtonBase.h"
 #include "CommonUserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Components/WidgetComponent.h"
 #include "ZL_ITemIcon.generated.h"
 
+
+UENUM(BlueprintType)
+enum class EItemState : uint8
+{
+	Default UMETA(DisplayName="Default"),
+	Sold UMETA(DisplayName="Sold"),
+	ReadyToUpgrade UMETA(DisplayName="ReadyToUpgrade")
+};
 class UImage;
 class UCommonTextBlock;
 /**
  * 
  */
 UCLASS()
-class ZEROLOCK_API UZL_ITemIcon : public UCommonUserWidget, public IUserObjectListEntry
+class ZEROLOCK_API UZL_ITemIcon : public UCommonButtonBase, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 
@@ -28,12 +37,23 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	class UCommonBorder* BackGroundCommon;
 
+	UPROPERTY(meta = (BindWidget))
+	class UCommonBorder* DetailCommon;
+
+	UPROPERTY(meta = (BindWidget))
+	UCommonTextBlock* ItemStates;
+
+	UPROPERTY(meta = (BindWidget))
+	UCommonTextBlock* DescriptionText;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UCommonBorderStyle> HoverCBStyle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UCommonBorderStyle> NoneHoverStyle;
 
+
+	
 
 	UFUNCTION(BlueprintCallable)
 	void SetupFromItem(class UZero_Item_data* ItemData);
@@ -42,19 +62,27 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UZero_Item_data* ItemDataToStore;
+
+	
+	UFUNCTION(Blueprintable,BlueprintImplementableEvent)
+	void OnAnimationPlay(bool activate);
 	
 	UFUNCTION(BlueprintCallable)
 	void SetOnItemPurchased();
 	UFUNCTION(BlueprintCallable)
 	void SetOnItemSold();
 	UFUNCTION(BlueprintCallable)
-	void SetItemCanBeUpgradedTo();
+	void SetItemCanBeUpgradedTo(bool bCnaBeUpgraded);
 	 
 	
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EItemState ItemCurrentState;
 	
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
-	
+
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tooltip")
+	TSubclassOf<class UZL_ItemTooltipWidget> TooltipWidgetClass;
 	
 };

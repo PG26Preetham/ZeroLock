@@ -88,15 +88,7 @@ void AZeroLockCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	ParryComp->SetVisibility(false);
-	FGameplayTag StunTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Stun"),false);
-	FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);
-	AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
-	AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
-	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
-	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
-	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
-	AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
-	AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
+	
 	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);
 
 	
@@ -196,6 +188,15 @@ void AZeroLockCharacter::InitializeAttributes()
 		{
 			FActiveGameplayEffectHandle GEHandle = AbilitySystemComp->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 		}
+		FGameplayTag StunTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Stun"),false);
+		FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);
+		AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
+		AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
+		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
+		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
+		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
+		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
+		AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
 	}
 }
 
@@ -323,6 +324,10 @@ void AZeroLockCharacter::OnRep_PlayerState()
 void AZeroLockCharacter::PrimaryFirePressed()
 {
 	if(!PrimaryFireAbility)
+	{
+		return;
+	}
+	if (!AttributeSet)
 	{
 		return;
 	}
@@ -735,6 +740,7 @@ void AZeroLockCharacter::Parry(FGameplayTag GameplayTag, int NewCount)
 
 void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData)
 {
+	if (!AttributeSet) return;
 	
 	float currentH= AttributeSet->GetCurrentHealth();
 	float MaxH = AttributeSet->GetMaximumHealth();
@@ -753,6 +759,7 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 
 void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData)
 {
+	if (!AttributeSet) return;
 	float currentA= AttributeSet->GetCurrentAmmo();
 	float MaxA = AttributeSet->GetMaxAmmo();
 	

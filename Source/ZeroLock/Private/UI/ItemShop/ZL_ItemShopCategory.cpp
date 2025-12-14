@@ -3,7 +3,11 @@
 
 #include "UI/ItemShop/ZL_ItemShopCategory.h"
 
+#include "CommonTextBlock.h"
 #include "CommonTileView.h"
+#include "Chaos/ChaosPerfTest.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Items/Zero_Item_data.h"
 #include "UI/ItemShop/ZL_ITemIcon.h"
 #include "ZeroLock/ZeroLock.h"
@@ -36,61 +40,67 @@ void UZL_ItemShopCategory::addtoLists(UZero_Item_data* itemData, TArray<UZero_It
 	listToAdd->AddItem(itemData);
 }
 
-void UZL_ItemShopCategory::OnItemSelected(UObject* Object)
+void UZL_ItemShopCategory::OnItemSelected(UObject* Object, class UCommonTileView* TileView)
 {
+	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
+	
+	if (itemData)
+	{
+		for (UZero_Item_data* it : itemData->NextItemsToUpgrade)
+		{
+			ZLOG(it->ItemName);
+			
+		}
+		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(TileView->GetEntryWidgetFromItem(itemData)))
+		{
+			if (icon->ItemCurrentState == EItemState::Sold)
+			{
+				icon->SetOnItemSold();
+				OnItemClickedOn.Broadcast(itemData);
+				for (UZero_Item_data* it : itemData->NextItemsToUpgrade)
+				{
+					ZLOG(it->ItemName);
+					FindAndSetToUpgradeOrRemove(it,false);
+				}
+			}
+			else
+			{
+				icon->SetOnItemPurchased();
+				OnItemClickedOn.Broadcast(itemData);
+
+				for (UZero_Item_data* it : itemData->NextItemsToUpgrade)
+				{
+					ZLOG(it->ItemName);
+					FindAndSetToUpgradeOrRemove(it,true);
+				}
+			}
+			
+		}
+	}
 }
+
+
 
 void UZL_ItemShopCategory::OnItemSelected1(UObject* Object)
 {
-	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
-	if (itemData)
-	{
-		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier1_ItemListView->GetEntryWidgetFromItem(itemData)))
-		{
-			icon->SetOnItemPurchased();
-			OnItemClickedOn.Broadcast(itemData);
-		}
-	}
+	OnItemSelected(Object,Tier1_ItemListView);
 }
 
 void UZL_ItemShopCategory::OnItemSelected2(UObject* Object)
 {
-	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
-	if (itemData)
-	{
-		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier2_ItemListView->GetEntryWidgetFromItem(itemData)))
-		{
-			icon->SetOnItemPurchased();
-			OnItemClickedOn.Broadcast(itemData);
-		}
-	}
+	OnItemSelected(Object,Tier2_ItemListView);
 }
 
 void UZL_ItemShopCategory::OnItemSelected3(UObject* Object)
 {
-	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
-	if (itemData)
-	{
-		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier3_ItemListView->GetEntryWidgetFromItem(itemData)))
-		{
-			icon->SetOnItemPurchased();
-			OnItemClickedOn.Broadcast(itemData);
-		}
-	}
+	OnItemSelected(Object,Tier3_ItemListView);
 }
 
 void UZL_ItemShopCategory::OnItemSelected4(UObject* Object)
 {
-	UZero_Item_data* itemData = Cast<UZero_Item_data>(Object);
-	if (itemData)
-	{
-		if (UZL_ITemIcon* icon =Cast<UZL_ITemIcon>(Tier4_ItemListView->GetEntryWidgetFromItem(itemData)))
-		{
-			icon->SetOnItemPurchased();
-			OnItemClickedOn.Broadcast(itemData);
-		}
-	}
+	OnItemSelected(Object,Tier4_ItemListView);
 }
+
 
 void UZL_ItemShopCategory::AddDelegates()
 {
@@ -98,6 +108,15 @@ void UZL_ItemShopCategory::AddDelegates()
 	Tier2_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected2);
 	Tier3_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected3);
 	Tier4_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected4);
+
+	//Tier1_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
+	//Tier2_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
+	//Tier3_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
+	//Tier4_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
+
+	//DescriptionCommonBorder->SetVisibility(ESlateVisibility::Collapsed);
+
+	//DescriptionPanel->AddChildToCanvas(DescriptionCommonBorder);
 }
 
 void UZL_ItemShopCategory::NativeOnInitialized()
@@ -105,3 +124,45 @@ void UZL_ItemShopCategory::NativeOnInitialized()
 	Super::NativeOnInitialized();
 	AddDelegates();
 }
+
+void UZL_ItemShopCategory::FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade,
+	bool setToUpgradeState)
+{
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier2_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
+	{
+		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState);
+	}
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier3_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
+	{
+		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState);
+	}
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier4_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
+	{
+		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState);
+	}
+}
+
+UZL_ITemIcon* UZL_ItemShopCategory::FindAndReturnIcon(UZero_Item_data* ItemData)
+{
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier1_ItemListView->GetEntryWidgetFromItem(ItemData)))
+	{
+		return iconToChange;
+	}
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier2_ItemListView->GetEntryWidgetFromItem(ItemData)))
+	{
+		return iconToChange;
+	}
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier3_ItemListView->GetEntryWidgetFromItem(ItemData)))
+	{
+		return iconToChange;
+	}
+	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier4_ItemListView->GetEntryWidgetFromItem(ItemData)))
+	{
+		return iconToChange;
+	}
+	return nullptr;
+}
+
+
+
+

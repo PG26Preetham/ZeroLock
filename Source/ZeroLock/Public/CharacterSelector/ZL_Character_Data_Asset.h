@@ -42,4 +42,8 @@ public:
 	TObjectPtr<UAnimSequence> DisplayAnimation;
 
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<UTexture2D> Icon;
+
+	
 };

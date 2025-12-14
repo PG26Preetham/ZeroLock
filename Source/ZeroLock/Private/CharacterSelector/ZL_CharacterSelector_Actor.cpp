@@ -31,7 +31,7 @@ AZL_CharacterSelector_Actor::AZL_CharacterSelector_Actor()
 void AZL_CharacterSelector_Actor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	CaptureComp->ShowOnlyComponent(PreviewMesh);
 }
 
 // Called every frame
@@ -52,7 +52,7 @@ void AZL_CharacterSelector_Actor::SetPreview(USkeletalMesh* NewMesh, class UAnim
 	{
 		PreviewMesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 		PreviewMesh->SetAnimation(NewAnim);
-		PreviewMesh->Play(true); // loop
+		PreviewMesh->Play(false); // loop
 	}
 }
 

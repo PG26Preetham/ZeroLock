@@ -191,7 +191,7 @@ protected:
 	class UBaseCharAbilitySystemComponent* AbilitySystemComp;
 
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UBaseCharAttributeSet* AttributeSet;
 
 public:

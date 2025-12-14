@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_ItemShopCategory.generated.h"
 
+class UZL_ITemIcon;
 class UZero_Item_data;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemClickedOn ,UZero_Item_data* ,ItemClickedOn);
 
@@ -43,16 +44,28 @@ public:
 
 
 	UFUNCTION()
-	void OnItemSelected(UObject* Object);
+	void OnItemSelected(UObject* Object , class UCommonTileView* TileView);
 	void OnItemSelected1(UObject* Object);
 	void OnItemSelected2(UObject* Object);
 	void OnItemSelected3(UObject* Object);
 	void OnItemSelected4(UObject* Object);
+	//void OnITemHovered(UObject* Object, bool bArg);
 	void AddDelegates();
 	virtual void NativeOnInitialized() override;
 
 
+	UFUNCTION()
+	void FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade, bool setToUpgradeState);
+	UFUNCTION()
+	UZL_ITemIcon* FindAndReturnIcon(UZero_Item_data* ItemData);
+
 	UPROPERTY(BlueprintAssignable)
 	FOnItemClickedOn OnItemClickedOn;
+	
+	
+
+
+	//void SetPostionOfPopUP(FVector2D postion);
+
 	
 };

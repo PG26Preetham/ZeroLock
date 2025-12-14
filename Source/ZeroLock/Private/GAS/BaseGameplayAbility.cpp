@@ -116,6 +116,10 @@ float UBaseGameplayAbility::GetCoolDownTime() const
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (Hero)
 	{
+		if (!Hero->GetMyAttributeSet())
+		{
+			return cooldownTime;
+		}
 		float CDR = Hero->GetMyAttributeSet()->GetCooldownReduction();
 		return (cooldownTime*(1-CDR/100));
 	}
