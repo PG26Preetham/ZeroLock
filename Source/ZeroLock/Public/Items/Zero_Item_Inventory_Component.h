@@ -28,9 +28,12 @@ public:
 	/** Ability handles we grant */
 	UPROPERTY()
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FZeroInventoryItem* ItemsUpgradedFrom;
 };
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FZeroInventoryItemDelegate, TArray<FZeroInventoryItem>, InventoryItem);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ZEROLOCK_API UZero_Item_Inventory_Component : public UActorComponent
@@ -55,7 +58,7 @@ virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLife
 
 	/** Max inventory slots */
 	UPROPERTY(EditDefaultsOnly)
-	int32 MaxSlots = 6;
+	int32 MaxSlots = 12;
 
 	/** GAS reference */
 	UAbilitySystemComponent* GetASC() const;
@@ -65,7 +68,7 @@ virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLife
 	//------------------------------------
 
 	UFUNCTION(BlueprintCallable,Server, Reliable)
-	void ServerBuyItem(UZero_Item_data* ItemData);
+	void ServerBuyItem(UZero_Item_data* ItemData , UZero_Item_data* ItemUpgradedFrom);
 
 	UFUNCTION(BlueprintCallable,Server, Reliable)
 	void ServerSellItem(UZero_Item_data* ItemData);
@@ -79,5 +82,17 @@ protected:
 	bool HasEnoughSouls(int32 Cost) const;
 	void DeductSouls(int32 Cost);
 	int32 AddItem(const FZeroInventoryItem& Item);
+
+	FZeroInventoryItem* FindItem(UZero_Item_data* ItemToSearch);
+	int32 FindItemIndex(UZero_Item_data* ItemToSearch);
+
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FZeroInventoryItemDelegate ItemDelegate;
+	
+	
+	UFUNCTION(BlueprintCallable)
+	bool HasSlotToBuy();
 		
 };

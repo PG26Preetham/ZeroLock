@@ -68,6 +68,11 @@ public:
 	UFUNCTION()
 	void AddDelegates();
 
+	void FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade, bool setToUpgradeState, UZero_Item_data* FromItem);
+	UZL_ITemIcon* FindAndReturnIcon(UZero_Item_data* ItemData);
+
+	void RecSellFunction(UZero_Item_data* ItemData);
+	
 	UFUNCTION()
 	void ItemPressed(UZero_Item_data* Data);
 

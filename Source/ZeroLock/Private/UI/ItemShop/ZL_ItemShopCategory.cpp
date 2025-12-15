@@ -9,8 +9,10 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Items/Zero_Item_data.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/ItemShop/ZL_ITemIcon.h"
 #include "ZeroLock/ZeroLock.h"
+#include "ZeroLock/ZeroLockCharacter.h"
 
 void UZL_ItemShopCategory::AddItemToTier(UZero_Item_data* itemData)
 {
@@ -55,24 +57,59 @@ void UZL_ItemShopCategory::OnItemSelected(UObject* Object, class UCommonTileView
 		{
 			if (icon->ItemCurrentState == EItemState::Sold)
 			{
+				
 				icon->SetOnItemSold();
 				OnItemClickedOn.Broadcast(itemData);
 				for (UZero_Item_data* it : itemData->NextItemsToUpgrade)
 				{
 					ZLOG(it->ItemName);
-					FindAndSetToUpgradeOrRemove(it,false);
+					FindAndSetToUpgradeOrRemove(it,false,nullptr);
 				}
+				RecSellFunction(icon->ItemUpgradedFrom);
+				
 			}
-			else
+			else if (icon->ItemCurrentState == EItemState::Default)
 			{
+				if (!InventoryComp) return;
+				if (!InventoryComp->HasSlotToBuy()) return;
 				icon->SetOnItemPurchased();
 				OnItemClickedOn.Broadcast(itemData);
 
 				for (UZero_Item_data* it : itemData->NextItemsToUpgrade)
 				{
 					ZLOG(it->ItemName);
-					FindAndSetToUpgradeOrRemove(it,true);
+					FindAndSetToUpgradeOrRemove(it,true,itemData);
 				}
+			}
+			else if (icon->ItemCurrentState == EItemState::ReadyToUpgrade)
+			{
+				if (icon->ItemUpgradedFrom)
+				{
+					for (UZero_Item_data* it : icon->ItemUpgradedFrom->NextItemsToUpgrade)
+					{
+						if (it == itemData)
+						{
+							FindAndSetToUpgradeOrRemove(it,false,icon->ItemUpgradedFrom);
+							continue;
+						}
+						FindAndSetToUpgradeOrRemove(it,false,nullptr);
+					}
+					if (UZL_ITemIcon* fromIcon = FindAndReturnIcon(icon->ItemUpgradedFrom))
+					{
+						fromIcon->SetUpgradedBlocked();
+					}
+				}
+				
+				icon->SetOnItemPurchased();
+				OnItemClickedOn.Broadcast(itemData);
+
+				for (UZero_Item_data* it : itemData->NextItemsToUpgrade)
+				{
+					ZLOG(it->ItemName);
+					FindAndSetToUpgradeOrRemove(it,true,itemData);
+				}
+
+				
 			}
 			
 		}
@@ -104,6 +141,11 @@ void UZL_ItemShopCategory::OnItemSelected4(UObject* Object)
 
 void UZL_ItemShopCategory::AddDelegates()
 {
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0));
+	if (Hero)
+	{
+		InventoryComp = Hero->GetInventoryComponent();
+	}
 	Tier1_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected1);
 	Tier2_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected2);
 	Tier3_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected3);
@@ -126,19 +168,20 @@ void UZL_ItemShopCategory::NativeOnInitialized()
 }
 
 void UZL_ItemShopCategory::FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade,
-	bool setToUpgradeState)
+	bool setToUpgradeState, UZero_Item_data* FromItem)
 {
+
 	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier2_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
 	{
-		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState);
+		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState,FromItem);
 	}
 	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier3_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
 	{
-		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState);
+		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState,FromItem);
 	}
 	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier4_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
 	{
-		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState);
+		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState,FromItem);
 	}
 }
 
@@ -161,6 +204,25 @@ UZL_ITemIcon* UZL_ItemShopCategory::FindAndReturnIcon(UZero_Item_data* ItemData)
 		return iconToChange;
 	}
 	return nullptr;
+}
+
+void UZL_ItemShopCategory::RecSellFunction(UZero_Item_data* ItemData)
+{
+	if (!ItemData) return;
+	if (UZL_ITemIcon* icon = FindAndReturnIcon(ItemData))
+	{
+		icon->SetOnItemSold();
+		if (icon->ItemUpgradedFrom)
+		{
+			//OnItemClickedOn.Broadcast(icon->ItemUpgradedFrom);
+			for (UZero_Item_data* it : icon->ItemUpgradedFrom->NextItemsToUpgrade)
+			{
+				ZLOG(it->ItemName);
+				FindAndSetToUpgradeOrRemove(it,false,nullptr);
+			}
+			RecSellFunction(icon->ItemUpgradedFrom);
+		}
+	}
 }
 
 

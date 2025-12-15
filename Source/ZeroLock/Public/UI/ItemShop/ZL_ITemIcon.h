@@ -16,7 +16,8 @@ enum class EItemState : uint8
 {
 	Default UMETA(DisplayName="Default"),
 	Sold UMETA(DisplayName="Sold"),
-	ReadyToUpgrade UMETA(DisplayName="ReadyToUpgrade")
+	ReadyToUpgrade UMETA(DisplayName="ReadyToUpgrade"),
+	Blocked UMETA(DisplayName="Blocked"),
 };
 class UImage;
 class UCommonTextBlock;
@@ -36,15 +37,12 @@ public:
 	UImage* ItemIcon;
 	UPROPERTY(meta = (BindWidget))
 	class UCommonBorder* BackGroundCommon;
-
-	UPROPERTY(meta = (BindWidget))
-	class UCommonBorder* DetailCommon;
+	
 
 	UPROPERTY(meta = (BindWidget))
 	UCommonTextBlock* ItemStates;
 
-	UPROPERTY(meta = (BindWidget))
-	UCommonTextBlock* DescriptionText;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UCommonBorderStyle> HoverCBStyle;
@@ -63,6 +61,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UZero_Item_data* ItemDataToStore;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UZero_Item_data* ItemUpgradedFrom;
+
 	
 	UFUNCTION(Blueprintable,BlueprintImplementableEvent)
 	void OnAnimationPlay(bool activate);
@@ -72,7 +74,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetOnItemSold();
 	UFUNCTION(BlueprintCallable)
-	void SetItemCanBeUpgradedTo(bool bCnaBeUpgraded);
+	void SetItemCanBeUpgradedTo(bool bCnaBeUpgraded , UZero_Item_data* ItemFrom);
+
+	UFUNCTION(BlueprintCallable)
+	void SetUpgradedBlocked();
 	 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

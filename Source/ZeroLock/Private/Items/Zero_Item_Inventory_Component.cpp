@@ -33,21 +33,32 @@ UAbilitySystemComponent* UZero_Item_Inventory_Component::GetASC() const
 	return Owner ? Owner->FindComponentByClass<UAbilitySystemComponent>() : nullptr;
 }
 
-void UZero_Item_Inventory_Component::ServerBuyItem_Implementation(UZero_Item_data* ItemData)
+void UZero_Item_Inventory_Component::ServerBuyItem_Implementation(UZero_Item_data* ItemData,
+	UZero_Item_data* ItemUpgradedFrom)
 {
 	if (!ItemData) return;
 	if (!HasEnoughSouls(ItemData->Cost)) return;
 
-	// Deduct souls
-	DeductSouls(ItemData->Cost);
+	if (ItemUpgradedFrom)
+	{
+		ServerSellItem(ItemUpgradedFrom);
+	}
+	
 
 	// Add item
 	FZeroInventoryItem NewItem;
 	NewItem.ItemData = ItemData;
-
+	if (ItemUpgradedFrom)
+	{
+		NewItem.ItemsUpgradedFrom = (FindItem(ItemUpgradedFrom));
+	}
 	int32 Index = AddItem(NewItem);
+
+	
 	if (Index == -1) return;
 	ZLOG("Item bought");
+	// Deduct souls
+	DeductSouls(ItemData->Cost);
 	ZLOG(ItemData->ItemName);
 	ApplyItemEffects(Items[Index]);
 }
@@ -74,6 +85,7 @@ void UZero_Item_Inventory_Component::ServerSellItem_Implementation(UZero_Item_da
 	RemoveItemEffects(Item);
 
 	Items.RemoveAt(FoundIndex);
+	ItemDelegate.Broadcast(Items);
 }
 
 void UZero_Item_Inventory_Component::ApplyItemEffects(FZeroInventoryItem& Item)
@@ -121,6 +133,7 @@ void UZero_Item_Inventory_Component::ApplyItemEffects(FZeroInventoryItem& Item)
 
 void UZero_Item_Inventory_Component::RemoveItemEffects(FZeroInventoryItem& Item)
 {
+	if (!IsValid(Item.ItemData)) return;
 	UAbilitySystemComponent* ASC = GetASC();
 	if (!ASC) return;
 
@@ -139,6 +152,7 @@ void UZero_Item_Inventory_Component::RemoveItemEffects(FZeroInventoryItem& Item)
 	}
 
 	Item.AbilitySpecHandles.Empty();
+	
 }
 
 bool UZero_Item_Inventory_Component::HasEnoughSouls(int32 Cost) const
@@ -172,9 +186,44 @@ void UZero_Item_Inventory_Component::DeductSouls(int32 Cost)
 
 int32 UZero_Item_Inventory_Component::AddItem(const FZeroInventoryItem& Item)
 {
+	
 	if (Items.Num() >= MaxSlots)
 		return -1;
 
 	int32 Index = Items.Add(Item);
+	ItemDelegate.Broadcast(Items);
 	return Index;
 }
+
+FZeroInventoryItem* UZero_Item_Inventory_Component::FindItem(UZero_Item_data* ItemToSearch)
+{
+	for (FZeroInventoryItem& Item : Items)
+	{
+		if (Item.ItemData == ItemToSearch)
+		{
+			return &Item;
+		}
+	}
+	return nullptr;
+}
+
+int32 UZero_Item_Inventory_Component::FindItemIndex(UZero_Item_data* ItemToSearch)
+{
+	int index=-1;
+	for (FZeroInventoryItem& Item : Items)
+	{
+		++index;
+		if (Item.ItemData == ItemToSearch)
+		{
+			return index;
+		}
+	}
+	return -1;
+}
+
+bool UZero_Item_Inventory_Component::HasSlotToBuy()
+{
+	return  Items.Num() < MaxSlots;
+}
+
+

@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "Items/Zero_Item_Inventory_Component.h"
+#include "ZeroLock/ZeroLockCharacter.h"
 #include "ZL_ItemShopCategory.generated.h"
 
 class UZL_ITemIcon;
@@ -27,6 +29,9 @@ public:
 	class UCommonTileView* Tier3_ItemListView;
 	UPROPERTY(meta = (BindWidget))
 	class UCommonTileView* Tier4_ItemListView;
+
+	UPROPERTY(BlueprintReadOnly)
+	UZero_Item_Inventory_Component* InventoryComp;
 
 	UFUNCTION()
 	void AddItemToTier(UZero_Item_data* itemData);
@@ -55,7 +60,7 @@ public:
 
 
 	UFUNCTION()
-	void FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade, bool setToUpgradeState);
+	void FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade, bool setToUpgradeState , UZero_Item_data* FromItem);
 	UFUNCTION()
 	UZL_ITemIcon* FindAndReturnIcon(UZero_Item_data* ItemData);
 
@@ -63,7 +68,7 @@ public:
 	FOnItemClickedOn OnItemClickedOn;
 	
 	
-
+	void RecSellFunction(UZero_Item_data* ItemData);
 
 	//void SetPostionOfPopUP(FVector2D postion);
 

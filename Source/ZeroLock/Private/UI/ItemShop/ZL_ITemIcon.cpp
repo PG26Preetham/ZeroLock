@@ -23,10 +23,8 @@ void UZL_ITemIcon::SetupFromItem(class UZero_Item_data* ItemData)
 void UZL_ITemIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	ItemStates->SetVisibility(ESlateVisibility::Collapsed);
-	DetailCommon->SetVisibility(ESlateVisibility::Collapsed);
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 	UZero_Item_data* ItemData = Cast<UZero_Item_data>(ListItemObject);
-	DescriptionText->SetText(FText::FromString(ItemData->Description));
 	if (!ItemData) return;
 
 	SetupFromItem(ItemData);
@@ -77,14 +75,16 @@ void UZL_ITemIcon::SetOnItemSold()
 	ZLOG("ItemClicked ItemIcon");
 }
 
-void UZL_ITemIcon::SetItemCanBeUpgradedTo(bool bCnaBeUpgraded)
+void UZL_ITemIcon::SetItemCanBeUpgradedTo(bool bCnaBeUpgraded, UZero_Item_data* ItemFrom)
 {
+	if (ItemCurrentState == EItemState::Sold)return;
 	if (bCnaBeUpgraded)
 	{
 		ItemStates->SetText(FText::FromString("Upgraded"));
 		ItemStates->SetVisibility(ESlateVisibility::Visible);
 		ItemCurrentState = EItemState::ReadyToUpgrade;
 		OnAnimationPlay(true);
+		ItemUpgradedFrom = ItemFrom;
 		
 	}
 	else
@@ -92,15 +92,22 @@ void UZL_ITemIcon::SetItemCanBeUpgradedTo(bool bCnaBeUpgraded)
 		ItemStates->SetVisibility(ESlateVisibility::Collapsed);
 		ItemCurrentState = EItemState::Default;
 		OnAnimationPlay(false);
+		ItemUpgradedFrom = ItemFrom;
 	}
 	
 }
+
+void UZL_ITemIcon::SetUpgradedBlocked()
+{
+	ItemIcon->SetOpacity(0.5f);
+	ItemCurrentState = EItemState::Blocked;
+}
+
 void UZL_ITemIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 	SetRenderScale(FVector2D(1.2,1.2));
 	SetRenderTranslation({-5, -5});
-	DetailCommon->SetVisibility(ESlateVisibility::Visible);
 	if (!NoneHoverStyle)
 	{
 		NoneHoverStyle=BackGroundCommon->Style;
@@ -115,7 +122,6 @@ void UZL_ITemIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointe
 void UZL_ITemIcon::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnMouseLeave(InMouseEvent);
-	DetailCommon->SetVisibility(ESlateVisibility::Collapsed);
 	SetRenderScale(FVector2D(1,1));
 	SetRenderTranslation({0, 0});
 	if (NoneHoverStyle)

@@ -20,6 +20,7 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
 #include "GAS/ZL_GameplayTags.h"
+#include "Items/Zero_Item_Inventory_Component.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
@@ -77,6 +78,9 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	AbilitySystemComp->SetIsReplicated(true);
 	AbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Full);
 	AttributeSet = CreateDefaultSubobject<UBaseCharAttributeSet>(TEXT("AttributeSet"));
+
+	ItemInventoryComp = CreateDefaultSubobject<UZero_Item_Inventory_Component>(TEXT("ItemInventory"));
+	ItemInventoryComp->SetIsReplicated(true);
 
 	ParryComp=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ParryComponent"));
 	ParryComp->SetupAttachment(RootComponent);
@@ -298,6 +302,11 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 		
 	}
 	
+}
+
+UZero_Item_Inventory_Component* AZeroLockCharacter::GetInventoryComponent() const
+{
+	return ItemInventoryComp;
 }
 
 void AZeroLockCharacter::PossessedBy(AController* NewController)
