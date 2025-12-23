@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"GameplayAbilities",
-				"CommonUI"
+				"CommonUI",
+				"ModelViewViewModel"
 			]
 		},
 		{
@@ -50,6 +51,18 @@
 		},
 		{
 			"Name": "AssetRegistryExport",
+			"Enabled": true
+		},
+		{
+			"Name": "SlateModelViewViewModel",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelViewViewModel",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelViewViewModelPreview",
 			"Enabled": true
 		}
 	]

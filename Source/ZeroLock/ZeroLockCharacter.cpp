@@ -23,6 +23,7 @@
 #include "Items/Zero_Item_Inventory_Component.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/MVVM/ZL_VM_Attributes.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -92,7 +93,7 @@ void AZeroLockCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	ParryComp->SetVisibility(false);
-	
+	CreateVM_Att();
 	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);
 
 	
@@ -316,8 +317,10 @@ void AZeroLockCharacter::PossessedBy(AController* NewController)
 	//server GAS 
 	AbilitySystemComp->InitAbilityActorInfo(this, this);
 
+	//CreateVM_Att();
 	InitializeAttributes();
 	GiveAbilities();
+	
 }
 
 void AZeroLockCharacter::OnRep_PlayerState()
@@ -328,6 +331,8 @@ void AZeroLockCharacter::OnRep_PlayerState()
 	AbilitySystemComp->InitAbilityActorInfo(this, this);
 
 	InitializeAttributes();
+
+	CreateVM_Att();
 }
 
 void AZeroLockCharacter::PrimaryFirePressed()
@@ -442,6 +447,11 @@ void AZeroLockCharacter::HealthChanged(float currentH , float MaxH)
 	if (HealthChangeDelegate.IsBound())
 	{
 		HealthChangeDelegate.Broadcast(currentH, MaxH);
+	}
+	if (UZL_VM_Attributes* VM =GetVM_Attributes())
+	{
+		VM->SetHealth(currentH);
+		VM->SetMaxHealth(MaxH);
 	}
 }
 
@@ -616,6 +626,33 @@ void AZeroLockCharacter::HandleWeaponHitEvent(const FGameplayEventData& EventDat
 	OnWeaponHitEventReceived.Broadcast(EventData);
 }
 
+UZL_VM_Attributes* AZeroLockCharacter::GetVM_Attributes()
+{
+	if (!VM_Attributes)
+	{
+		CreateVM_Att();
+	}
+	return VM_Attributes;
+}
+
+UObject* AZeroLockCharacter::GetVMObject_Attributes()
+{
+	return GetVM_Attributes();
+}
+
+void AZeroLockCharacter::CreateVM_Att()
+{
+	if (VM_Attributes) return;
+	VM_Attributes = NewObject<UZL_VM_Attributes>(this);
+
+	// Immediately sync the current GAS values to the new VM
+	if (AttributeSet)
+	{
+		VM_Attributes->SetHealth(AttributeSet->GetCurrentHealth());
+		VM_Attributes->SetMaxHealth(AttributeSet->GetMaximumHealth());
+	}
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -764,6 +801,11 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 		//HandleDeath();
 	}
 	OnTakeDamage(currentH);
+	if (UZL_VM_Attributes* VM =GetVM_Attributes())
+	{
+		VM->SetHealth(currentH);
+		VM->SetMaxHealth(MaxH);
+	}
 }
 
 void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData)

@@ -25,7 +25,9 @@ public class ZeroLock : ModuleRules
 			"OnlineSubsystemUtils",
 			"HTTP",
 			"OpenSSL",
-			"Json"
+			"Json",
+			"ModelViewViewModel",
+			"SlateMVVM"
 
 		});
 	}

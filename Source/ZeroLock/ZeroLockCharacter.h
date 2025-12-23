@@ -12,6 +12,7 @@
 #include "GAS/BaseGameplayAbility.h"
 #include "ZeroLockCharacter.generated.h"
 
+class UZL_VM_Attributes;
 //enum class EGASAbilityInputID;
 class USpringArmComponent;
 class UCameraComponent;
@@ -375,6 +376,21 @@ public:
 	// Function you call when the actual hit happens
 	UFUNCTION(BlueprintCallable)
 	void HandleWeaponHitEvent(const FGameplayEventData& EventData);
+
+
+	UPROPERTY(BlueprintReadWrite,Category="MVVM")
+	UZL_VM_Attributes* VM_Attributes;
+
+	UFUNCTION(BlueprintCallable)
+	UZL_VM_Attributes* GetVM_Attributes();
+
+	UFUNCTION(BlueprintCallable)
+	UObject* GetVMObject_Attributes();
+
+	UFUNCTION()
+	void CreateVM_Att();
+
+	
 };
 
 
