@@ -47,6 +47,8 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	protected:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Movement")
 	class UZeroBaseCharacterMovementComp* ZeroMovementComp;
+
+	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))

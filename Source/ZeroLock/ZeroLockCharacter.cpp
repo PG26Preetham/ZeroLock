@@ -31,6 +31,23 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // AZeroLockCharacter
 
+void AZeroLockCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+
+	if (ZeroMovementComp->MovementMode == MOVE_Custom)
+	{
+		if (ZeroMovementComp->IsCustomMovementMode(ECustomMovementMode::CMOVE_Slide))
+		{
+			VM_Attributes->SetIsInfiniteAmmo(true);
+		}
+	}
+	if (PreviousCustomMode == ECustomMovementMode::CMOVE_Slide)
+	{
+		VM_Attributes->SetIsInfiniteAmmo(false);
+	}
+}
+
 AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UZeroBaseCharacterMovementComp>(ACharacter::CharacterMovementComponentName))
 {
@@ -201,6 +218,7 @@ void AZeroLockCharacter::InitializeAttributes()
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
+		
 		AbilitySystemComp->OnNewAbilityAdded.AddUniqueDynamic(this,&ThisClass::NewAbilityAddedLocal);
 	}
 }
@@ -650,6 +668,9 @@ void AZeroLockCharacter::CreateVM_Att()
 	{
 		VM_Attributes->SetHealth(AttributeSet->GetCurrentHealth());
 		VM_Attributes->SetMaxHealth(AttributeSet->GetMaximumHealth());
+		VM_Attributes->SetAmmo(static_cast<int32>(AttributeSet->GetCurrentAmmo()));
+		VM_Attributes->SetMaxAmmo(static_cast<int32>(AttributeSet->GetMaxAmmo()));
+		VM_Attributes->SetIsInfiniteAmmo(false);
 	}
 }
 
@@ -813,10 +834,12 @@ void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAtt
 	if (!AttributeSet) return;
 	float currentA= AttributeSet->GetCurrentAmmo();
 	float MaxA = AttributeSet->GetMaxAmmo();
-	
+	VM_Attributes->SetMaxAmmo(static_cast<int32>(MaxA));
+	VM_Attributes->SetAmmo(static_cast<int32>(currentA));
 	if (AmmoChangeDelegate.IsBound())
 	{
-		AmmoChangeDelegate.Broadcast(currentA, MaxA);
+		
+		//AmmoChangeDelegate.Broadcast(currentA, MaxA);
 	}
 }
 

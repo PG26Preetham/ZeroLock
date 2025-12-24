@@ -14,6 +14,8 @@ class ZEROLOCK_API UZL_VM_Attributes : public UMVVMViewModelBase
 {
 	GENERATED_BODY()
 
+
+	//Health
 public:
 	float GetHealth() const {return Health;}
 	void SetHealth(const float& health);
@@ -30,4 +32,35 @@ private:
 
 	UPROPERTY(BlueprintReadOnly,FieldNotify,Getter,Setter,meta=(AllowPrivateAccess=true))
 	float MaxHealth;
+
+
+
+	//Ammo
+public:
+	int32 GetAmmo() const {return Ammo;}
+	void SetAmmo(const int32& ammo);
+
+	int32 GetMaxAmmo() const {return MaxAmmo;}
+	void SetMaxAmmo(const int32& maxammo);
+
+
+	bool GetIsInfiniteAmmo()const {return IsInfiniteAmmo;};
+	void SetIsInfiniteAmmo(const bool& isInfinite);
+
+
+	UFUNCTION(BlueprintPure,FieldNotify)
+	const FString GetFinalAmmoText()const;
+
+
+private:
+	UPROPERTY(BlueprintReadOnly,FieldNotify,Getter,Setter,meta=(AllowPrivateAccess=true))
+	int32 Ammo;
+
+	UPROPERTY(BlueprintReadOnly,FieldNotify,Getter,Setter,meta=(AllowPrivateAccess=true))
+	int32 MaxAmmo;
+
+	UPROPERTY(BlueprintReadOnly,FieldNotify,Getter,Setter,meta=(AllowPrivateAccess=true))
+	bool IsInfiniteAmmo;
+
+	
 };
