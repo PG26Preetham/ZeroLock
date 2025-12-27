@@ -24,6 +24,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "UI/MVVM/ZL_VM_Attributes.h"
+#include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -103,6 +104,9 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	ParryComp=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ParryComponent"));
 	ParryComp->SetupAttachment(RootComponent);
 	ParryComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+
+	AbilityUIManager = CreateDefaultSubobject<UZL_AbilityUIManagerComponent>(TEXT("AbilityUIManager"));
 }
 
 void AZeroLockCharacter::BeginPlay()
@@ -314,6 +318,7 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 		}
 		FGameplayAbilitySpec* Spec = GetAbilitySystemComponent()->FindAbilitySpecFromHandle(GrantedHandle);
 		UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(Spec->Ability);
+		
 		if (Ability)
 		{
 			Ability->SetInputID(InputToBindTo);

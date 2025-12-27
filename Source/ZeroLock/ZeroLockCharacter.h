@@ -392,6 +392,14 @@ public:
 	UFUNCTION()
 	void CreateVM_Att();
 
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UZL_AbilityUIManagerComponent* AbilityUIManager;
+    
+public:
+	UFUNCTION(BlueprintCallable, Category = "UI")
+	UZL_AbilityUIManagerComponent* GetAbilityUIManager() const { return AbilityUIManager; }
+
 	
 };
 

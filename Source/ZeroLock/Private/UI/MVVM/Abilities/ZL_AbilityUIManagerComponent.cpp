@@ -1,0 +1,160 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
+
+#include "GameplayTagContainer.h"
+#include "GAS/BaseCharAbilitySystemComponent.h"
+#include "UI/MVVM/Abilities/ZL_VM_AbilitiesContainer.h"
+#include "UI/MVVM/Abilities/ZL_VM_AbilityIcon.h"
+#include "ZeroLock/ZeroLockCharacter.h"
+
+UZL_AbilityUIManagerComponent::UZL_AbilityUIManagerComponent()
+{
+	PrimaryComponentTick.bCanEverTick = false;
+	
+}
+
+UObject* UZL_AbilityUIManagerComponent::GetAbilitiesViewModel() 
+{
+	if (!VM_Abilities)
+	{
+		
+		VM_Abilities = NewObject<UZL_VM_AbilitiesContainer>(GetOwner());
+		if (VM_Abilities)
+		{
+			VM_Abilities->InitSlots();
+		}
+	}
+	
+	return VM_Abilities;
+}
+
+
+// Called when the game starts
+void UZL_AbilityUIManagerComponent::BeginPlay()
+{
+	Super::BeginPlay();
+	//ZLOG_COLOR_TIME("Actor comp begin play",FColor::Red,2);
+	if (GetAbilitiesViewModel())
+	{
+		if (VM_Abilities)
+		{
+			VM_Abilities->InitSlots();
+			InitializeTagMap();
+		}
+	}
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+	if (Hero && Hero->IsLocallyControlled())
+	{
+		UAbilitySystemComponent* ASC = Hero->GetAbilitySystemComponent();
+		
+		Hero->GetMyAbilitySystemComp()->OnNewAbilityAdded.AddUniqueDynamic(this, &ThisClass::OnAbilityAdded);
+		
+		TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
+		ASC->GetAllAbilities(AbilitySpecHandles);
+        
+		for (FGameplayAbilitySpecHandle Handle : AbilitySpecHandles)
+		{
+			if (FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(Handle))
+			{
+				OnAbilityAdded(*Spec);
+			}
+		}
+	}
+	
+	
+}
+
+void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
+{
+	
+	UBaseGameplayAbility* Ability = Cast<UBaseGameplayAbility>(Spec.Ability);
+	if (!Ability) return;
+
+	UZL_VM_AbilityIcon* TargetSlot = nullptr;
+	FGameplayTagContainer CombinedTags = Spec.GetDynamicSpecSourceTags();
+	//CombinedTags.AppendTags(Spec.GetDynamicSpecSourceTags());
+
+	for (const FGameplayTag& Tag : CombinedTags)
+	{
+		if (AbilityTagMap.Contains(Tag))
+		{
+			TargetSlot = AbilityTagMap[Tag];
+			break; 
+		}
+	}
+
+	if (TargetSlot)
+	{
+	
+		TargetSlot->SetIconTexture(Ability->IconImage);
+		const FGameplayTagContainer* CooldownTags = Ability->GetCooldownTags();
+		if (CooldownTags)
+		{
+			for (FGameplayTag Tag : *CooldownTags)
+			{
+				TagToSlotMap.Add(Tag, TargetSlot);
+				Cast<AZeroLockCharacter>(GetOwner())->GetAbilitySystemComponent()
+					->RegisterGameplayTagEvent(Tag, EGameplayTagEventType::NewOrRemoved)
+					.AddUObject(this, &ThisClass::OnCooldownTagChanged);
+			}
+		}
+	}
+}
+
+void UZL_AbilityUIManagerComponent::InitializeTagMap()
+{
+	if (!VM_Abilities)return;
+	AbilityTagMap.Empty();
+	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_SECONDRY, VM_Abilities->Slot_Secondary);
+	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1, VM_Abilities->Slot_Ability1);
+	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_2, VM_Abilities->Slot_Ability2);
+	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE,  VM_Abilities->Slot_Ultimate);
+}
+
+
+void UZL_AbilityUIManagerComponent::OnCooldownTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	if (NewCount > 0)
+	{
+		if (!CooldownTimerHandle.IsValid())
+		{
+			GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, this, &ThisClass::RefreshCooldowns, 0.033f, true);
+		}
+	}
+}
+
+void UZL_AbilityUIManagerComponent::RefreshCooldowns()
+{
+	auto ASC = Cast<AZeroLockCharacter>(GetOwner())->GetAbilitySystemComponent();
+	bool bAnyActive = false;
+
+	for (auto& Element : TagToSlotMap)
+	{
+		if (ASC->GetTagCount(Element.Key) > 0)
+		{
+			bAnyActive = true;
+			float Remaining = 0.f, Duration = 0.f;
+			FGameplayEffectQuery const Query = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(Element.Key));
+			TArray<TPair<float, float>> Times = ASC->GetActiveEffectsTimeRemainingAndDuration(Query);
+			if (Times.Num() > 0)
+			{
+				Element.Value->UpdateCooldown(Times[0].Key, Times[0].Value);
+			}
+		}
+		else
+		{
+			Element.Value->UpdateCooldown(0.f, 0.f);
+		}
+	}
+
+	if (!bAnyActive)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+	}
+}
+
+
+
+
