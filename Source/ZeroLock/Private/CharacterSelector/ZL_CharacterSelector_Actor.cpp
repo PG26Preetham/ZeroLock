@@ -3,8 +3,12 @@
 
 #include "CharacterSelector/ZL_CharacterSelector_Actor.h"
 
+#include "CharacterSelector/ZL_CharacterSelectionSubsystem.h"
+#include"CharacterSelector/ZL_CharacterSelectionVM.h"
+#include "CharacterSelector/ZL_Character_Data_Asset.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "ZeroLock/ZeroLock.h"
 
 // Sets default values
 AZL_CharacterSelector_Actor::AZL_CharacterSelector_Actor()
@@ -27,11 +31,35 @@ AZL_CharacterSelector_Actor::AZL_CharacterSelector_Actor()
 
 }
 
+void AZL_CharacterSelector_Actor::OnMousePosChanged(FVector2D NewMousePos)
+{
+	if (!SpringArm) return;
+
+	
+}
+
 // Called when the game starts or when spawned
 void AZL_CharacterSelector_Actor::BeginPlay()
 {
 	Super::BeginPlay();
 	CaptureComp->ShowOnlyComponent(PreviewMesh);
+
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (auto* Subsystem = GI->GetSubsystem<UZL_CharacterSelectionSubsystem>())
+		{
+			BoundVM = Subsystem->SelectionVM;
+
+			if (BoundVM)
+			{
+				BoundVM->OnCharacterChanged.AddDynamic(this,&AZL_CharacterSelector_Actor::OnViewModelFieldChanged);
+				OnViewModelFieldChanged(BoundVM->CurrentCharacter);
+
+				BoundVM->OnMousePosChanged.AddDynamic(this,&AZL_CharacterSelector_Actor::OnMousePosChanged);
+			}
+		}
+	}
 }
 
 // Called every frame
@@ -40,6 +68,16 @@ void AZL_CharacterSelector_Actor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 }
+
+void AZL_CharacterSelector_Actor::OnViewModelFieldChanged(UZL_Character_Data_Asset* NewHero)
+{
+	if (NewHero)
+	{
+		SetPreview(NewHero->DisplaySeletalMesh,NewHero->DisplayAnimation);
+	}
+}
+
+
 
 void AZL_CharacterSelector_Actor::SetPreview(USkeletalMesh* NewMesh, class UAnimSequence* NewAnim)
 {

@@ -5,9 +5,11 @@
 
 #include "CharacterSelector/ZL_Character_Data_Asset.h"
 #include "Components/Image.h"
+#include "ZeroLock/ZeroLock.h"
 
 void UZL_CharacterIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
+	ZLOG("IconInit");
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 	UZL_Character_Data_Asset* HeroData = Cast<UZL_Character_Data_Asset>(ListItemObject);
 	if (!HeroData) return;

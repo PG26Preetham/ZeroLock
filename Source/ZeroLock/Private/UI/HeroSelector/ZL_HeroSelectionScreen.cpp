@@ -4,105 +4,110 @@
 #include "UI/HeroSelector/ZL_HeroSelectionScreen.h"
 
 #include "CommonTileView.h"
-#include "CharacterSelector/ZL_CharacterSelector_Actor.h"
+#include "CharacterSelector/ZL_CharacterSelectionSubsystem.h"
+#include "CharacterSelector/ZL_CharacterSelectionVM.h"
 #include "CharacterSelector/ZL_Character_Data_Asset.h"
-#include "Engine/AssetManager.h"
-#include "Engine/StreamableManager.h"
-#include "Kismet/GameplayStatics.h"
+
 #include "UI/ItemShop/ZL_ItemShop_Base.h"
 #include "ZeroLock/ZeroLock.h"
+
+#include "MVVMSubsystem.h"
+#include "View/MVVMView.h"
 
 UZL_HeroSelectionScreen::UZL_HeroSelectionScreen()
 {
 }
 
-void UZL_HeroSelectionScreen::HoveredItemChanged(UObject* Object, bool bArg)
-{
-	if (!bArg)return;
-	if (!RenderHeroActor) return;
-
-	UZL_Character_Data_Asset* CharacterData = Cast<UZL_Character_Data_Asset>(Object);
-	if (!CharacterData) return;
-
-	RenderHeroActor->SetPreview(CharacterData->DisplaySeletalMesh,CharacterData->DisplayAnimation);
-}
-
 void UZL_HeroSelectionScreen::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
-	LoadItemsAsync();
-	RenderHeroActor= Cast<AZL_CharacterSelector_Actor>(UGameplayStatics::GetActorOfClass(GetWorld(),AZL_CharacterSelector_Actor::StaticClass()));
 	
-	HeroSelectionList->OnItemIsHoveredChanged().AddUObject(this,&UZL_HeroSelectionScreen::HoveredItemChanged);
-}
+	if (UZL_CharacterSelectionSubsystem* Subsystem = GetSelectionSubsystem())
+	{
+		SelectionVM = Subsystem->SelectionVM;
+		ZLOG("Set IN Widget");
 
-void UZL_HeroSelectionScreen::LoadItemsAsync()
-{
-	if (!HeroTable)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ItemTable is NULL"));
-		return;
-	}
-	
-	TArray<FHeroTableRow*> Rows;
-	HeroTable->GetAllRows(TEXT("LoadingItems"), Rows);
+		
 
-	if (Rows.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No rows in ItemTable"));
-		return;
-	}
-	
-	TArray<FSoftObjectPath> Paths;
-	for (FHeroTableRow* Row : Rows)
-	{
-		if (Row && Row->HeroAsset.IsValid())
-		{
-			// Already loaded asset
-			LoadedItems.AddUnique(Row->HeroAsset.Get());
+			if (UMVVMSubsystem* MVVMSubsystem = GEngine->GetEngineSubsystem<UMVVMSubsystem>())
+			{
+
+				if (UMVVMView* WidgetView = MVVMSubsystem->GetViewFromUserWidget(this))
+				{					
+
+					if (bool bSuccess = WidgetView->SetViewModel(FName("Zl_CharacterSelectionVM"), Subsystem->SelectionVM))
+					{
+						UE_LOG(LogTemp, Log, TEXT("MVVM: Successfully linked Zl_CharacterSelectionVM!"));
+					
+						
+						if (HeroSelectionList && Subsystem->SelectionVM)
+						{
+							HeroSelectionList->SetListItems(Subsystem->SelectionVM->GetCharacterList());
+						}
+					}
+					else
+					{
+						UE_LOG(LogTemp, Error, TEXT("MVVM: Failed to link Viewmodel. Check the name in the BP!"));
+					}
+				}
+			}
 		}
-		else if (Row && !Row->HeroAsset.IsNull())
-		{
-			// Not loaded yet, add to load list
-			Paths.Add(Row->HeroAsset.ToSoftObjectPath());
-		}
-	}
-
+		
 	
-	if (Paths.Num() == 0)
-	{
-		OnItemsLoaded();
-		return;
-	}
 
-	// 4. Async load missing ones
-	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
 
-	Streamable.RequestAsyncLoad(
-		Paths,
-		FStreamableDelegate::CreateUObject(this, &UZL_HeroSelectionScreen::OnItemsLoaded)
-	);
-}
-
-void UZL_HeroSelectionScreen::OnItemsLoaded()
-{
-	ZLOG("Async load all done");
-	LoadedItems.Empty();
-
-	TArray<FHeroTableRow*> Rows;
-	HeroTable->GetAllRows(TEXT("FinishLoading"), Rows);
-
-	for (FHeroTableRow* Row : Rows)
-	{
-		if (!Row || Row->HeroAsset.IsNull()) continue;
-
-		UZL_Character_Data_Asset* Item = Row->HeroAsset.Get();
-		if (Item)
-		{
-			LoadedItems.AddUnique(Item);
-		}
-	}
-	// Push loaded items into the CommonUI ListView
 	if (HeroSelectionList)
-		HeroSelectionList->SetListItems(LoadedItems);
+	{
+		HeroSelectionList->OnItemIsHoveredChanged().AddUObject(this, &UZL_HeroSelectionScreen::HandleOnHoveredChanged);
+
+		HeroSelectionList->OnItemClicked().AddUObject(this, &UZL_HeroSelectionScreen::HandleOnSelectionChanged);
+		
+	}
+}
+
+void UZL_HeroSelectionScreen::HandleOnHoveredChanged(UObject* Item, bool bIsHovered)
+{
+	if (bIsHovered && SelectionVM)
+	{
+		if (UZL_Character_Data_Asset* Data = Cast<UZL_Character_Data_Asset>(Item))
+		{
+			SelectionVM->SetCurrentCharacter(Data);
+		}
+	}
+}
+
+void UZL_HeroSelectionScreen::HandleOnSelectionChanged(UObject* Item)
+{
+}
+
+FReply UZL_HeroSelectionScreen::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	FVector2D LocalMousePos = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
+
+	// 3. Update the ViewModel
+	if (SelectionVM)
+	{
+		SelectionVM->SetLocalMousePos(LocalMousePos);
+	}
+	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
+}
+
+void UZL_HeroSelectionScreen::VM_PopulateList(TArray<UZL_Character_Data_Asset*> DataArray)
+{
+	
+	HeroSelectionList->ClearListItems();
+	for (UZL_Character_Data_Asset* Data : DataArray)
+	{
+		ZLOG_COLOR_TIME("VM_PopulateList",FColor::Red,2.0f);
+		HeroSelectionList->AddItem(Data);
+	}
+}
+
+UZL_CharacterSelectionSubsystem* UZL_HeroSelectionScreen::GetSelectionSubsystem() const
+{
+	if (GetGameInstance())
+	{
+		return GetGameInstance()->GetSubsystem<UZL_CharacterSelectionSubsystem>();
+	}
+	return nullptr;
 }

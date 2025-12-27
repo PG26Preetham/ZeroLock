@@ -22,13 +22,7 @@ void UZL_LoginPage::LoginResultRecieved(bool bSuccess)
 
 void UZL_LoginPage::LoginClicked()
 {
-	LoginBtn->SetVisibility(ESlateVisibility::Collapsed);
-	UZero_BaseGameInstance* myGM = Cast<UZero_BaseGameInstance>(GetGameInstance());
-	if (myGM)
-	{
-		myGM->OnLoginResult.AddUniqueDynamic(this,&ThisClass::LoginResultRecieved);
-		myGM->Login();
-	}
+
 }
 
 void UZL_LoginPage::NativeOnInitialized()
