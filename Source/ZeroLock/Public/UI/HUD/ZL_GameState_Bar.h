@@ -7,6 +7,9 @@
 #include "Zero_BasePlayerState.h"
 #include "ZL_GameState_Bar.generated.h"
 
+class UZL_PlayerInfoBox;
+class UZL_VM_PlayerInfo;
+class UHorizontalBox;
 class UZL_HUD_GameTimer;
 class UZL_HUD_TeamList_View;
 /**
@@ -19,17 +22,18 @@ class ZEROLOCK_API UZL_GameState_Bar : public UCommonActivatableWidget
 
 public:
 	UPROPERTY(BlueprintReadOnly ,Category ="TeamList",meta=(BindWidget))
-	TObjectPtr<UZL_HUD_TeamList_View>  AllyTeamList;
+	TObjectPtr<UHorizontalBox>  AllyTeamList;
 	UPROPERTY(BlueprintReadOnly ,Category ="TeamList",meta=(BindWidget))
-	TObjectPtr<UZL_HUD_TeamList_View>  EnemyTeamList;
-	UPROPERTY(BlueprintReadOnly ,Category ="TIme",meta=(BindWidget))
-	TObjectPtr<UZL_HUD_GameTimer> Timer;
-
-	virtual void NativeOnInitialized() override;
-
-	UFUNCTION()
-	void AddPS_Delegates(AZero_BasePlayerState* PS);
+	TObjectPtr<UHorizontalBox>  EnemyTeamList;
 	
-	void AddDelegates();
-	
+
+	UFUNCTION(BlueprintCallable)
+	void OnAllyTeamChanged(const TArray<UZL_VM_PlayerInfo*>& NewTeam);
+
+	UFUNCTION(BlueprintCallable)
+	void OnEnemyTeamChanged(const TArray<UZL_VM_PlayerInfo*>& NewTeam);
+
+
+	UPROPERTY(EditDefaultsOnly,Category="CharacterIcon")
+	TSubclassOf<UUserWidget> PlayerIconClass;
 };

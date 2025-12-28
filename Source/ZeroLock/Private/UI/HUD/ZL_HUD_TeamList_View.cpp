@@ -35,7 +35,7 @@ void UZL_HUD_TeamList_View::AddPlayerToBox(AZero_BasePlayerState* PS)
 		UZL_PlayerInfoBox* newIcon = CreateWidget<UZL_PlayerInfoBox>(this,PlayerIconClass);
 		if (newIcon)
 		{
-			newIcon->SetDefaultsWithPS(PS);
+			//newIcon->SetDefaultsWithPS(PS);
 			if (UHorizontalBoxSlot* newSlot = HorizontalBox->AddChildToHorizontalBox(newIcon))
 			{
 				newSlot->SetPadding(FMargin(5.0f));

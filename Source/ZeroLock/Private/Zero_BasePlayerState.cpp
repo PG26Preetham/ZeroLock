@@ -3,6 +3,7 @@
 
 #include "Zero_BasePlayerState.h"
 
+#include "Gamemode/Zero_BaseGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "ZeroLock/ZeroLock.h"
 
@@ -27,6 +28,10 @@ void AZero_BasePlayerState::SetTeamID(ETeamID id_team)
 		{
 			OnTeamChanged.Broadcast(TeamID);
 		}
+		if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+		{
+			GS->RefreshTeamLists();
+		}
 	}
 }
 
@@ -41,6 +46,10 @@ void AZero_BasePlayerState::AddKill()
 			//ZLOG_COLOR_TIME("SERVER_KILL_ADDED",FColor::Blue,20);
 			OnKillsChanged.Broadcast(Kills);
 		}
+		if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+		{
+			GS->RefreshTeamLists();
+		}
 	}
 }
 
@@ -53,6 +62,10 @@ void AZero_BasePlayerState::AddDeath()
 		{
 		//	ZLOG_COLOR_TIME("SERVER_Death_ADDED",FColor::Blue,20);
 			OnDeathsChanged.Broadcast(Deaths);
+		}
+		if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+		{
+			GS->RefreshTeamLists();
 		}
 	}
 }
@@ -86,7 +99,10 @@ void AZero_BasePlayerState::OnRep_Kills()
 		//ZLOG_COLOR_TIME("CLIENT_KILL_ADDED",FColor::Red,20);
 		OnKillsChanged.Broadcast(Kills);
 	}
-	
+	if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+	{
+		GS->UpdatePlayerInVM(this);
+	}
 }
 
 void AZero_BasePlayerState::OnRep_Assists()
@@ -94,6 +110,10 @@ void AZero_BasePlayerState::OnRep_Assists()
 	if (OnAssistsChanged.IsBound())
 	{
 		OnAssistsChanged.Broadcast(Assists);
+	}
+	if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+	{
+		GS->UpdatePlayerInVM(this);
 	}
 }
 
@@ -104,6 +124,10 @@ void AZero_BasePlayerState::OnRep_Deaths()
 		//ZLOG_COLOR_TIME("CLIENT_DEATH_ADDED",FColor::Red,20);
 		OnDeathsChanged.Broadcast(Deaths);
 	}
+	if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+	{
+		GS->UpdatePlayerInVM(this);
+	}
 }
 
 void AZero_BasePlayerState::OnRep_TeamID()
@@ -112,6 +136,10 @@ void AZero_BasePlayerState::OnRep_TeamID()
 	{
 	//	ZLOG_COLOR_TIME("CLIENT_Set_TEAM",FColor::Red,10);
 		OnTeamChanged.Broadcast(TeamID);
+	}
+	if (AZero_BaseGameState* GS = GetWorld()->GetGameState<AZero_BaseGameState>())
+	{
+		GS->RefreshTeamLists();
 	}
 }
 

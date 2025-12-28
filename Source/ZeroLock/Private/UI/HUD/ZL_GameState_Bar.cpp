@@ -2,37 +2,34 @@
 
 
 #include "UI/HUD/ZL_GameState_Bar.h"
+#include "Components/HorizontalBox.h"
+#include "UI/HUD/ZL_PlayerInfoBox.h"
 
-#include "Zero_BasePlayerController.h"
-#include "Kismet/GameplayStatics.h"
-#include "UI/HUD/ZL_HUD_TeamList_View.h"
 
-void UZL_GameState_Bar::NativeOnInitialized()
+void UZL_GameState_Bar::OnAllyTeamChanged(const TArray<UZL_VM_PlayerInfo*>& NewTeam)
 {
-	Super::NativeOnInitialized();
-
-	AddDelegates();
-}
-
-void UZL_GameState_Bar::AddPS_Delegates(AZero_BasePlayerState* PS)
-{
-	if (AZero_BasePlayerController* PC = Cast<AZero_BasePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
+	AllyTeamList->ClearChildren();
+	for (UZL_VM_PlayerInfo* PlayerVM : NewTeam)
 	{
-		PC->OnPSInit.RemoveDynamic(this,&UZL_GameState_Bar::AddPS_Delegates);
-	}
-	AllyTeamList->SetupAllyTeam(PS);
-	EnemyTeamList->SetupEnemyTeam(PS);
-	
-}
-
-void UZL_GameState_Bar::AddDelegates()
-{
-	if (AZero_BasePlayerController* PC = Cast<AZero_BasePlayerController>(UGameplayStatics::GetPlayerController(this, 0)))
-	{
-		if (PC->HasAuthority())
+		UZL_PlayerInfoBox* NewWidget = CreateWidget<UZL_PlayerInfoBox>(this, PlayerIconClass);
+		if (NewWidget)
 		{
-			AddPS_Delegates(PC->GetPlayerState<AZero_BasePlayerState>());
+			NewWidget->SetViewModel(PlayerVM); 
+			AllyTeamList->AddChildToHorizontalBox(NewWidget);
 		}
-		PC->OnPSInit.AddUniqueDynamic(this,&UZL_GameState_Bar::AddPS_Delegates);
+	}
+}
+
+void UZL_GameState_Bar::OnEnemyTeamChanged(const TArray<UZL_VM_PlayerInfo*>& NewTeam)
+{
+	EnemyTeamList->ClearChildren();
+	for (UZL_VM_PlayerInfo* PlayerVM : NewTeam)
+	{
+		UZL_PlayerInfoBox* NewWidget = CreateWidget<UZL_PlayerInfoBox>(this, PlayerIconClass);
+		if (NewWidget)
+		{
+			NewWidget->SetViewModel(PlayerVM); 
+			EnemyTeamList->AddChildToHorizontalBox(NewWidget);
+		}
 	}
 }

@@ -3,38 +3,35 @@
 
 #include "UI/HUD/ZL_PlayerInfoBox.h"
 
+#include <string>
+
 #include "CommonTextBlock.h"
+#include "MVVMSubsystem.h"
 #include "Zero_BasePlayerState.h"
 #include "Components/Image.h"
+#include "UI/MVVM/GameStats/ZL_VM_PlayerInfo.h"
+#include "View/MVVMView.h"
 
-void UZL_PlayerInfoBox::KillUpdate(int NewStatValue)
+
+void UZL_PlayerInfoBox::SetViewModel(UZL_VM_PlayerInfo* InViewModel)
 {
-	Kill->SetText(FText::FromString(FString::FromInt(NewStatValue)));
-}
+	myVM = InViewModel;
+	if (!myVM) return;
+	if (UMVVMSubsystem* MVVMSubsystem = GEngine->GetEngineSubsystem<UMVVMSubsystem>())
+	{
 
-void UZL_PlayerInfoBox::DeathUpdate(int NewStatValue)
-{
-	Death->SetText(FText::FromString(FString::FromInt(NewStatValue)));
-}
+		if (UMVVMView* WidgetView = MVVMSubsystem->GetViewFromUserWidget(this))
+		{					
 
-void UZL_PlayerInfoBox::AssistUpdate(int NewStatValue)
-{
-	Assist->SetText(FText::FromString(FString::FromInt(NewStatValue)));
-}
-
-void UZL_PlayerInfoBox::SetDefaultsWithPS(AZero_BasePlayerState* PS)
-{
-	if (!PS)return;
-
-	ZLOG("BindPlayerIcon");
-
-	PlayerIcon->SetBrushFromTexture(PS->PlayerImage);
-	PlayerName->SetText(FText::FromString("Player Name"));
-	Kill->SetText(FText::FromString(FString::FromInt(PS->Kills)));
-	Death->SetText(FText::FromString(FString::FromInt(PS->Deaths)));
-	Assist->SetText(FText::FromString(FString::FromInt(PS->Assists)));
-
-	PS->OnKillsChanged.AddUniqueDynamic(this,&ThisClass::KillUpdate);
-	PS->OnDeathsChanged.AddUniqueDynamic(this,&ThisClass::DeathUpdate);
-	PS->OnAssistsChanged.AddUniqueDynamic(this,&ThisClass::AssistUpdate);
+			if (bool bSuccess = WidgetView->SetViewModel(FName("ZL_VM_PlayerInfo"), myVM))
+			{
+				PlayerIcon->SetBrushFromTexture(myVM->GetIcon());
+				PlayerName->SetText(myVM->GetPlayerName());
+				Kill->SetText(FText::FromString(FString::FromInt(myVM->GetKills())));
+				Death->SetText(FText::FromString(FString::FromInt(myVM->GetDeaths())));
+				Assist->SetText(FText::FromString(FString::FromInt(myVM->GetAssists())));
+				
+			}
+		}
+	}
 }

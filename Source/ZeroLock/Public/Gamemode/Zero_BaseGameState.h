@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
 #include "Zero_BaseGameState.generated.h"
+class UZL_VM_GameState;
+class UZL_VM_PlayerInfo;
 class AZero_BasePlayerState;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamArrayUpdated , AZero_BasePlayerState* , ps);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameTimeUpdated , int , gameTime);
@@ -63,7 +65,25 @@ public:
 	UFUNCTION()
 	void On_RepGameTime();
 
-	
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	UZL_VM_GameState* GameStateVM;
+
+	UFUNCTION()
+	UZL_VM_GameState* GetGameStateVM();
+
+	// Helper to find the VM associated with a specific PlayerState
+	UPROPERTY()
+	TMap<AZero_BasePlayerState*, UZL_VM_PlayerInfo*> PlayerVMMapping;
+
+	void UpdatePlayerInVM(AZero_BasePlayerState* PS);
+
+
+	void RefreshTeamLists();
+	void ProcessTeamUpdate(const TArray<AZero_BasePlayerState*>& SourceTeamArray);
+
+	/** Helper to get the local player state safely */
+	AZero_BasePlayerState* GetLocalPlayerState() const;
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
