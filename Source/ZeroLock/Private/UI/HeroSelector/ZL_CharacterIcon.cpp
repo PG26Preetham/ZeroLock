@@ -15,4 +15,6 @@ void UZL_CharacterIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (!HeroData) return;
 
 	Icon->SetBrushFromTexture(HeroData->Icon);
+	//Icon->SetBrushTintColor(HeroData->IconColor);
+	BG->SetColorAndOpacity(HeroData->IconColor);
 }

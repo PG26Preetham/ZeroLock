@@ -41,6 +41,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UAnimSequence> DisplayAnimation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FColor IconColor;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UTexture2D> Icon;

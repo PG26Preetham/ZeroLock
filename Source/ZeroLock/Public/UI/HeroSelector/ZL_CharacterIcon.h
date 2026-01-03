@@ -23,5 +23,8 @@ class ZEROLOCK_API UZL_CharacterIcon : public UCommonActivatableWidget, public I
 	UPROPERTY(EditAnywhere,meta=(BindWidget))
 	UImage* Icon;
 
+	UPROPERTY(EditAnywhere,meta=(BindWidget))
+	UImage* BG;
+
 	
 };
