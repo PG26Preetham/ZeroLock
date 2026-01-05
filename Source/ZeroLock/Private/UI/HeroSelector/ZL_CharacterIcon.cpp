@@ -18,3 +18,15 @@ void UZL_CharacterIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 	//Icon->SetBrushTintColor(HeroData->IconColor);
 	BG->SetColorAndOpacity(HeroData->IconColor);
 }
+
+void UZL_CharacterIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+	Icon->SetRenderScale(FVector2D(1.5,1.5));
+}
+
+void UZL_CharacterIcon::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseLeave(InMouseEvent);
+	Icon->SetRenderScale(FVector2D(1,1));
+}

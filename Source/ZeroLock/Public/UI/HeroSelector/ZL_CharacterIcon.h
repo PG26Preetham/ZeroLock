@@ -19,6 +19,8 @@ class ZEROLOCK_API UZL_CharacterIcon : public UCommonActivatableWidget, public I
 	public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 
+	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 
 	UPROPERTY(EditAnywhere,meta=(BindWidget))
 	UImage* Icon;
