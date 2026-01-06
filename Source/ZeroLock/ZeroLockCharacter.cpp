@@ -199,6 +199,18 @@ UBaseCharAttributeSet* AZeroLockCharacter::GetMyAttributeSet() const
 	return AttributeSet;
 }
 
+void AZeroLockCharacter::MovementLocked(FGameplayTag GameplayTag, int NewCount)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (NewCount>0)
+	{
+	}
+	else
+	{
+	
+	}
+}
+
 void AZeroLockCharacter::InitializeAttributes()
 {
 	
@@ -217,6 +229,7 @@ void AZeroLockCharacter::InitializeAttributes()
 		FGameplayTag StunTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Stun"),false);
 		FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);
 		AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
+		AbilitySystemComp->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock"),EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::MovementLocked);
 		AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
@@ -851,6 +864,10 @@ void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAtt
 
 void AZeroLockCharacter::Move(const FInputActionValue& Value)
 {
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock")))
+	{
+		return;
+	}
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -887,6 +904,10 @@ void AZeroLockCharacter::Look(const FInputActionValue& Value)
 
 void AZeroLockCharacter::DashPressed()
 {
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock")))
+	{
+		return;
+	}
 	ZeroMovementComp->DashPressed();
 }
 
@@ -897,6 +918,10 @@ void AZeroLockCharacter::DashReleased()
 
 void AZeroLockCharacter::CrouchPressed()
 {
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock")))
+	{
+		return;
+	}
 	ZeroMovementComp->CrouchPressed();
 }
 
@@ -907,6 +932,7 @@ void AZeroLockCharacter::CrouchReleased()
 
 void AZeroLockCharacter::MeleePressed()
 {
+	
 	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Melee));
 }
 

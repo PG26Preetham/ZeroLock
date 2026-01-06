@@ -208,6 +208,7 @@ public:
 
 	virtual UBaseCharAttributeSet* GetMyAttributeSet()const;
 
+	void MovementLocked(FGameplayTag GameplayTag, int NewCount);
 	virtual void InitializeAttributes();
 	UFUNCTION()
 	void NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec);

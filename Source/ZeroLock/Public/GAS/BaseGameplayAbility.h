@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "ZL_GameplayTags.h"
 #include "Abilities/GameplayAbility.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
 
+class AZeroLockCharacter;
 class UImage;
 class APredictedProjectile;
 class UBaseCharAbilitySystemComponent;
@@ -90,5 +92,10 @@ public:
 	// This will be a union of our CooldownTags and the Cooldown GE's cooldown tags.
 	UPROPERTY(Transient)
 	FGameplayTagContainer TempCooldownTags;
+
+
 	
+	static bool ConeTraceMulti(const UObject* WorldContextObject, const FVector Start, const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex, const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits, TArray<AZeroLockCharacter*>& OutVillans, bool bIgnoreSelf, FLinearColor TraceColor = FLinearColor::Red, FLinearColor TraceHitColor = FLinearColor::Green, float DrawTime = 5.0f );
+
+	bool GetConeOverlap(UWorld* World, TArray<FOverlapResult>& OutResults, const FVector& Origin, const FVector& Direction, float Radius, float AngleDegrees, ECollisionChannel Channel);
 };

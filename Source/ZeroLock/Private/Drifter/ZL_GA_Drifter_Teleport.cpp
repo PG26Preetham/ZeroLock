@@ -26,9 +26,18 @@ void UZL_GA_Drifter_Teleport::OnEventRecived(FGameplayEventData Payload)
 	{
 		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 	}
+	
+	if (MarkEffectClass)
+	{
+		FGameplayEffectContextHandle EffectContext = SourceASC->MakeEffectContext();
+		EffectContext.AddInstigator(Hero, Hero);
 
-	//TargetASC->AddGameplayCue(MarkedCueTag);
-
+		FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(MarkEffectClass, GetAbilityLevel(), EffectContext);
+		if (SpecHandle.IsValid())
+		{
+			AppliedEffectHandle = SourceASC->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), TargetASC);
+		}
+	}
 	ZLOG("EnemyHitRecieved");
 	
 	InputPTask = UAbilityTask_WaitInputPress::WaitInputPress(this,false);
@@ -46,22 +55,38 @@ void UZL_GA_Drifter_Teleport::OnInputPressed(float TimeWaited)
 	WaitDelay->ExternalCancel();
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	
-
+	if (Villan && AppliedEffectHandle.IsValid())
+	{
+		Villan->GetAbilitySystemComponent()->RemoveActiveGameplayEffect(AppliedEffectHandle);
+	}
 	if (Villan && IsValid(Hero))
 	{
 		Hero->SetActorLocation(Villan->GetActorLocation()+ FVector(0,0,200));
 		//Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
 	}
-	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
+	//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 
 }
 
 void UZL_GA_Drifter_Teleport::OnTimeFinish()
 {
+	if (Villan && AppliedEffectHandle.IsValid())
+	{
+		Villan->GetAbilitySystemComponent()->RemoveActiveGameplayEffect(AppliedEffectHandle);
+	}
 	if (Villan && IsValid(Villan))
 	{
 		//Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
 	}
+	//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+}
+
+void UZL_GA_Drifter_Teleport::EndAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility, bool bWasCancelled)
+{
+	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

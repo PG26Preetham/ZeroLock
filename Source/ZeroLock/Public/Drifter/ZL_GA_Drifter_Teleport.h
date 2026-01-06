@@ -27,7 +27,14 @@ public:
 	void OnInputPressed(float TimeWaited);
 	UFUNCTION()
 	void OnTimeFinish();
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> MarkEffectClass;
+
+	
+	FActiveGameplayEffectHandle AppliedEffectHandle;
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag MarkedCueTag;
 };

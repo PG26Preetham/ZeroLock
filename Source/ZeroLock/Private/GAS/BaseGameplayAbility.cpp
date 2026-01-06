@@ -4,6 +4,8 @@
 #include "GAS/BaseGameplayAbility.h"
 
 #include "GameplayTagsManager.h"
+#include "KismetTraceUtils.h"
+#include "Engine/OverlapResult.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/ZL_GameplayTags.h"
@@ -137,6 +139,140 @@ const FGameplayTagContainer* UBaseGameplayAbility::GetCooldownTags() const
 	}
 	MutableTags->AppendTags(CooldownTags);
 	return MutableTags;
+}
+
+bool UBaseGameplayAbility::ConeTraceMulti(const UObject* WorldContextObject, const FVector Start,
+	const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex,
+	const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits,TArray<AZeroLockCharacter*>& OutVillans,
+	bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor, float DrawTime)
+{
+	OutHits.Reset();
+	OutVillans.Reset();
+	ECollisionChannel CollisionChannel = UEngineTypes::ConvertToCollisionChannel(TraceChannel);
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ConeTraceMulti), bTraceComplex);
+	Params.bReturnPhysicalMaterial = true;
+	Params.AddIgnoredActors(ActorsToIgnore);
+ 
+	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+	if (!World)
+	{
+		return false;
+	}
+ 
+	TArray<FHitResult> TempHitResults;
+	const FVector End = Start + (Direction.Vector() * ConeHeight);
+	const double ConeHalfAngleRad = FMath::DegreesToRadians(ConeHalfAngle);
+	// r = h * tan(theta / 2)
+	const double ConeBaseRadius = ConeHeight * tan(ConeHalfAngleRad);
+	const FCollisionShape SphereSweep = FCollisionShape::MakeSphere(ConeBaseRadius);
+ 
+	// Perform a sweep encompassing an imaginary cone.
+	World->SweepMultiByChannel(TempHitResults, Start, End, Direction.Quaternion(), CollisionChannel, SphereSweep, Params);
+ 
+	// Filter for hits that would be inside the cone.
+	for (FHitResult& HitResult : TempHitResults)
+	{
+		const FVector HitDirection = (HitResult.ImpactPoint - Start).GetSafeNormal();
+		const double Dot = FVector::DotProduct(Direction.Vector(), HitDirection);
+		// theta = arccos((A • B) / (|A|*|B|)). |A|*|B| = 1 because A and B are unit vectors.
+		const double DeltaAngle = FMath::Acos(Dot);
+ 
+		// Hit is outside the angle of the cone.
+		if (DeltaAngle > ConeHalfAngleRad)
+		{
+			continue;
+		}
+ 
+		const double Distance = (HitResult.ImpactPoint - Start).Length();
+		// Hypotenuse = adjacent / cos(theta)
+		const double LengthAtAngle = ConeHeight / cos(DeltaAngle);
+ 
+		// Hit is beyond the cone. This can happen because we sweep with spheres, which results in a cap at the end of the sweep.
+		if (Distance > LengthAtAngle)
+		{
+			continue;
+		}
+		if (AZeroLockCharacter* villan = Cast<AZeroLockCharacter>(HitResult.GetActor()))
+		{
+			OutVillans.AddUnique(villan);
+		}
+		OutHits.Add(HitResult);
+	}
+ 
+#if ENABLE_DRAW_DEBUG
+	if (DrawDebugType != EDrawDebugTrace::None)
+	{
+		// Cone trace.
+		const double ConeSlantHeight = FMath::Sqrt((ConeBaseRadius * ConeBaseRadius) + (ConeHeight * ConeHeight)); // s = sqrt(r^2 + h^2)
+		DrawDebugCone(World, Start, Direction.Vector(), ConeSlantHeight, ConeHalfAngleRad, ConeHalfAngleRad, 32, TraceColor.ToFColor(true), (DrawDebugType == EDrawDebugTrace::Persistent), DrawTime);
+ 
+		// Uncomment to see the trace we're actually performing.
+		// DrawDebugSweptSphere(World, Start, End, ConeBaseRadius, TraceColor.ToFColor(true), (DrawDebugType == EDrawDebugTrace::Persistent), DrawTime);
+ 
+		// Successful hits.
+		for (const FHitResult& Hit : OutHits)
+		{
+			DrawDebugLineTraceSingle(World, Hit.TraceStart, Hit.ImpactPoint, DrawDebugType, true, Hit, TraceHitColor, TraceHitColor, DrawTime);
+		}
+ 
+		// Uncomment to see hits from the sphere sweep that were filtered out.
+		// for (const FHitResult& Hit : TempHitResults)
+		// {
+		//     if (!OutHits.ContainsByPredicate([Hit](const FHitResult& Other)
+		//     {
+		//         return (Hit.GetActor() == Other.GetActor()) &&
+		//                (Hit.ImpactPoint == Other.ImpactPoint) &&
+		//                (Hit.ImpactNormal == Other.ImpactNormal);
+		//     }))
+		//     {
+		//         DrawDebugLineTraceSingle(World, Hit.TraceStart, Hit.ImpactPoint, DrawDebugType, false, Hit, FColor::Red, FColor::Red, DrawTime);
+		//     }
+		// }
+	}
+#endif // ENABLE_DRAW_DEBUG
+ 
+	return (OutHits.Num() > 0);
+}
+
+bool UBaseGameplayAbility::GetConeOverlap(UWorld* World, TArray<FOverlapResult>& OutResults, const FVector& Origin,
+                                          const FVector& Direction, float Radius, float AngleDegrees, ECollisionChannel Channel)
+{
+	if (!World) return false;
+
+	DrawDebugSphere(GetWorld(), Origin, Radius, 20, FColor::Yellow, false,10);
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(Radius);
+	FCollisionQueryParams Params;
+	Params.bTraceComplex = false;
+	Params.AddIgnoredActor(GetOwningActorFromActorInfo());
+	
+	TArray<FOverlapResult> SphereResults;
+	bool bHit = World->OverlapMultiByChannel(SphereResults, Origin, FQuat::Identity, Channel, Sphere, Params);
+
+	if (!bHit) return false;
+
+
+	float HalfAngleRadians = FMath::DegreesToRadians(AngleDegrees * 0.5f);
+	float CosThreshold = FMath::Cos(HalfAngleRadians);
+	FVector NormalizedDir = Direction.GetSafeNormal();
+
+	for (const FOverlapResult& Result : SphereResults)
+	{
+		AActor* OverlappedActor = Result.GetActor();
+		if (!OverlappedActor) continue;
+
+		FVector TargetLocation = OverlappedActor->GetActorLocation();
+		FVector DirToTarget = (TargetLocation - Origin).GetSafeNormal();
+
+		
+		float Dot = FVector::DotProduct(NormalizedDir, DirToTarget);
+
+		if (Dot >= CosThreshold)
+		{
+			OutResults.Add(Result);
+		}
+	}
+
+	return OutResults.Num() > 0;
 }
 
 

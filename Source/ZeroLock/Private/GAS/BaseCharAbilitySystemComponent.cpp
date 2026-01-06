@@ -29,7 +29,7 @@ void UBaseCharAbilitySystemComponent::OnRep_ActivateAbilities()
 void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
 {
 	if (!TargetASC || !GE_WeaponClass)return;
-
+	if (!GetOwner()->HasAuthority()) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -58,7 +58,7 @@ void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent*
 void UBaseCharAbilitySystemComponent::ApplySpiritDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
 {
 	if (!TargetASC || !GE_SpiritClass)return;
-
+	if (!GetOwner()->HasAuthority()) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -76,7 +76,7 @@ void UBaseCharAbilitySystemComponent::ApplySpiritDamage(UAbilitySystemComponent*
 void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
 {
 	if (!TargetASC || !GE_MeleeClass)return;
-
+	if (!GetOwner()->HasAuthority()) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
