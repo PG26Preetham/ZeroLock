@@ -38,6 +38,12 @@ public:
 	void ApplyHeal(UAbilitySystemComponent* TargetASC,float HealValue);
 
 
+	UFUNCTION(BlueprintCallable)
+	void SendGameplayEventToSelf(FGameplayTag Tag, UAbilitySystemComponent* TargetASC);
+
+	UFUNCTION(BlueprintCallable)
+	void SendGameplayEventToTarget(FGameplayTag Tag , UAbilitySystemComponent* TargetASC);
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/WeaponDamage")
 	TSubclassOf<UGameplayEffect> GE_WeaponClass;
 

@@ -44,14 +44,14 @@ void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent*
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
 
 	//Sending event to the source
-	FGameplayEventData WeaponHitEventData;
-	WeaponHitEventData.EventTag =FGameplayTag::RequestGameplayTag("Event.WeaponHit",false);
-	WeaponHitEventData.ContextHandle =MakeEffectContext();
-	WeaponHitEventData.ContextHandle.AddSourceObject(GetAvatarActor());
-	WeaponHitEventData.Instigator= GetAvatarActor();
-	WeaponHitEventData.Target =TargetASC->GetAvatarActor();
+	
 
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),FGameplayTag::RequestGameplayTag("Event.WeaponHit",false),WeaponHitEventData);
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.WeaponHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.WeaponRecieved",false);
+	SendGameplayEventToTarget(TagToSend, TargetASC);
+
+	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),FGameplayTag::RequestGameplayTag("Event.WeaponHit",false),WeaponHitEventData);
 	
 }
 
@@ -71,6 +71,11 @@ void UBaseCharAbilitySystemComponent::ApplySpiritDamage(UAbilitySystemComponent*
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.DamageCalc.Spirit",false), DamageValue);
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.SpiritHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.SpiritRecieved",false);
+	SendGameplayEventToTarget(TagToSend, TargetASC);
 }
 
 void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
@@ -89,6 +94,11 @@ void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* 
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.DamageCalc.Melee",false), DamageValue);
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.MeleeHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.MeleeRecieved",false);
+	SendGameplayEventToTarget(TagToSend, TargetASC);
 }
 
 void UBaseCharAbilitySystemComponent::ApplyHeal(UAbilitySystemComponent* TargetASC, float HealValue)
@@ -107,4 +117,37 @@ void UBaseCharAbilitySystemComponent::ApplyHeal(UAbilitySystemComponent* TargetA
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.HealCalc.Healing",false), HealValue);
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.HealHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.HealRecieved",false);
+}
+
+void UBaseCharAbilitySystemComponent::SendGameplayEventToSelf(FGameplayTag Tag, UAbilitySystemComponent* TargetASC)
+{
+
+	FGameplayEventData EventDataToSend;
+	EventDataToSend.Instigator = GetAvatarActor();
+	EventDataToSend.EventTag =Tag;
+	EventDataToSend.ContextHandle =MakeEffectContext();
+	EventDataToSend.ContextHandle.AddSourceObject(GetAvatarActor());
+	EventDataToSend.Instigator= GetAvatarActor();
+	EventDataToSend.Target =TargetASC->GetAvatarActor();
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),Tag,EventDataToSend);
+	
+}
+
+void UBaseCharAbilitySystemComponent::SendGameplayEventToTarget(FGameplayTag Tag, UAbilitySystemComponent* TargetASC)
+{
+	FGameplayEventData EventDataToSend;
+	EventDataToSend.Instigator = GetAvatarActor();
+	EventDataToSend.EventTag =Tag;
+	EventDataToSend.ContextHandle =MakeEffectContext();
+	EventDataToSend.ContextHandle.AddSourceObject(GetAvatarActor());
+	EventDataToSend.Instigator= GetAvatarActor();
+	EventDataToSend.Target =TargetASC->GetAvatarActor();
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetASC->GetAvatarActor(),Tag,EventDataToSend);
+	
 }

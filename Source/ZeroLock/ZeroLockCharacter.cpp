@@ -837,6 +837,7 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	}
 	if (currentH <= 0.0f && currentH < MaxH)
 	{
+		AddEventForDeath();
 		//HandleDeath();
 	}
 	OnTakeDamage(currentH);
@@ -858,6 +859,27 @@ void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAtt
 	{
 		
 		//AmmoChangeDelegate.Broadcast(currentA, MaxA);
+	}
+}
+
+void AZeroLockCharacter::AddEventForDeath()
+{
+	if (LastHitCharacter)
+	{
+		FGameplayTag DeathTag = FGameplayTag::RequestGameplayTag("Event.Death");
+		LastHitCharacter->GetMyAbilitySystemComp()->SendGameplayEventToTarget(DeathTag, GetAbilitySystemComponent());
+		FGameplayTag KillTag = FGameplayTag::RequestGameplayTag("Event.Kill");
+		LastHitCharacter->GetMyAbilitySystemComp()->SendGameplayEventToSelf(KillTag, GetAbilitySystemComponent());
+	}
+	if (AssistListCharacters.Num() > 0)
+	{
+		for (AZeroLockCharacter* AssitChar : AssistListCharacters)
+		{
+			if (!AssitChar ) continue;
+			if (AssitChar == LastHitCharacter)continue;
+			FGameplayTag AssistTag = FGameplayTag::RequestGameplayTag("Event.Assist");
+			AssitChar->GetMyAbilitySystemComp()->SendGameplayEventToTarget(AssistTag, GetAbilitySystemComponent());
+		}
 	}
 }
 

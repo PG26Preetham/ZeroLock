@@ -158,6 +158,8 @@ protected:
 
 	void HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
 	void AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData);
+
+	void AddEventForDeath();
 	
 	// To add mapping context
 	virtual void BeginPlay();
