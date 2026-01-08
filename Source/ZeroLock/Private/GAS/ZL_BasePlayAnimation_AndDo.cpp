@@ -17,7 +17,7 @@ void UZL_BasePlayAnimation_AndDo::OnCanelled(FGameplayTag EventTag, FGameplayEve
 
 void UZL_BasePlayAnimation_AndDo::OnCompleted(FGameplayTag EventTag, FGameplayEventData EventData)
 {
-	OnAnimationCancelled();
+	OnAnimationCompleted();
 }
 
 
@@ -66,4 +66,11 @@ void UZL_BasePlayAnimation_AndDo::OnAnimationCancelled()
 {
 	ZLOG("Cancelled");
 	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true, true);
+}
+
+void UZL_BasePlayAnimation_AndDo::OnAnimationCompleted()
+{
+	ZLOG("Completed");
+	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true, false);
+
 }

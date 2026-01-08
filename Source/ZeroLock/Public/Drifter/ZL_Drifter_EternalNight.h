@@ -3,21 +3,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/BaseGameplayAbility.h"
+#include "GAS/ZL_BasePlayAnimation_AndDo.h"
 #include "ZL_Drifter_EternalNight.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ZEROLOCK_API UZL_Drifter_EternalNight : public UBaseGameplayAbility
+class ZEROLOCK_API UZL_Drifter_EternalNight : public UZL_BasePlayAnimation_AndDo
 {
 	GENERATED_BODY()
 
 public:
+	virtual void OnAnimationPointTrigger() override;
+	virtual void OnAnimationCompleted() override;
 	UFUNCTION()
 	void OnWeaponEventTrigger(FGameplayEventData Payload);
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	float MaxRange = 1000.f;

@@ -30,6 +30,8 @@ virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplay
 
 	virtual void OnAnimationCancelled();
 
+	virtual void OnAnimationCompleted();
+
 	UGAST_PlayMontageAndWaitForEvent* PlayMontageTask;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Animation")

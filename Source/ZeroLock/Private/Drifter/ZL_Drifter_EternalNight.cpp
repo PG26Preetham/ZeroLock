@@ -13,25 +13,13 @@
 #include "ZeroLock/ZeroLockCharacter.h"
 
 
-
-void UZL_Drifter_EternalNight::OnWeaponEventTrigger(FGameplayEventData Payload)
+void UZL_Drifter_EternalNight::OnAnimationPointTrigger()
 {
-	const AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(Payload.Target);
-	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	if (!IsValid(Villan)) return;
-	if (!IsValid(Hero)) return;
-	Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(Villan->GetMyAbilitySystemComp(),SpiritDamage);
-}
-
-void UZL_Drifter_EternalNight::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-                                               const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-                                               const FGameplayEventData* TriggerEventData)
-{
-	if (!HasAuthority(&ActivationInfo)) return;
-	AZeroLockCharacter* Avatar = Cast<AZeroLockCharacter>(ActorInfo->AvatarActor.Get());
+	if (!GetCurrentActorInfo()->IsNetAuthority()) return;
+	AZeroLockCharacter* Avatar = Cast<AZeroLockCharacter>(GetCurrentActorInfo()->AvatarActor.Get());
 	if (!Avatar)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(), true, true);
 	}
 	FVector Origin = Avatar->GetActorLocation();
 
@@ -75,7 +63,7 @@ void UZL_Drifter_EternalNight::ActivateAbility(const FGameplayAbilitySpecHandle 
 			
 		}
 	}
-	CommitAbility(Handle,ActorInfo,ActivationInfo);
+	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
 	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, Duration);
 	DelayTask->OnFinish.AddDynamic(this, &UZL_Drifter_EternalNight::OnDelayFinished);
 	DelayTask->ReadyForActivation();
@@ -83,6 +71,27 @@ void UZL_Drifter_EternalNight::ActivateAbility(const FGameplayAbilitySpecHandle 
 	WaitGameplayEventTask->EventReceived.AddDynamic(this,&UZL_Drifter_EternalNight::OnWeaponEventTrigger);
 	WaitGameplayEventTask->ReadyForActivation();
 }
+
+void UZL_Drifter_EternalNight::OnAnimationCompleted()
+{
+	//Super::OnAnimationCompleted();
+	if (UAbilitySystemComponent* ASC = GetCurrentActorInfo()->AbilitySystemComponent.Get())
+	{
+		ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
+	}
+}
+
+
+void UZL_Drifter_EternalNight::OnWeaponEventTrigger(FGameplayEventData Payload)
+{
+	const AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(Payload.Target);
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	if (!IsValid(Villan)) return;
+	if (!IsValid(Hero)) return;
+	Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(Villan->GetMyAbilitySystemComp(),SpiritDamage);
+}
+
+
 
 void UZL_Drifter_EternalNight::OnDelayFinished()
 {
