@@ -105,7 +105,8 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	ParryComp->SetupAttachment(RootComponent);
 	ParryComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-
+	GetMesh()->CustomDepthStencilValue =1;
+	GetMesh()->SetRenderInDepthPass(true);
 	AbilityUIManager = CreateDefaultSubobject<UZL_AbilityUIManagerComponent>(TEXT("AbilityUIManager"));
 }
 
@@ -115,10 +116,9 @@ void AZeroLockCharacter::BeginPlay()
 	Super::BeginPlay();
 	ParryComp->SetVisibility(false);
 	CreateVM_Att();
-	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);
-
-	
-	
+	GetMesh()->CustomDepthStencilValue =1;
+	GetMesh()->SetRenderInDepthPass(true);
+	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);	
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const

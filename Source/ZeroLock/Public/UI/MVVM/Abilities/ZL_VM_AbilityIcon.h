@@ -26,7 +26,19 @@ public:
 	UPROPERTY(BlueprintReadOnly, FieldNotify, Category = "UI")
 	bool bIsOnCooldown = false;
 
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	bool bHasStacks =false;
+
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	int32 StackNum =0;
+	
 	void SetIconTexture(UTexture2D* NewIcon) ;
 	UTexture2D* GetIconTexture()const  { return IconTexture; }
 	void UpdateCooldown(float Remaining, float Duration);
+
+	void SetbHasStacks(bool bstacks);
+	bool GetbHasStacks()const { return bHasStacks; }
+
+	void SetStackNum(int32 NewStackNum);
+	int32 GetStackNum()const { return StackNum; }
 };

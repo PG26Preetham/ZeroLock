@@ -31,5 +31,8 @@ public:
 	UZL_VM_AbilityIcon* VM_AbilityIcon;
 
 	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
+	UCommonTextBlock* Ability_StackText;
+
+	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
 	UImage* AbilityIcon;
 };

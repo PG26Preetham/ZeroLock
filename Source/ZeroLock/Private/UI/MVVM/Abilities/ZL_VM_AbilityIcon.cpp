@@ -23,3 +23,19 @@ void UZL_VM_AbilityIcon::UpdateCooldown(float Remaining, float Duration)
 		int32 Seconds = FMath::CeilToInt(Remaining);
 		UE_MVVM_SET_PROPERTY_VALUE(CooldownText, Seconds > 0 ? FText::AsNumber(Seconds) : FText::GetEmpty());
 }
+
+void UZL_VM_AbilityIcon::SetbHasStacks(bool bstacks)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(bHasStacks, bstacks))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetStackNum(int32 NewStackNum)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(StackNum, NewStackNum))
+	{
+		
+	}
+}

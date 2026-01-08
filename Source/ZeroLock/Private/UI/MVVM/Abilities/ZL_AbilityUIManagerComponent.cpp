@@ -31,11 +31,9 @@ UObject* UZL_AbilityUIManagerComponent::GetAbilitiesViewModel()
 }
 
 
-// Called when the game starts
 void UZL_AbilityUIManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	//ZLOG_COLOR_TIME("Actor comp begin play",FColor::Red,2);
 	if (GetAbilitiesViewModel())
 	{
 		if (VM_Abilities)
@@ -50,7 +48,7 @@ void UZL_AbilityUIManagerComponent::BeginPlay()
 		UAbilitySystemComponent* ASC = Hero->GetAbilitySystemComponent();
 		
 		Hero->GetMyAbilitySystemComp()->OnNewAbilityAdded.AddUniqueDynamic(this, &ThisClass::OnAbilityAdded);
-		
+		ASC->OnActiveGameplayEffectAddedDelegateToSelf.AddUObject(this, &ThisClass::OnGEApplied);
 		TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
 		ASC->GetAllAbilities(AbilitySpecHandles);
         
@@ -66,6 +64,18 @@ void UZL_AbilityUIManagerComponent::BeginPlay()
 	
 }
 
+void UZL_AbilityUIManagerComponent::OnStackTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	if (StackTagToSlotMap.Contains(CallbackTag))
+	{
+		UZL_VM_AbilityIcon* Slot = StackTagToSlotMap[CallbackTag];
+		if (Slot)
+		{
+			Slot->SetStackNum(NewCount);
+		}
+	}
+}
+
 void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 {
 	
@@ -74,7 +84,7 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 
 	UZL_VM_AbilityIcon* TargetSlot = nullptr;
 	FGameplayTagContainer CombinedTags = Spec.GetDynamicSpecSourceTags();
-	//CombinedTags.AppendTags(Spec.GetDynamicSpecSourceTags());
+
 
 	for (const FGameplayTag& Tag : CombinedTags)
 	{
@@ -100,8 +110,18 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 					.AddUObject(this, &ThisClass::OnCooldownTagChanged);
 			}
 		}
+		AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+		if (!Hero) return;
+		FGameplayTag StackTag = Ability->StackTag; 
+		if (StackTag.IsValid())
+		{
+			TargetSlot->SetbHasStacks(true);
+			StackTagToSlotMap.Add(StackTag, TargetSlot);
+
+		}
 	}
 }
+
 
 void UZL_AbilityUIManagerComponent::InitializeTagMap()
 {
@@ -111,6 +131,36 @@ void UZL_AbilityUIManagerComponent::InitializeTagMap()
 	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1, VM_Abilities->Slot_Ability1);
 	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_2, VM_Abilities->Slot_Ability2);
 	AbilityTagMap.Add(ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE,  VM_Abilities->Slot_Ultimate);
+}
+
+void UZL_AbilityUIManagerComponent::OnStackChanged(FActiveGameplayEffectHandle Handle, int32 NewCount, int32 OldCount)
+{
+	if (ActiveHandleToSlotMap.Contains(Handle))
+	{
+		ActiveHandleToSlotMap[Handle]->SetStackNum(NewCount);
+	}
+}
+
+void UZL_AbilityUIManagerComponent::OnGEApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& SpecApplied,
+	FActiveGameplayEffectHandle ActiveHandle)
+{
+	FGameplayTagContainer AssetTags;
+	SpecApplied.GetAllAssetTags(AssetTags);
+	
+	for (const FGameplayTag& Tag : AssetTags)
+	{
+		if (StackTagToSlotMap.Contains(Tag))
+		{
+			UZL_VM_AbilityIcon* TargetSlot = StackTagToSlotMap[Tag];
+			
+			ActiveHandleToSlotMap.Add(ActiveHandle, TargetSlot);
+			
+			ASC->OnGameplayEffectStackChangeDelegate(ActiveHandle)->AddUObject(this, &ThisClass::OnStackChanged);
+			
+			TargetSlot->SetStackNum(SpecApplied.StackCount);
+			break;
+		}
+	}
 }
 
 

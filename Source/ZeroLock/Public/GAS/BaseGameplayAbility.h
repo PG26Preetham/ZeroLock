@@ -88,6 +88,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Cooldown")
 	FScalableFloat CooldownDuration;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Stacks")
+	FGameplayTag StackTag;
 	// Temp container that we will return the pointer to in GetCooldownTags().
 	// This will be a union of our CooldownTags and the Cooldown GE's cooldown tags.
 	UPROPERTY(Transient)

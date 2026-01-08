@@ -318,10 +318,10 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerHandleDeath(APlayerController* PC);
 	
-	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	UPROPERTY(BlueprintReadOnly,Replicated,Category = "Assist")
 	AZeroLockCharacter* LastHitCharacter;
 
-	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	UPROPERTY(BlueprintReadOnly,Replicated,Category = "Assist")
 	TArray<TObjectPtr<AZeroLockCharacter>> AssistListCharacters;
 
 	UPROPERTY(BlueprintReadOnly,Category = "Assist")
