@@ -14,6 +14,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Zero_BasePlayerController.h"
+#include "Zero_BasePlayerState.h"
 #include "Gamemode/Zero_BaseGameModeBase.h"
 #include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
@@ -690,6 +691,15 @@ void AZeroLockCharacter::CreateVM_Att()
 		VM_Attributes->SetMaxAmmo(static_cast<int32>(AttributeSet->GetMaxAmmo()));
 		VM_Attributes->SetIsInfiniteAmmo(false);
 	}
+}
+
+bool AZeroLockCharacter::IsOnSameTeam(AZeroLockCharacter* CharacterToCheck)
+{
+	AZero_BasePlayerState* MyPS =Cast<AZero_BasePlayerState>(GetPlayerState());
+	if (!MyPS) return false;
+	AZero_BasePlayerState* OtherPS =Cast<AZero_BasePlayerState>(CharacterToCheck->GetPlayerState());
+	if (!OtherPS) return false;
+	return MyPS->TeamID == OtherPS->TeamID;
 }
 
 

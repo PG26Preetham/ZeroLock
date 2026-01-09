@@ -403,7 +403,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	UZL_AbilityUIManagerComponent* GetAbilityUIManager() const { return AbilityUIManager; }
 
-	
+	UFUNCTION(BlueprintCallable, Category = "Teams")
+	bool IsOnSameTeam(AZeroLockCharacter* CharacterToCheck);
 };
 
 

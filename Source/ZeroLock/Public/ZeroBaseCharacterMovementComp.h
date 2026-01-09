@@ -27,6 +27,7 @@ enum ECustomMovementMode
 	CMOVE_Slide UMETA(DisplayName = "Slide"),
 	CMOVE_Zipline UMETA(DisplayName = "Zipline"),
 	CMOVE_Melee UMETA(DisplayName = "Melee"),
+	CMOVE_To_Location UMETA(DisplayName = "To_Location"),
 	CMOVE_Max   UMETA(DisplayName = "Max")
 };
 
