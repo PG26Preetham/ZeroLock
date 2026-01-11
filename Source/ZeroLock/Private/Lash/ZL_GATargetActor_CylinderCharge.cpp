@@ -4,7 +4,10 @@
 #include "Lash/ZL_GATargetActor_CylinderCharge.h"
 
 #include "Abilities/GameplayAbility.h"
+#include "Camera/CameraComponent.h"
 #include "Engine/OverlapResult.h"
+#include "ZeroLock/ZeroLockCharacter.h"
+
 AZL_GATargetActor_CylinderCharge::AZL_GATargetActor_CylinderCharge()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -22,10 +25,10 @@ FVector AZL_GATargetActor_CylinderCharge::GetCylinderCenter() const
 {
 	if (!OwningAbility) return GetActorLocation();
 	
-	AActor* Avatar = OwningAbility->GetAvatarActorFromActorInfo();
+	AZeroLockCharacter* Avatar = Cast<AZeroLockCharacter>(OwningAbility->GetAvatarActorFromActorInfo());
 	if (!Avatar) return GetActorLocation();
 
-	FVector Forward = Avatar->GetActorForwardVector();
+	FVector Forward = Avatar->GetFollowCamera()->GetForwardVector();
 	// Offset the cylinder center to be half-height in front of the player
 	return Avatar->GetActorLocation() + (Forward * (CylinderHeight * 0.5f));
 }
@@ -43,7 +46,7 @@ void AZL_GATargetActor_CylinderCharge::Tick(float DeltaSeconds)
 
 void AZL_GATargetActor_CylinderCharge::UpdateTargetingData(float DeltaSeconds)
 {
-	AActor* Avatar = OwningAbility->GetAvatarActorFromActorInfo();
+	AZeroLockCharacter* Avatar = Cast<AZeroLockCharacter>(OwningAbility->GetAvatarActorFromActorInfo());
 	if (!Avatar) return;
 
 	FCollisionQueryParams Params;
@@ -53,7 +56,7 @@ void AZL_GATargetActor_CylinderCharge::UpdateTargetingData(float DeltaSeconds)
 	// CapsuleRadius is cylinder radius, CapsuleHalfHeight is half the cylinder length
 	FCollisionShape Capsule = FCollisionShape::MakeCapsule(CylinderRadius, CylinderHeight * 0.5f);
 	// Rotate capsule to lie horizontal (pointing forward)
-	FQuat Rotation = Avatar->GetActorQuat() * FRotator(90.f, 0.f, 0.f).Quaternion();
+	FQuat Rotation = Avatar->GetFollowCamera()->GetForwardVector().ToOrientationQuat();
 	DrawDebugCapsule(GetWorld(), GetCylinderCenter(), CylinderHeight * 0.5f, CylinderRadius, Rotation, FColor::Green, false, -1, 0, 2.f);
 
 	GetWorld()->OverlapMultiByChannel(Overlaps, GetCylinderCenter(), Rotation, ECC_Pawn, Capsule, Params);
@@ -128,7 +131,13 @@ bool AZL_GATargetActor_CylinderCharge::IsValidTarget(AActor* Actor) const
 {
 	if (!Actor) return false;
 	// Use the filter provided by the ability
-	return Filter.FilterPassesForActor(Actor);
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(OwningAbility->GetAvatarActorFromActorInfo());
+	AZeroLockCharacter* Villian = Cast<AZeroLockCharacter>(Actor);
+	if (!Hero || !Villian) return false;
+	return (!Hero->IsOnSameTeam(Villian));
+	
+	
+	//return Filter.FilterPassesForActor(Actor);
 }
 
 void AZL_GATargetActor_CylinderCharge::ConfirmTargetingAndContinue()

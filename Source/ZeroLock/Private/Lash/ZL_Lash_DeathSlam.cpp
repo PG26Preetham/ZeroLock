@@ -3,9 +3,14 @@
 
 #include "Lash/ZL_Lash_DeathSlam.h"
 
+#include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbilityTargetDataFilter.h"
+#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Abilities/Tasks/AbilityTask_WaitTargetData.h"
+#include "Chaos/Deformable/MuscleActivationConstraints.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GAS/BaseCharAbilitySystemComponent.h"
 #include "Lash/ZL_GATargetActor_CylinderCharge.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
@@ -13,18 +18,36 @@ UZL_Lash_DeathSlam::UZL_Lash_DeathSlam()
 {
 }
 
-void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+void UZL_Lash_DeathSlam::TargetTimeOut()
 {
-	// 1. Setup Spawn Transform at Player location
+	TargetInputRelease(0.01);
+}
+
+void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+                                         const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+                                         const FGameplayEventData* TriggerEventData)
+{
+
 	FVector StartLocation = GetAvatarActorFromActorInfo()->GetActorLocation();
 	FTransform SpawnTransform = FTransform::Identity;
 	SpawnTransform.SetLocation(StartLocation);
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	if (!Hero)
+	{
+		EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,true);
+	}
+	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
+	{
+		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
+	}
+	Hero->GetCharacterMovement()->BrakingDecelerationFlying =1000;
+	Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
-	// 2. Spawn our custom Cylinder Target Actor
-	// Ensure 'Targetclass' is set to AZL_GATargetActor_CylinderCharge in the Blueprint
-	AZL_GATargetActor_CylinderCharge* TargetActor = GetWorld()->SpawnActor<AZL_GATargetActor_CylinderCharge>(Targetclass, SpawnTransform);
+	UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,LockOnThreshold);
+	InitWait->OnFinish.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
+	InitWait->ReadyForActivation();
+	//Hero->GetCharacterMovement()->StopMovementImmediately();
+	/*AZL_GATargetActor_CylinderCharge* TargetActor = GetWorld()->SpawnActor<AZL_GATargetActor_CylinderCharge>(Targetclass, SpawnTransform);
 
 	if (TargetActor)
 	{
@@ -71,7 +94,78 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	else
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+	}*/
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+}
+
+void UZL_Lash_DeathSlam::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	for (FActiveGameplayEffectHandle& mHandle : CurrentActiveEffectHandles)
+	{
+		if (mHandle.IsValid())
+		{
+			UAbilitySystemComponent* TargetASC = mHandle.GetOwningAbilitySystemComponent();
+			if (TargetASC)
+			{
+				TargetASC->RemoveActiveGameplayEffect(mHandle);
+			}
+		}
 	}
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	if (Hero)
+	{
+		Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+	}
+	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
+	{
+		ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
+	}
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UZL_Lash_DeathSlam::TargetSlamFinish()
+{
+	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
+}
+
+void UZL_Lash_DeathSlam::TargetPullFinish()
+{
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	FHitResult TargetHit;
+	if (GetLookAtLocation(Hero,600,0.5,3000,TargetHit))
+	{
+		FVector TargetPullLOcation =  TargetHit.ImpactPoint;
+		for (TWeakObjectPtr<AActor> Target : OutActors)
+		{
+			
+			if (AZeroLockCharacter* Victim = Cast<AZeroLockCharacter>(Target.Get()))
+			{
+				if (Hero->HasAuthority())
+				{
+					TSharedPtr<FRootMotionSource_ConstantForce> DragForce = MakeShared<FRootMotionSource_ConstantForce>();
+					DragForce->InstanceName = FName("VictimDragWithOffset");
+					DragForce->AccumulateMode = ERootMotionAccumulateMode::Override;
+					DragForce->Priority = 10;
+					FVector VictimLoc = Victim->GetActorLocation();
+					FVector ToDestination = TargetPullLOcation - VictimLoc;
+					float Distance = ToDestination.Size();
+					FVector RequiredVelocity = ToDestination / PullTime;
+					DragForce->Force = RequiredVelocity;
+					DragForce->Duration = PullTime;
+					DragForce->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::SetVelocity;
+					DragForce->FinishVelocityParams.SetVelocity = FVector::ZeroVector;
+
+					Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
+				}
+			}
+			
+		}
+		
+	}
+	UAbilityTask_WaitDelay* WaitPullTask = UAbilityTask_WaitDelay::WaitDelay(this,PullTime);
+	WaitPullTask->OnFinish.AddDynamic(this, &UZL_Lash_DeathSlam::TargetSlamFinish);
+	WaitPullTask->ReadyForActivation();
 }
 
 void UZL_Lash_DeathSlam::AbilityConfirmedAction(const FGameplayAbilityTargetDataHandle& Data)
@@ -85,19 +179,94 @@ void UZL_Lash_DeathSlam::AbilityConfirmedAction(const FGameplayAbilityTargetData
 	OutActors = Data.Get(0)->GetActors();
 
 	ZLOG(FString::Printf(TEXT("Ability Confirmed! Locked on %d targets."), OutActors.Num()));
-
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (LockOnEffect)
 	{
+		FGameplayEffectContextHandle Context = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
+		FGameplayEffectSpecHandle Spec = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(LockOnEffect, 1.f, Context);
+		
+		FVector TargetPullLOcation = Hero->GetActorLocation() + FVector(0,0,-45);
 		for (TWeakObjectPtr<AActor> Target : OutActors)
 		{
-			FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(LockOnEffect);
-			if (SpecHandle.IsValid())
+		
+			if (AZeroLockCharacter* Victim = Cast<AZeroLockCharacter>(Target.Get()))
 			{
-				ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, Data);
+				UAbilitySystemComponent* TargetASC = Victim->GetAbilitySystemComponent();
+				if (TargetASC)
+				{
+					FActiveGameplayEffectHandle ActiveHandle = Hero->GetMyAbilitySystemComp()->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(),TargetASC);
+					if (ActiveHandle.IsValid())
+					{
+						CurrentActiveEffectHandles.Add(ActiveHandle);
+					}
+				}
+				if (Hero->HasAuthority())
+				{
+					TSharedPtr<FRootMotionSource_ConstantForce> DragForce = MakeShared<FRootMotionSource_ConstantForce>();
+					DragForce->InstanceName = FName("VictimDragWithOffset");
+					DragForce->AccumulateMode = ERootMotionAccumulateMode::Override;
+					DragForce->Priority = 10;
+					FVector VictimLoc = Victim->GetActorLocation();
+					FVector ToDestination = TargetPullLOcation - VictimLoc;
+					float Distance = ToDestination.Size();
+					FVector RequiredVelocity = ToDestination / PullTime;
+					DragForce->Force = RequiredVelocity;
+					DragForce->Duration = PullTime;
+					DragForce->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::SetVelocity;
+					DragForce->FinishVelocityParams.SetVelocity = FVector::ZeroVector;
+
+					Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
+				}
 			}
+			
 		}
 	}
+	
+	UAbilityTask_WaitDelay* WaitPullTask = UAbilityTask_WaitDelay::WaitDelay(this,PullTime);
+	WaitPullTask->OnFinish.AddDynamic(this, &UZL_Lash_DeathSlam::TargetPullFinish);
+	WaitPullTask->ReadyForActivation();
+}
 
-	// Always call Super to handle EndAbility and cleanup
-	Super::AbilityConfirmedAction(Data);
+bool UZL_Lash_DeathSlam::GetLookAtLocation(const AZeroLockCharacter* InActor, float BaseRadius, float HeightMultiplier,
+	float MaxAllowedRadius, FHitResult& OutHit)
+{
+	if (!InActor || !InActor->GetWorld()) return false;
+	UWorld* World = InActor->GetWorld();
+	FVector ActorLoc = InActor->GetActorLocation();
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(InActor);
+	
+	FHitResult HeightCheckHit;
+	float Height = 0.f;
+	if (World->LineTraceSingleByChannel(HeightCheckHit, ActorLoc - FVector(0,0,45), ActorLoc + (FVector::DownVector * 10000.f), ECC_Visibility, Params))
+	{
+		Height = FVector::Dist(ActorLoc, HeightCheckHit.ImpactPoint);
+	}
+	
+
+	float DynamicRadius = FMath::Clamp(BaseRadius + (Height * HeightMultiplier), BaseRadius, MaxAllowedRadius);
+	FVector CenterBase = HeightCheckHit.bBlockingHit ? HeightCheckHit.ImpactPoint : ActorLoc;
+
+
+	FVector Start = InActor->GetPawnViewLocation();
+	FVector End = Start + (InActor->GetViewRotation().Vector() * 10000.f);
+	FHitResult LookHit;
+
+	if (World->LineTraceSingleByChannel(LookHit, Start, End, ECC_Visibility, Params))
+	{
+		FVector ToHitFlat = LookHit.ImpactPoint - CenterBase;
+		ToHitFlat.Z = 0;
+		
+		if (ToHitFlat.Size() > DynamicRadius)
+		{
+			FVector ClampedPos = CenterBase + (ToHitFlat.GetSafeNormal() * DynamicRadius);
+			return World->LineTraceSingleByChannel(OutHit, ClampedPos + FVector(0,0,500), ClampedPos + (FVector::DownVector * 1000.f), ECC_Visibility, Params);
+		}
+		OutHit = LookHit;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

@@ -16,9 +16,11 @@ class ZEROLOCK_API UZL_Lash_DeathSlam : public UBase_GA_TargetActors
 public:
 	UZL_Lash_DeathSlam();
 
+	UFUNCTION()
+	void TargetTimeOut();
 	/** Overriding Activate to inject our custom Cylinder logic */
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 protected:
 	/** Time in seconds an enemy must stay in the cylinder to be "Locked" */
 	UPROPERTY(EditAnywhere, Category = "Targeting|Cylinder")
@@ -36,6 +38,21 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	TSubclassOf<UGameplayEffect> LockOnEffect;
 	TArray<TWeakObjectPtr<AActor>> OutActors;
-	/** Override to process the final list of tracked actors */
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	float PullTime =0.5;
+	
+	UFUNCTION()
+	void TargetSlamFinish();
+	
+	UFUNCTION()
+	void TargetPullFinish();
+
+
+	UPROPERTY()
+	TArray<FActiveGameplayEffectHandle> CurrentActiveEffectHandles;
 	virtual void AbilityConfirmedAction(const FGameplayAbilityTargetDataHandle& Data) override;
+
+	static bool GetLookAtLocation(const AZeroLockCharacter* InActor, float BaseRadius, float HeightMultiplier, float MaxAllowedRadius, FHitResult& OutHit);
+
 };
