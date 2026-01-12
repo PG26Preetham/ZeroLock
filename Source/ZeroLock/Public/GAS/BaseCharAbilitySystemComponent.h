@@ -10,6 +10,7 @@
  * 
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FNewAbilityAddedDelegate,FGameplayAbilitySpec& ,AbilitySpec);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAbilityUpgradedDelegate,UGameplayAbility* ,Ability,int32 ,newlevel);
 UCLASS()
 class ZEROLOCK_API UBaseCharAbilitySystemComponent : public UAbilitySystemComponent
 {
@@ -18,13 +19,20 @@ class ZEROLOCK_API UBaseCharAbilitySystemComponent : public UAbilitySystemCompon
 	UFUNCTION()
 	virtual void OnGiveAbility(FGameplayAbilitySpec& AbilitySpec) override;
 
+	
+
 
 	virtual void OnRep_ActivateAbilities() override;
 public:
 	UPROPERTY(BlueprintAssignable)
 	FNewAbilityAddedDelegate OnNewAbilityAdded;
 
+	UPROPERTY(BlueprintAssignable)
+	FAbilityUpgradedDelegate OnAbilityUpgraded;
 
+	UFUNCTION()
+	void LevelUpAbility(UGameplayAbility* AbilityToUpgrade,int32 mLevel);
+	
 	UFUNCTION(BlueprintCallable)
 	void ApplyWeaponDamage(UAbilitySystemComponent* TargetASC,float DamageValue);
 

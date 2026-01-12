@@ -6,6 +6,9 @@
 #include "MVVMViewModelBase.h"
 #include "ZL_VM_AbilityIcon.generated.h"
 
+class UBaseGameplayAbility;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FAbilityLevelChanged, UZL_VM_AbilityIcon*,AbilityIconVM,int32,newLevel);
+
 /**
  * 
  */
@@ -31,6 +34,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
 	int32 StackNum =0;
+
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	int32 AbilityLevel = 1;
 	
 	void SetIconTexture(UTexture2D* NewIcon) ;
 	UTexture2D* GetIconTexture()const  { return IconTexture; }
@@ -41,4 +47,12 @@ public:
 
 	void SetStackNum(int32 NewStackNum);
 	int32 GetStackNum()const { return StackNum; }
+
+	void IncrementAbilityLevel();
+	void SetAbilityLevel(int32 NewAbilityLevel);
+	int32 GetAbilityLevel()const { return AbilityLevel; }
+
+
+	UPROPERTY(BlueprintAssignable)
+	FAbilityLevelChanged OnAbilityLevelChanged;
 };

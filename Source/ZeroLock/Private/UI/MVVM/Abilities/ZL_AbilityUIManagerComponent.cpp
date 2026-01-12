@@ -30,6 +30,61 @@ UObject* UZL_AbilityUIManagerComponent::GetAbilitiesViewModel()
 	return VM_Abilities;
 }
 
+void UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI(UZL_VM_AbilityIcon* AbilityIconVM, int32 NewLevel)
+{
+	if (NewLevel > 3) return;
+    
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+	if (Hero && AbilityIconVM)
+	{
+		if (UGameplayAbility* GAToUpgrade = *SlotToAbilityMap.Find(AbilityIconVM))
+		{
+			Server_UpgradeAbility(GAToUpgrade->GetClass(), NewLevel);
+			AbilityIconVM->SetAbilityLevel(NewLevel);
+		}
+	}
+}
+
+void UZL_AbilityUIManagerComponent::Server_UpgradeAbility_Implementation(TSubclassOf<UBaseGameplayAbility> AbilityClass,
+	int32 NewLevel)
+{
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+	if (!Hero) return;
+
+	UAbilitySystemComponent* ASC = Hero->GetAbilitySystemComponent();
+	if (!ASC || !AbilityClass) return;
+
+	if (FGameplayAbilitySpec* AbilitySpec = ASC->FindAbilitySpecFromClass(AbilityClass))
+	{
+		if (AbilitySpec->Level < NewLevel)
+		{
+			AbilitySpec->Level = NewLevel; 
+			ASC->MarkAbilitySpecDirty(*AbilitySpec);
+		}
+	}
+}
+
+bool UZL_AbilityUIManagerComponent::Server_UpgradeAbility_Validate(TSubclassOf<UBaseGameplayAbility> AbilityClass,
+	int32 NewLevel)
+{
+	return true;
+}
+
+
+
+
+void UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromASC(UGameplayAbility* AbilityLeveledUp, int32 NewLevel)
+{
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+	if (Hero)
+	{
+		if (UZL_VM_AbilityIcon* TargetSlot = *SlotToAbilityMap.FindKey(AbilityLeveledUp))
+		{
+			TargetSlot->SetAbilityLevel(NewLevel);
+		}
+	}
+}
+
 
 void UZL_AbilityUIManagerComponent::BeginPlay()
 {
@@ -46,7 +101,7 @@ void UZL_AbilityUIManagerComponent::BeginPlay()
 	if (Hero && Hero->IsLocallyControlled())
 	{
 		UAbilitySystemComponent* ASC = Hero->GetAbilitySystemComponent();
-		
+		Hero->GetMyAbilitySystemComp()->OnAbilityUpgraded.AddDynamic(this,&ThisClass::UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromASC);
 		Hero->GetMyAbilitySystemComp()->OnNewAbilityAdded.AddUniqueDynamic(this, &ThisClass::OnAbilityAdded);
 		ASC->OnActiveGameplayEffectAddedDelegateToSelf.AddUObject(this, &ThisClass::OnGEApplied);
 		TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;
@@ -97,7 +152,8 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 
 	if (TargetSlot)
 	{
-	
+		TargetSlot->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
+		SlotToAbilityMap.Add(TargetSlot, Ability);
 		TargetSlot->SetIconTexture(Ability->IconImage);
 		const FGameplayTagContainer* CooldownTags = Ability->GetCooldownTags();
 		if (CooldownTags)
@@ -117,7 +173,6 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 		{
 			TargetSlot->SetbHasStacks(true);
 			StackTagToSlotMap.Add(StackTag, TargetSlot);
-
 		}
 	}
 }
@@ -157,7 +212,7 @@ void UZL_AbilityUIManagerComponent::OnGEApplied(UAbilitySystemComponent* ASC, co
 			
 			ASC->OnGameplayEffectStackChangeDelegate(ActiveHandle)->AddUObject(this, &ThisClass::OnStackChanged);
 			
-			TargetSlot->SetStackNum(SpecApplied.StackCount);
+			TargetSlot->SetStackNum(SpecApplied.GetStackCount());
 			break;
 		}
 	}

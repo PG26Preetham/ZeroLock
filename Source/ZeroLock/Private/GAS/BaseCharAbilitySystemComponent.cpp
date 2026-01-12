@@ -4,17 +4,20 @@
 #include "GAS/BaseCharAbilitySystemComponent.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "GAS/BaseGameplayAbility.h"
+#include "ZeroLock/ZeroLock.h"
 
 void UBaseCharAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
 	Super::OnGiveAbility(AbilitySpec);
-
+	
 	if (OnNewAbilityAdded.IsBound())
 	{
 		OnNewAbilityAdded.Broadcast(AbilitySpec);
 	}
 	
 }
+
 
 void UBaseCharAbilitySystemComponent::OnRep_ActivateAbilities()
 {
@@ -23,6 +26,33 @@ void UBaseCharAbilitySystemComponent::OnRep_ActivateAbilities()
 	for (FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 	{
 		OnNewAbilityAdded.Broadcast(Spec);
+	}
+}
+
+void UBaseCharAbilitySystemComponent::LevelUpAbility(UGameplayAbility* AbilityToUpgrade, int32 mLevel)
+{
+	ZLOG("AbilityUpgrade clicked");
+
+	if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromClass(AbilityToUpgrade->GetClass()))
+	{
+		AbilitySpec->Level = mLevel;
+    
+		// 1. Mark for replication
+		MarkAbilitySpecDirty(*AbilitySpec);
+
+		// 2. Update active instances (if any exist)
+		TArray<UGameplayAbility*> Instances = AbilitySpec->GetAbilityInstances();
+		for (UGameplayAbility* Instance : Instances)
+		{
+			if (UBaseGameplayAbility* BaseAbilityInstance = Cast<UBaseGameplayAbility>(Instance))
+			{
+				// Optional: Call a function on the instance to react to the level up
+				// BaseAbilityInstance->OnLevelChanged(mLevel);
+			}
+		}
+
+		// 3. Notify UI/Global VM
+		OnAbilityUpgraded.Broadcast(AbilityToUpgrade, AbilitySpec->Level);
 	}
 }
 

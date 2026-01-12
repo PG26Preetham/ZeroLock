@@ -9,6 +9,7 @@
 #include "ZL_AbilityUIManagerComponent.generated.h"
 
 
+class UBaseGameplayAbility;
 class UAbilitySystemComponent;
 struct FGameplayEffectSpec;
 struct FActiveGameplayEffectHandle;
@@ -28,12 +29,24 @@ public:
 	UObject* GetAbilitiesViewModel() ;
 
 	UFUNCTION()
+	void AbilityUpgradeCallBackFromUI(UZL_VM_AbilityIcon* AbilityIconVM, int32 NewLevel);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UpgradeAbility(TSubclassOf<UBaseGameplayAbility> AbilityClass, int32 NewLevel);
+
+	UFUNCTION()
+	void AbilityUpgradeCallBackFromASC(UGameplayAbility* AbilityLeveledUp, int32 NewLevel);
+	
+	UFUNCTION()
 	void OnAbilityAdded(FGameplayAbilitySpec& Spec);
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY()
 	TMap<FGameplayTag, UZL_VM_AbilityIcon*> StackTagToSlotMap;
+
+	UPROPERTY()
+	TMap< UZL_VM_AbilityIcon*,UGameplayAbility*> SlotToAbilityMap;
 
 	// Callback for when stack tags change
 	void OnStackTagChanged(const FGameplayTag CallbackTag, int32 NewCount);

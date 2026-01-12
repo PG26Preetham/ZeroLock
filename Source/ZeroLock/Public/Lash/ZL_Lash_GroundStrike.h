@@ -30,10 +30,10 @@ protected:
 	float StrikeConeAngle = 50.f;
 
 	UPROPERTY(EditAnywhere, Category = "Lash | SlamDam")
-	float StrikeDistanceMultipler = 0.5f;
+	FScalableFloat StrikeDistanceMultipler;
 	
 	UPROPERTY(EditAnywhere, Category = "Lash | SlamDam")
-	float StrikeBaseDam =20;
+	FScalableFloat StrikeBaseDam;
 	
 	UPROPERTY(EditAnywhere, Category = "Lash | Settings")
 	float MovementSpeed = 3000.f;

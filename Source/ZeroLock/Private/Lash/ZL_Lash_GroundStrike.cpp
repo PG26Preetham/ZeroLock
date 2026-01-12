@@ -193,7 +193,10 @@ void UZL_Lash_GroundStrike::OnMovementFinished()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AZeroLockCharacter*> OutVillans;
 		ActorsToIgnore.Add(Hero);
-		float DamageCalc =StrikeBaseDam + (DistanceTravelled* StrikeDistanceMultipler);
+			int32 mylevel =GetCurrentAbilitySpec()->Level;
+			ZLOG(FString::FromInt(mylevel));
+			ZLOG(FString::SanitizeFloat(StrikeBaseDam.GetValueAtLevel(mylevel)));
+		float DamageCalc =StrikeBaseDam.GetValueAtLevel(mylevel) + (DistanceTravelled* StrikeDistanceMultipler.GetValueAtLevel(mylevel));
 		//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 		if (ConeTraceMulti(GetWorld(),Origin,Direction.Rotation(),StrikeConeHeight,StrikeConeAngle/2, UEngineTypes::ConvertToTraceType(ECC_Pawn),true,ActorsToIgnore,EDrawDebugTrace::ForDuration,HitResults,OutVillans,true))
 		{

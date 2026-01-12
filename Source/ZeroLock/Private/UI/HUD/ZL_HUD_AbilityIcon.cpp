@@ -41,3 +41,18 @@ void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
 	}
 	
 }
+
+void UZL_HUD_AbilityIcon::NativeOnClicked()
+{
+	Super::NativeOnClicked();
+	
+}
+
+FReply UZL_HUD_AbilityIcon::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (VM_AbilityIcon)
+	{
+		VM_AbilityIcon->IncrementAbilityLevel();
+	}
+	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}

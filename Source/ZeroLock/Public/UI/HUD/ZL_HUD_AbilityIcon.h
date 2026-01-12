@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "CommonButtonBase.h"
 #include "Abilities/GameplayAbility.h"
 #include "ZL_HUD_AbilityIcon.generated.h"
 
@@ -17,7 +18,7 @@ class UImage;
  * 
  */
 UCLASS()
-class ZEROLOCK_API UZL_HUD_AbilityIcon : public UCommonActivatableWidget
+class ZEROLOCK_API UZL_HUD_AbilityIcon : public UCommonButtonBase
 {
 	GENERATED_BODY()
 
@@ -35,4 +36,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
 	UImage* AbilityIcon;
+
+	virtual void NativeOnClicked() override;
+
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	
 };

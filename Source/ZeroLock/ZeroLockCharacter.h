@@ -115,6 +115,9 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_Cancel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_UIInfo;
 	
 public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
@@ -136,6 +139,8 @@ protected:
 	void MeleePressed();
 	void MeleeReleased();
 	void ParryPressed();
+	void UIInfoPressed();
+	void UIInfoReleased();
 
 
 public:

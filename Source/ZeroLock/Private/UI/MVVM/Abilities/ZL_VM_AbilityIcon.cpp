@@ -39,3 +39,16 @@ void UZL_VM_AbilityIcon::SetStackNum(int32 NewStackNum)
 		
 	}
 }
+
+void UZL_VM_AbilityIcon::IncrementAbilityLevel()
+{
+	OnAbilityLevelChanged.Broadcast(this,GetAbilityLevel()+1);
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel(int32 NewAbilityLevel)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel, NewAbilityLevel))
+	{
+		
+	}
+}

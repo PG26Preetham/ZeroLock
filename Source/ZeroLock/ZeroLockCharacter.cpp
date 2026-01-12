@@ -313,7 +313,8 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 		FGameplayAbilitySpec GrantedSpec=FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this);
 		if (inputTags.Contains(AbiltyInputID))
 		{
-			GrantedSpec.DynamicAbilityTags.AddTag(inputTags.FindRef(InputToBindTo));
+			//GrantedSpec.DynamicAbilityTags.AddTag(inputTags.FindRef(InputToBindTo));
+			GrantedSpec.GetDynamicSpecSourceTags().AddTag(inputTags.FindRef(InputToBindTo));
 		}
 		
 		
@@ -761,6 +762,10 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		EnhancedInputComponent->BindAction(EI_Confirm,ETriggerEvent::Completed,AbilitySystemComp,&UAbilitySystemComponent::LocalInputConfirm);
 		EnhancedInputComponent->BindAction(EI_Cancel,ETriggerEvent::Completed,AbilitySystemComp,&UAbilitySystemComponent::LocalInputCancel);
+
+
+		EnhancedInputComponent->BindAction(EI_UIInfo,ETriggerEvent::Started,this,&AZeroLockCharacter::UIInfoPressed);
+		EnhancedInputComponent->BindAction(EI_UIInfo,ETriggerEvent::Completed,this,&AZeroLockCharacter::UIInfoReleased);
 		
 	}
 	else
@@ -976,4 +981,22 @@ void AZeroLockCharacter::MeleeReleased()
 void AZeroLockCharacter::ParryPressed()
 {
 	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Parry));
+}
+
+void AZeroLockCharacter::UIInfoPressed()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->bShowMouseCursor = true;
+		PC->SetInputMode(FInputModeGameAndUI());
+	}
+}
+
+void AZeroLockCharacter::UIInfoReleased()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 }
