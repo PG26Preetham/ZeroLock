@@ -155,6 +155,12 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 		TargetSlot->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
 		SlotToAbilityMap.Add(TargetSlot, Ability);
 		TargetSlot->SetIconTexture(Ability->IconImage);
+		TargetSlot->SetAbilityDescription(FText::FromString(Ability->AbilityDescription));
+		TargetSlot->SetAbilityLevel1Description(FText::FromString(Ability->AbilityDescription1));
+		TargetSlot->SetAbilityLevel2Description(FText::FromString(Ability->AbilityDescription2));
+		TargetSlot->SetAbilityLevel3Description(FText::FromString(Ability->AbilityDescription3));
+		TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
+		TargetSlot->SetAbilityName(FText::FromString(Ability->AbilityName));
 		const FGameplayTagContainer* CooldownTags = Ability->GetCooldownTags();
 		if (CooldownTags)
 		{

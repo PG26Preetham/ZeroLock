@@ -5,6 +5,54 @@
 
 #include "ZeroLock/ZeroLock.h"
 
+void UZL_VM_AbilityIcon::SetAbilityDescription(FText mAbilityDescription)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityDescription,mAbilityDescription))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel1Description(FText mAbilityLevel1Description)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel1Description,mAbilityLevel1Description))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel2Description(FText mAbilityLevel2Description)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel2Description,mAbilityLevel2Description))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel3Description(FText mAbilityLevel3Description)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel3Description,mAbilityLevel3Description))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetMaxCoolDownTime(float mMaxCoolDownTime)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(MaxCoolDownTime,mMaxCoolDownTime))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityName(FText mAbilityName)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityName,mAbilityName))
+	{
+		
+	}
+}
+
 void UZL_VM_AbilityIcon::SetIconTexture(UTexture2D* NewIcon)
 {
 	

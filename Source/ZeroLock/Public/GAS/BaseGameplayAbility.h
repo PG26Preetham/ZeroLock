@@ -65,6 +65,15 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
 	FString AbilityDescription;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
+	FString AbilityDescription1;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
+	FString AbilityDescription2;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Icon")
+	FString AbilityDescription3;
 	
 
 	TArray<FGameplayTag> AbilitySlotTags{ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_1,ZerolockGameplayTagsForBinding::TAG_INPUT_ABILITY_2,ZerolockGameplayTagsForBinding::TAG_INPUT_SECONDRY,ZerolockGameplayTagsForBinding::TAG_INPUT_ULTIMATE};

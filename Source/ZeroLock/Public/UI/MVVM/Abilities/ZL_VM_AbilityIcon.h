@@ -37,6 +37,37 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
 	int32 AbilityLevel = 1;
+
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	FText AbilityDescription;
+
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	FText AbilityName;
+
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	FText AbilityLevel1Description;
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	FText AbilityLevel2Description;
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	FText AbilityLevel3Description;
+
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	float MaxCoolDownTime;
+
+
+	void SetAbilityDescription(FText mAbilityDescription);
+	void SetAbilityLevel1Description(FText mAbilityLevel1Description);
+	void SetAbilityLevel2Description(FText mAbilityLevel2Description);
+	void SetAbilityLevel3Description(FText mAbilityLevel3Description);
+	void SetMaxCoolDownTime(float mMaxCoolDownTime);
+	void SetAbilityName(FText mAbilityName);
+
+	FText GetAbilityName() const{return AbilityName;}
+	FText GetAbilityDescription()const { return AbilityDescription; }
+	FText GetAbilityLevel1Description()const { return AbilityLevel1Description; }
+	FText GetAbilityLevel2Description()const { return AbilityLevel2Description; }
+	FText GetAbilityLevel3Description()const { return AbilityLevel3Description; }
+	float GetMaxCoolDownTime()const { return MaxCoolDownTime; }
 	
 	void SetIconTexture(UTexture2D* NewIcon) ;
 	UTexture2D* GetIconTexture()const  { return IconTexture; }
@@ -44,6 +75,8 @@ public:
 
 	void SetbHasStacks(bool bstacks);
 	bool GetbHasStacks()const { return bHasStacks; }
+
+	
 
 	void SetStackNum(int32 NewStackNum);
 	int32 GetStackNum()const { return StackNum; }

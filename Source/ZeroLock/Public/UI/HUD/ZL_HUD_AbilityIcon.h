@@ -37,6 +37,9 @@ public:
 	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
 	UImage* AbilityIcon;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tooltip")
+	TSubclassOf<class UZL_AbilityToolTips> TooltipWidgetClass;
+
 	virtual void NativeOnClicked() override;
 
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;

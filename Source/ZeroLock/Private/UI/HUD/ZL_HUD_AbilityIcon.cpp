@@ -10,6 +10,8 @@
 #include "Components/Image.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilityIcon.h"
 #include "View/MVVMView.h"
+#include "UI/HUD/ZL_AbilityToolTips.h"
+#include "ZeroLock/ZeroLock.h"
 
 
 void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
@@ -36,6 +38,19 @@ void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
 						Ability_StackText->SetText(FText::FromString(StackCountText));
 					}
 				}
+				if (TooltipWidgetClass)
+				{
+
+					UZL_AbilityToolTips* TooltipWidget = CreateWidget<UZL_AbilityToolTips>(GetOwningPlayer(),TooltipWidgetClass);
+
+					if (TooltipWidget)
+					{
+						ZLOG("ToolTipsSetup")
+						TooltipWidget->SetViewModel(InViewModel);
+						SetToolTip(TooltipWidget);
+					}
+				}
+	
 			}
 		}
 	}
