@@ -194,7 +194,7 @@ void UZL_Lash_GroundStrike::OnMovementFinished()
 		TArray<AZeroLockCharacter*> OutVillans;
 		ActorsToIgnore.Add(Hero);
 			int32 mylevel =GetCurrentAbilitySpec()->Level;
-			ZLOG(FString::FromInt(mylevel));
+			//ZLOG(FString::FromInt(mylevel));
 			ZLOG(FString::SanitizeFloat(StrikeBaseDam.GetValueAtLevel(mylevel)));
 		float DamageCalc =StrikeBaseDam.GetValueAtLevel(mylevel) + (DistanceTravelled* StrikeDistanceMultipler.GetValueAtLevel(mylevel));
 		//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
