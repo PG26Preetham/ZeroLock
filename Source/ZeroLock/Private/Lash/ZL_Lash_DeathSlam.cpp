@@ -126,6 +126,25 @@ void UZL_Lash_DeathSlam::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 
 void UZL_Lash_DeathSlam::TargetSlamFinish()
 {
+	
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	int32 myLevel =GetCurrentAbilitySpec()->Level;
+
+	for (TWeakObjectPtr<AActor> Target : OutActors)
+	{
+			
+		if (AZeroLockCharacter* Victim = Cast<AZeroLockCharacter>(Target.Get()))
+		{
+				Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(Victim->GetMyAbilitySystemComp(),SlamDamage.GetValueAtLevel(myLevel));
+				if (AfterSlamEffect)
+				{
+					Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Victim->GetMyAbilitySystemComp(),AfterSlamEffect,myLevel);
+				}
+		}
+			
+	}
+		
+	
 	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
 }
 
@@ -133,7 +152,7 @@ void UZL_Lash_DeathSlam::TargetPullFinish()
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	FHitResult TargetHit;
-	if (GetLookAtLocation(Hero,600,0.5,3000,TargetHit))
+	if (GetLookAtLocation(Hero,SlamRadius.GetValueAtLevel(GetCurrentAbilitySpec()->Level),0.5,3000,TargetHit))
 	{
 		FVector TargetPullLOcation =  TargetHit.ImpactPoint;
 		for (TWeakObjectPtr<AActor> Target : OutActors)

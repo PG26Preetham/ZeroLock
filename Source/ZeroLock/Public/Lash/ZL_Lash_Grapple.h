@@ -20,7 +20,7 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConeIstance")
-	float ConeHeight = 500;
+	FScalableFloat ConeHeight = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConeIstance")
 	float ConeAngle =45;
 
@@ -29,4 +29,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple")
 	float GrappleLaunchStrength =100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grapple")
+	TSubclassOf<UGameplayEffect> OnGrappleEffect;
 };

@@ -153,6 +153,24 @@ void UBaseCharAbilitySystemComponent::ApplyHeal(UAbilitySystemComponent* TargetA
 	TagToSend = FGameplayTag::RequestGameplayTag("Event.HealRecieved",false);
 }
 
+void UBaseCharAbilitySystemComponent::ApplyGameplayEffect(UAbilitySystemComponent* TargetASC,
+	TSubclassOf<UGameplayEffect> EffectClass, int32 level)
+{
+
+	if (!TargetASC || !EffectClass)return;
+
+	FGameplayEffectContextHandle Context = MakeEffectContext();
+	Context.AddSourceObject(GetAvatarActor());
+
+	FGameplayEffectSpecHandle SpecHandle =
+		MakeOutgoingSpec(EffectClass, level, Context);
+
+	if (!SpecHandle.IsValid())
+		return;
+	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+}
+
 void UBaseCharAbilitySystemComponent::SendGameplayEventToSelf(FGameplayTag Tag, UAbilitySystemComponent* TargetASC)
 {
 

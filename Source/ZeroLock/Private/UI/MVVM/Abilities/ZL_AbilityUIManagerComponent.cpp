@@ -161,6 +161,7 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 		TargetSlot->SetAbilityLevel3Description(FText::FromString(Ability->AbilityDescription3));
 		TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
 		TargetSlot->SetAbilityName(FText::FromString(Ability->AbilityName));
+		
 		const FGameplayTagContainer* CooldownTags = Ability->GetCooldownTags();
 		if (CooldownTags)
 		{

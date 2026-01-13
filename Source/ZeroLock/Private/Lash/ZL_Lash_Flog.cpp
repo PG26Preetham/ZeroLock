@@ -27,6 +27,7 @@ void UZL_Lash_Flog::OnAnimationPointTrigger()
 	TArray<AActor*> ActorsToIgnore;
 	TArray<AZeroLockCharacter*> OutVillans;
 	ActorsToIgnore.Add(Hero);
+	int32 myLevel = GetCurrentAbilitySpec()->Level;
 	//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	if (ConeTraceMulti(GetWorld(),Origin,Direction.Rotation(),ConeHeight,ConeAngle/2, UEngineTypes::ConvertToTraceType(ECC_Pawn),true,ActorsToIgnore,EDrawDebugTrace::ForDuration,HitResults,OutVillans,true))
 	{
@@ -38,9 +39,13 @@ void UZL_Lash_Flog::OnAnimationPointTrigger()
 				{
 					if (!villan) continue;
 					if (Hero->IsOnSameTeam(villan)) continue;
-				
-					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),FlogDamage);
-					Hero->GetMyAbilitySystemComp()->ApplyHeal(Hero->GetMyAbilitySystemComp(),FlogHeal);
+
+					if (FlogEffect)
+					{
+						Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(villan->GetMyAbilitySystemComp(),FlogEffect,myLevel);
+					}
+					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),FlogDamage.GetValueAtLevel(myLevel));
+					Hero->GetMyAbilitySystemComp()->ApplyHeal(Hero->GetMyAbilitySystemComp(),(FlogDamage.GetValueAtLevel(myLevel)*0.6));
 					
 				}
 			}

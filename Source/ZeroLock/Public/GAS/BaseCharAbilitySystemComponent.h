@@ -45,6 +45,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyHeal(UAbilitySystemComponent* TargetASC,float HealValue);
 
+	UFUNCTION(BlueprintCallable)
+	void ApplyGameplayEffect(UAbilitySystemComponent* TargetASC,TSubclassOf<UGameplayEffect> EffectClass,int32 level);
+
 
 	UFUNCTION(BlueprintCallable)
 	void SendGameplayEventToSelf(FGameplayTag Tag, UAbilitySystemComponent* TargetASC);

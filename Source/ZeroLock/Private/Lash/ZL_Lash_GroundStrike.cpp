@@ -193,11 +193,8 @@ void UZL_Lash_GroundStrike::OnMovementFinished()
 		TArray<AActor*> ActorsToIgnore;
 		TArray<AZeroLockCharacter*> OutVillans;
 		ActorsToIgnore.Add(Hero);
-			int32 mylevel =GetCurrentAbilitySpec()->Level;
-			//ZLOG(FString::FromInt(mylevel));
-			ZLOG(FString::SanitizeFloat(StrikeBaseDam.GetValueAtLevel(mylevel)));
+		int32 mylevel =GetCurrentAbilitySpec()->Level;
 		float DamageCalc =StrikeBaseDam.GetValueAtLevel(mylevel) + (DistanceTravelled* StrikeDistanceMultipler.GetValueAtLevel(mylevel));
-		//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 		if (ConeTraceMulti(GetWorld(),Origin,Direction.Rotation(),StrikeConeHeight,StrikeConeAngle/2, UEngineTypes::ConvertToTraceType(ECC_Pawn),true,ActorsToIgnore,EDrawDebugTrace::ForDuration,HitResults,OutVillans,true))
 		{
 			if (OutVillans.Num() > 0)
@@ -208,7 +205,14 @@ void UZL_Lash_GroundStrike::OnMovementFinished()
 					if (Hero->IsOnSameTeam(villan)) continue;
 					ZLOG(FString::SanitizeFloat(DamageCalc));
 					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),DamageCalc);
-					
+					if (mylevel>=2)
+					{
+						villan->LaunchCharacter(FVector(0,0,100),true,true);
+						if (KnockUpEffect)
+						{
+							Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(villan->GetMyAbilitySystemComp(),KnockUpEffect,mylevel);
+						}
+					}
 				}
 			}
 				

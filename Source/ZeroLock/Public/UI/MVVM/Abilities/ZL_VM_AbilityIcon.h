@@ -36,7 +36,7 @@ public:
 	int32 StackNum =0;
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
-	int32 AbilityLevel = 1;
+	int32 AbilityLevel = 0;
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
 	FText AbilityDescription;

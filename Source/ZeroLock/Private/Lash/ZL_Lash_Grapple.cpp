@@ -5,6 +5,7 @@
 
 #include "Camera/CameraComponent.h"
 #include "Engine/OverlapResult.h"
+#include "GAS/BaseCharAbilitySystemComponent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 
@@ -29,11 +30,13 @@ void UZL_Lash_Grapple::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	TArray<AActor*> ActorsToIgnore;
 	TArray<AZeroLockCharacter*> OutVillans;
 	ActorsToIgnore.Add(Hero);
+	int32 mylevel =GetCurrentAbilitySpec()->Level;
 	//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
-	if (ConeTraceMulti(GetWorld(),Origin,Direction.Rotation(),ConeHeight,ConeAngle/2, UEngineTypes::ConvertToTraceType(ECC_Pawn),true,ActorsToIgnore,EDrawDebugTrace::None,HitResults,OutVillans,true))
+	if (ConeTraceMulti(GetWorld(),Origin,Direction.Rotation(),ConeHeight.GetValueAtLevel(mylevel),ConeAngle/2, UEngineTypes::ConvertToTraceType(ECC_Pawn),true,ActorsToIgnore,EDrawDebugTrace::None,HitResults,OutVillans,true))
 	{
 		if (OutVillans.Num() > 0)
 		{
+			
 			for (AZeroLockCharacter* OutVillan : OutVillans)
 			{
 				if (OutVillan)
@@ -43,6 +46,10 @@ void UZL_Lash_Grapple::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 					FVector LaunchVelocity = LaunchDiraction * GrappleLaunchStrength;
 					LaunchVelocity.Z+= HeightBoostInGrapple;
 					Hero->LaunchCharacter(LaunchVelocity,true,true);
+					if (OnGrappleEffect)
+					{
+						Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Hero->GetMyAbilitySystemComp(),OnGrappleEffect,mylevel);
+					}
 					CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 					EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
 		

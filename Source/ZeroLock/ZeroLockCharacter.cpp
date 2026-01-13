@@ -310,7 +310,7 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 		
 		EGASAbilityInputID AbiltyInputID = InputToBindTo;
 		FGameplayAbilitySpecHandle GrantedHandle;
-		FGameplayAbilitySpec GrantedSpec=FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this);
+		FGameplayAbilitySpec GrantedSpec=FGameplayAbilitySpec(AbilityToGrant, 0, static_cast<int32>(AbiltyInputID), this);
 		if (inputTags.Contains(AbiltyInputID))
 		{
 			//GrantedSpec.DynamicAbilityTags.AddTag(inputTags.FindRef(InputToBindTo));

@@ -26,11 +26,15 @@ public:
 	float ConeAngle = 45.f;
 
 	UPROPERTY(EditAnywhere, Category = "Flog | Dam")
-	float FlogDamage = 10;
+	FScalableFloat FlogDamage = 1;
 	UPROPERTY(EditAnywhere, Category = "Flog | Dam")
 	float FlogHeal = 10;
 
 	virtual void OnAnimationPointTrigger() override;
 	virtual void OnAnimationCompleted() override;
+
+
+	UPROPERTY(EditAnywhere, Category = "Flog | Dam")
+	TSubclassOf<UGameplayEffect> FlogEffect;
 	
 };

@@ -26,11 +26,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Targeting|Cylinder")
 	float LockOnThreshold = 1.5f;
 
-	/** Radius of the cylinder */
+
 	UPROPERTY(EditAnywhere, Category = "Targeting|Cylinder")
 	float CylinderRadius = 200.0f;
 
-	/** Length/Distance of the cylinder in front of the player */
+
 	UPROPERTY(EditAnywhere, Category = "Targeting|Cylinder")
 	float CylinderLength = 600.0f;
 
@@ -41,13 +41,22 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	float PullTime =0.5;
-	
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	FScalableFloat SlamDamage;
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	FScalableFloat SlamRadius;
+
 	UFUNCTION()
 	void TargetSlamFinish();
 	
 	UFUNCTION()
 	void TargetPullFinish();
 
+
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	TSubclassOf<UGameplayEffect> AfterSlamEffect;
 
 	UPROPERTY()
 	TArray<FActiveGameplayEffectHandle> CurrentActiveEffectHandles;
