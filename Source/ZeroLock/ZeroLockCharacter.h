@@ -47,6 +47,7 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	protected:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Movement")
 	class UZeroBaseCharacterMovementComp* ZeroMovementComp;
+	
 
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
@@ -163,7 +164,7 @@ protected:
 
 	void HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
 	void AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData);
-
+	void SpeedAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
 	void AddEventForDeath();
 	
 	// To add mapping context

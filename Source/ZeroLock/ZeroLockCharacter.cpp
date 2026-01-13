@@ -234,6 +234,9 @@ void AZeroLockCharacter::InitializeAttributes()
 		AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
+		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentSpeedAttribute()).AddUObject(this,&AZeroLockCharacter::SpeedAttributeChanged);
+		ZeroMovementComp->MaxWalkSpeed = AttributeSet->GetCurrentSpeed();
+		ZeroMovementComp->Walk_MaxSpeed = AttributeSet->GetCurrentSpeed();
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 		
@@ -875,6 +878,16 @@ void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAtt
 		
 		//AmmoChangeDelegate.Broadcast(currentA, MaxA);
 	}
+}
+
+void AZeroLockCharacter::SpeedAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData)
+{
+	if (!AttributeSet) return;
+
+	float currentS= OnAttributeChangeData.NewValue;
+	GetCharacterMovement()->MaxWalkSpeed = currentS;
+	ZeroMovementComp->MaxWalkSpeed = currentS;
+	ZeroMovementComp->Walk_MaxSpeed = currentS;
 }
 
 void AZeroLockCharacter::AddEventForDeath()

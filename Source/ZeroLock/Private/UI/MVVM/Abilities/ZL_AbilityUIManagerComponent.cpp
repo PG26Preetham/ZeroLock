@@ -94,6 +94,22 @@ void UZL_AbilityUIManagerComponent::BeginPlay()
 		if (VM_Abilities)
 		{
 			VM_Abilities->InitSlots();
+			if (VM_Abilities->GetSlot_Secondary())
+			{
+				VM_Abilities->GetSlot_Secondary()->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
+			}
+			if (VM_Abilities->GetSlot_Ability1())
+			{
+				VM_Abilities->GetSlot_Ability1()->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
+			}
+			if (VM_Abilities->GetSlot_Ability2())
+			{
+				VM_Abilities->GetSlot_Ability2()->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
+			}
+			if (VM_Abilities->GetSlot_Ultimate())
+			{
+				VM_Abilities->GetSlot_Ultimate()->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
+			}
 			InitializeTagMap();
 		}
 	}
@@ -152,14 +168,14 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 
 	if (TargetSlot)
 	{
-		TargetSlot->OnAbilityLevelChanged.AddDynamic(this,&UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromUI);
+		
 		SlotToAbilityMap.Add(TargetSlot, Ability);
 		TargetSlot->SetIconTexture(Ability->IconImage);
 		TargetSlot->SetAbilityDescription(FText::FromString(Ability->AbilityDescription));
 		TargetSlot->SetAbilityLevel1Description(FText::FromString(Ability->AbilityDescription1));
 		TargetSlot->SetAbilityLevel2Description(FText::FromString(Ability->AbilityDescription2));
 		TargetSlot->SetAbilityLevel3Description(FText::FromString(Ability->AbilityDescription3));
-		TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
+		//TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
 		TargetSlot->SetAbilityName(FText::FromString(Ability->AbilityName));
 		
 		const FGameplayTagContainer* CooldownTags = Ability->GetCooldownTags();

@@ -113,11 +113,14 @@ void UBaseGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle
 
 float UBaseGameplayAbility::GetCoolDownTime() const
 {
-
+	if (!GetCurrentActorInfo()) 
+	{
+		return 0.0f; 
+	}
 	float cooldownTime = CooldownDuration.GetValueAtLevel(GetAbilityLevel());
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (Hero)
-	{
+	{ 
 		if (!Hero->GetMyAttributeSet())
 		{
 			return cooldownTime;
