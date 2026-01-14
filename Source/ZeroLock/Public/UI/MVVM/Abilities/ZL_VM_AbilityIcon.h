@@ -54,6 +54,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
 	float MaxCoolDownTime;
 
+	
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	FKey RelatedInputKey;
+
+	
+
 
 	void SetAbilityDescription(FText mAbilityDescription);
 	void SetAbilityLevel1Description(FText mAbilityLevel1Description);
@@ -62,6 +68,9 @@ public:
 	void SetMaxCoolDownTime(float mMaxCoolDownTime);
 	void SetAbilityName(FText mAbilityName);
 
+	void SetRelatedInputKey(FKey mRelatedInputKey);
+	FKey GetRelatedInputKey()const { return RelatedInputKey; };
+	
 	FText GetAbilityName() const{return AbilityName;}
 	FText GetAbilityDescription()const { return AbilityDescription; }
 	FText GetAbilityLevel1Description()const { return AbilityLevel1Description; }

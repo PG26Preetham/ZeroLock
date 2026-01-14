@@ -3,11 +3,14 @@
 
 #include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
 
+#include "EnhancedInputSubsystemInterface.h"
 #include "GameplayTagContainer.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilitiesContainer.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilityIcon.h"
 #include "ZeroLock/ZeroLockCharacter.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
 
 UZL_AbilityUIManagerComponent::UZL_AbilityUIManagerComponent()
 {
@@ -89,6 +92,7 @@ void UZL_AbilityUIManagerComponent::AbilityUpgradeCallBackFromASC(UGameplayAbili
 void UZL_AbilityUIManagerComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
 	if (GetAbilitiesViewModel())
 	{
 		if (VM_Abilities)
@@ -114,6 +118,30 @@ void UZL_AbilityUIManagerComponent::BeginPlay()
 		}
 	}
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+
+	if (Hero)
+	{
+		if (VM_Abilities)
+		{
+			VM_Abilities->InitSlots();
+			if (VM_Abilities->GetSlot_Secondary())
+			{
+				VM_Abilities->GetSlot_Secondary()->SetRelatedInputKey(Hero->GetFirstKeyForInputAction(Hero->EI_SecondryFire));
+			}
+			if (VM_Abilities->GetSlot_Ability1())
+			{
+				VM_Abilities->GetSlot_Ability1()->SetRelatedInputKey(Hero->GetFirstKeyForInputAction(Hero->EI_Ability1));
+			}
+			if (VM_Abilities->GetSlot_Ability2())
+			{
+				VM_Abilities->GetSlot_Ability2()->SetRelatedInputKey(Hero->GetFirstKeyForInputAction(Hero->EI_Ability2));
+			}
+			if (VM_Abilities->GetSlot_Ultimate())
+			{
+				VM_Abilities->GetSlot_Ultimate()->SetRelatedInputKey(Hero->GetFirstKeyForInputAction(Hero->EI_Ultimate));
+			}
+		}
+	}
 	if (Hero && Hero->IsLocallyControlled())
 	{
 		UAbilitySystemComponent* ASC = Hero->GetAbilitySystemComponent();
@@ -130,6 +158,7 @@ void UZL_AbilityUIManagerComponent::BeginPlay()
 				OnAbilityAdded(*Spec);
 			}
 		}
+		
 	}
 	
 	

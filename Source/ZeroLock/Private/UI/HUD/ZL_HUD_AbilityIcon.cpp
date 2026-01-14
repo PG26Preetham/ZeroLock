@@ -31,6 +31,7 @@ void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
 				if (AbilityIcon && VM_AbilityIcon)
 				{
 					AbilityIcon->SetBrushFromTexture(VM_AbilityIcon->GetIconTexture());
+					SetTextBasedOnKey(VM_AbilityIcon->RelatedInputKey);
 					if (VM_AbilityIcon->GetbHasStacks())
 					{
 						Ability_StackText->SetVisibility(ESlateVisibility::Visible);
@@ -70,4 +71,13 @@ FReply UZL_HUD_AbilityIcon::NativeOnMouseButtonUp(const FGeometry& InGeometry, c
 		VM_AbilityIcon->IncrementAbilityLevel();
 	}
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+void UZL_HUD_AbilityIcon::SetTextBasedOnKey(FKey InKey)
+{
+	if (InKey.IsValid())
+	{
+		Ability_InputBind->SetText(FText::FromString(InKey.ToString()));
+	}
+	
 }

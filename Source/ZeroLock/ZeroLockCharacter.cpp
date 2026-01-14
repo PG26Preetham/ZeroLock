@@ -13,6 +13,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "InputMappingContext.h"
 #include "Zero_BasePlayerController.h"
 #include "Zero_BasePlayerState.h"
 #include "Gamemode/Zero_BaseGameModeBase.h"
@@ -481,6 +482,25 @@ void AZeroLockCharacter::UltimateAbilityReleased()
 void AZeroLockCharacter::Reload()
 {
 	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Reload));
+}
+
+FKey AZeroLockCharacter::GetFirstKeyForInputAction(const UInputAction* InputAction)
+{
+	if (!DefaultMappingContext || !InputAction)
+	{
+		return FKey();
+	}
+	const TArray<FEnhancedActionKeyMapping>& Mappings =	DefaultMappingContext->GetMappings();
+
+	for (const FEnhancedActionKeyMapping& Map : Mappings)
+	{
+		if (Map.Action == InputAction)
+		{
+			return Map.Key;
+		}
+	}
+
+	return FKey(); 
 }
 
 void AZeroLockCharacter::HealthChanged(float currentH , float MaxH)

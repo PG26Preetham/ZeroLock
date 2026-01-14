@@ -85,7 +85,7 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	UInputAction* LookAction;
 
 
-
+public:
 	//Gameplay Ability system inputs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_PrimaryFire;
@@ -120,7 +120,7 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_UIInfo;
 	
-public:
+
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
 	
 
@@ -257,6 +257,7 @@ public:
 
 	void Reload();
 	
+	FKey GetFirstKeyForInputAction(const UInputAction* InputAction);
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "GAS")
 	TSubclassOf<class UGameplayEffect> DefaultGameplayEffect;

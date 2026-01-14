@@ -53,6 +53,14 @@ void UZL_VM_AbilityIcon::SetAbilityName(FText mAbilityName)
 	}
 }
 
+void UZL_VM_AbilityIcon::SetRelatedInputKey(FKey mRelatedInputKey)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(RelatedInputKey,mRelatedInputKey))
+	{
+		
+	}
+}
+
 void UZL_VM_AbilityIcon::SetIconTexture(UTexture2D* NewIcon)
 {
 	
