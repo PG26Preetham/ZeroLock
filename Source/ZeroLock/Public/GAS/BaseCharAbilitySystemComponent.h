@@ -66,4 +66,19 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="GE/Healing")
 	TSubclassOf<UGameplayEffect> GE_HealingClass;
+
+
+
+	UFUNCTION(BlueprintCallable)
+	void AdjustActiveEffectsDuration(FGameplayTag ContainerTag, float Multiplier);
+
+	FActiveGameplayEffect* GetActiveGameplayEffect_Mutable(FActiveGameplayEffectHandle Handle);
+ 
+
+	TArray<FActiveGameplayEffectHandle> GetAllActiveEffectHandles() const;
+ 
+
+	void MarkActiveGameplayEffectDirty(FActiveGameplayEffect* ActiveGE);
+ 
+	void CheckActiveEffectDuration(const FActiveGameplayEffectHandle& Handle);
 };

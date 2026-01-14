@@ -199,3 +199,58 @@ void UBaseCharAbilitySystemComponent::SendGameplayEventToTarget(FGameplayTag Tag
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetASC->GetAvatarActor(),Tag,EventDataToSend);
 	
 }
+
+void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDuration(FGameplayTag ContainerTag, float Multiplier)
+{
+	if (GetOwnerRole() != ROLE_Authority) return;
+
+	FGameplayTag AbilityTag  = FGameplayTag::RequestGameplayTag("ZerolockAbilities.Cooldown",false);
+	FGameplayTag InputTag  = FGameplayTag::RequestGameplayTag("Zerolock.InputBindTags",false);
+	for (FActiveGameplayEffectHandle Handle : ActiveGameplayEffects.GetAllActiveEffectHandles())
+	{
+		FActiveGameplayEffect* ActiveGE = ActiveGameplayEffects.GetActiveGameplayEffect(Handle);
+
+
+		if (ActiveGE && ActiveGE->Spec.Def->DurationPolicy == EGameplayEffectDurationType::HasDuration)
+		{
+			for (auto tagssss : ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->GetGameplayTagArray())
+			{
+				ZLOG(tagssss.ToString());
+			}
+			if (ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(AbilityTag) || ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(InputTag))
+			{
+				
+				float CurrentDuration = ActiveGE->Spec.Duration;
+				ActiveGE->Spec.Duration = FMath::Max(CurrentDuration * Multiplier, SMALL_NUMBER);
+
+				
+				ActiveGameplayEffects.MarkItemDirty(*ActiveGE);
+				ActiveGameplayEffects.CheckDuration(Handle);
+			}
+		}
+	}
+}
+
+FActiveGameplayEffect* UBaseCharAbilitySystemComponent::GetActiveGameplayEffect_Mutable(
+	FActiveGameplayEffectHandle Handle)
+{
+	return ActiveGameplayEffects.GetActiveGameplayEffect(Handle);
+}
+
+TArray<FActiveGameplayEffectHandle> UBaseCharAbilitySystemComponent::GetAllActiveEffectHandles() const
+{
+	return ActiveGameplayEffects.GetAllActiveEffectHandles();
+}
+
+void UBaseCharAbilitySystemComponent::MarkActiveGameplayEffectDirty(FActiveGameplayEffect* ActiveGE)
+{
+	if (ActiveGE)
+	{
+		ActiveGameplayEffects.MarkItemDirty(*ActiveGE);
+	}
+}
+
+void UBaseCharAbilitySystemComponent::CheckActiveEffectDuration(const FActiveGameplayEffectHandle& Handle)
+{
+	ActiveGameplayEffects.CheckDuration(Handle);
+}

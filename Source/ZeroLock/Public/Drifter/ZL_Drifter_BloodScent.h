@@ -39,6 +39,13 @@ protected:
 
 	FTimerHandle LogicTimerHandle;
 
+	bool isHavingBuff =false;
+	void HasIsolatedTarget(bool HasISoLatedTargetNear);
+	
+	FActiveGameplayEffectHandle BloodScentEffectHandle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
+	TSubclassOf<UGameplayEffect> IsolatedTargetEffectClass;
 	// --- Internal Logic ---
 	void UpdateServerLogic();
 

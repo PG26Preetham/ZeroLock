@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
+#include "GAS/BaseCharAbilitySystemComponent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 
@@ -54,7 +55,10 @@ void UZL_GA_Drifter_Teleport::OnInputPressed(float TimeWaited)
 {
 	WaitDelay->ExternalCancel();
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	
+	if (AfterTeleportEffectClass)
+	{
+		Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Hero->GetMyAbilitySystemComp(),AfterTeleportEffectClass,GetCurrentAbilitySpec()->Level);
+	}
 	if (Villan && AppliedEffectHandle.IsValid())
 	{
 		Villan->GetAbilitySystemComponent()->RemoveActiveGameplayEffect(AppliedEffectHandle);

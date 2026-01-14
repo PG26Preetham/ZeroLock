@@ -56,13 +56,43 @@ void UZL_Drifter_BloodScent::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
+void UZL_Drifter_BloodScent::HasIsolatedTarget(bool HasISoLatedTargetNear)
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC || !IsolatedTargetEffectClass) return;
+
+	if (HasISoLatedTargetNear)
+	{
+		if (!BloodScentEffectHandle.IsValid())
+		{
+			FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
+			EffectContext.AddSourceObject(this);
+
+			FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(IsolatedTargetEffectClass, GetAbilityLevel(), EffectContext);
+            
+			if (SpecHandle.IsValid())
+			{
+				BloodScentEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
+	}
+	else
+	{
+		if (BloodScentEffectHandle.IsValid())
+		{
+			ASC->RemoveActiveGameplayEffect(BloodScentEffectHandle);
+			BloodScentEffectHandle.Invalidate();
+		}
+	}
+}
+
 void UZL_Drifter_BloodScent::UpdateServerLogic()
 {
 	FGameplayTag IsolatedTag = FGameplayTag::RequestGameplayTag("Zerolock.Drifter.BloodScent");
     AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     AZero_BasePlayerState* MyPS = Hero ? Cast<AZero_BasePlayerState>(Hero->GetPlayerState()) : nullptr;
     if (!MyPS) return;
-	
+	int numberOfIsolatedTarget = 0;
     for (int32 i = OverlappingEnemies.Num() - 1; i >= 0; --i)
     {
         AZeroLockCharacter* CurrentEnemy =OverlappingEnemies[i];
@@ -98,6 +128,7 @@ void UZL_Drifter_BloodScent::UpdateServerLogic()
         {
             if (bIsIsolated)
             {
+            	numberOfIsolatedTarget++;
                 if (!EnemyASC->HasMatchingGameplayTag(IsolatedTag))
                 {
                     FGameplayEffectContextHandle Context = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
@@ -114,6 +145,17 @@ void UZL_Drifter_BloodScent::UpdateServerLogic()
             }
         }
     }
+	if (numberOfIsolatedTarget > 0)
+	{
+		if (!isHavingBuff)
+		{
+			HasIsolatedTarget(true);
+		}
+	}
+	else
+	{
+		HasIsolatedTarget(false);
+	}
 }
 
 void UZL_Drifter_BloodScent::OnTargetDied(const FGameplayEventData Payload)
@@ -198,6 +240,7 @@ void UZL_Drifter_BloodScent::OnDetectionOverlapEnd(UPrimitiveComponent* Overlapp
 			UAbilitySystemComponent* EnemyASC = Villan->GetAbilitySystemComponent();
 			if (EnemyASC)
 			{
+				HasIsolatedTarget(false);
 				FGameplayTag IsolatedTag = FGameplayTag::RequestGameplayTag("Zerolock.Drifter.BloodScent");
 				EnemyASC->RemoveActiveEffectsWithGrantedTags(FGameplayTagContainer(IsolatedTag));
 				FGameplayEffectQuery Query = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(FGameplayTagContainer(IsolatedTag));

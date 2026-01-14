@@ -33,6 +33,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
 	TSubclassOf<UGameplayEffect> MarkEffectClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> AfterTeleportEffectClass;
+
 	
 	FActiveGameplayEffectHandle AppliedEffectHandle;
 	UPROPERTY(EditDefaultsOnly)

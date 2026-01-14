@@ -34,6 +34,8 @@ class ZEROLOCK_API UZL_Drifter_Rend : public UZL_BasePlayAnimation_AndDo
 	float BaseDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
-	float BonusDamage;
+	FScalableFloat BonusDamage;
+
+
 	
 };

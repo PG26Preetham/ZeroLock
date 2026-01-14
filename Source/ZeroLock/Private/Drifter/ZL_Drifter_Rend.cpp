@@ -13,7 +13,7 @@ UZL_Drifter_Rend::UZL_Drifter_Rend()
 	ConeRadius =100;
 	BonusTargetDist =50;
 	BaseDamage =25;
-	BonusDamage =25;
+	
 }
 
 void UZL_Drifter_Rend::OnAnimationPointTrigger()
@@ -44,7 +44,7 @@ void UZL_Drifter_Rend::OnAnimationPointTrigger()
 					float DistanceSq = FVector::DistSquared(Origin, villan->GetActorLocation());
 					if (DistanceSq <= (BonusTargetDist*BonusTargetDist))
 					{
-						Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),BonusDamage);
+						Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),BonusDamage.GetValueAtLevel(GetCurrentAbilitySpec()->Level));
 					}
 				}
 			}
