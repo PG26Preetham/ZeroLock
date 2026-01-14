@@ -22,7 +22,23 @@ void UZL_Drifter_EternalNight::OnAnimationPointTrigger()
 		EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(), true, true);
 	}
 	FVector Origin = Avatar->GetActorLocation();
+	if (PlayerBuffEffectClass)
+	{
+		if (!PlayerBuffEffectHandle.IsValid())
+		{
+		
+			ZLOG("Effect Applied");
+			FGameplayEffectContextHandle EffectContext = Avatar->GetAbilitySystemComponent()->MakeEffectContext();
+			EffectContext.AddSourceObject(this);
 
+			FGameplayEffectSpecHandle SpecHandle = Avatar->GetAbilitySystemComponent()->MakeOutgoingSpec(PlayerBuffEffectClass, GetAbilityLevel(), EffectContext);
+            
+			if (SpecHandle.IsValid())
+			{
+				PlayerBuffEffectHandle = Avatar->GetAbilitySystemComponent()->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
+	}
 	TArray<FOverlapResult> Overlaps;
 	FCollisionShape Sphere = FCollisionShape::MakeSphere(MaxRange);
 	GetWorld()->OverlapMultiByChannel(Overlaps, Origin, FQuat::Identity, ECC_Pawn, Sphere);
@@ -48,8 +64,8 @@ void UZL_Drifter_EternalNight::OnAnimationPointTrigger()
 		FGameplayEffectContextHandle Context = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
 		FGameplayEffectSpecHandle Spec = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(BlindEffectClass, 1.f, Context);
 			
-
-		for (int32 i = 0; i < FMath::Min(MaxTargets, EnemyToEffect.Num()); ++i)
+		int32 MaxTargetsInt =FMath::FloorToInt32(MaxTargets.GetValueAtLevel(GetAbilityLevel()));
+		for (int32 i = 0; i < FMath::Min(MaxTargetsInt, EnemyToEffect.Num()); ++i)
 		{
 				UAbilitySystemComponent* TargetASC = EnemyToEffect[i]->GetAbilitySystemComponent();
 				if (TargetASC)
@@ -64,7 +80,7 @@ void UZL_Drifter_EternalNight::OnAnimationPointTrigger()
 		}
 	}
 	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
-	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, Duration);
+	UAbilityTask_WaitDelay* DelayTask = UAbilityTask_WaitDelay::WaitDelay(this, Duration.GetValueAtLevel(GetAbilityLevel()));
 	DelayTask->OnFinish.AddDynamic(this, &UZL_Drifter_EternalNight::OnDelayFinished);
 	DelayTask->ReadyForActivation();
 	UAbilityTask_WaitGameplayEvent* WaitGameplayEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this,FGameplayTag::RequestGameplayTag("Event.WeaponHit"));
@@ -88,7 +104,7 @@ void UZL_Drifter_EternalNight::OnWeaponEventTrigger(FGameplayEventData Payload)
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (!IsValid(Villan)) return;
 	if (!IsValid(Hero)) return;
-	Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(Villan->GetMyAbilitySystemComp(),SpiritDamage);
+	Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(Villan->GetMyAbilitySystemComp(),SpiritDamage.GetValueAtLevel(GetAbilityLevel()));
 }
 
 
@@ -106,7 +122,17 @@ void UZL_Drifter_EternalNight::OnDelayFinished()
 			}
 		}
 	}
-
+	
+	if (PlayerBuffEffectHandle.IsValid())
+	{
+		if (AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo()))
+		{
+			
+			Hero->GetAbilitySystemComponent()->RemoveActiveGameplayEffect(PlayerBuffEffectHandle);
+			PlayerBuffEffectHandle.Invalidate();
+		}
+		
+	}
 	CurrentActiveEffectHandles.Empty();
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

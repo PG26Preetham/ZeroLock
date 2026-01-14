@@ -200,7 +200,7 @@ void UBaseCharAbilitySystemComponent::SendGameplayEventToTarget(FGameplayTag Tag
 	
 }
 
-void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDuration(FGameplayTag ContainerTag, float Multiplier)
+void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDurationByPercentage( float Multiplier)
 {
 	if (GetOwnerRole() != ROLE_Authority) return;
 
@@ -219,9 +219,38 @@ void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDuration(FGameplayTag C
 			}
 			if (ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(AbilityTag) || ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(InputTag))
 			{
-				
 				float CurrentDuration = ActiveGE->Spec.Duration;
 				ActiveGE->Spec.Duration = FMath::Max(CurrentDuration * Multiplier, SMALL_NUMBER);
+
+				
+				ActiveGameplayEffects.MarkItemDirty(*ActiveGE);
+				ActiveGameplayEffects.CheckDuration(Handle);
+			}
+		}
+	}
+}
+
+void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDurationByValue(float reductionAmount)
+{
+	if (GetOwnerRole() != ROLE_Authority) return;
+
+	FGameplayTag AbilityTag  = FGameplayTag::RequestGameplayTag("ZerolockAbilities.Cooldown",false);
+	FGameplayTag InputTag  = FGameplayTag::RequestGameplayTag("Zerolock.InputBindTags",false);
+	for (FActiveGameplayEffectHandle Handle : ActiveGameplayEffects.GetAllActiveEffectHandles())
+	{
+		FActiveGameplayEffect* ActiveGE = ActiveGameplayEffects.GetActiveGameplayEffect(Handle);
+
+
+		if (ActiveGE && ActiveGE->Spec.Def->DurationPolicy == EGameplayEffectDurationType::HasDuration)
+		{
+			for (auto tagssss : ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->GetGameplayTagArray())
+			{
+				ZLOG(tagssss.ToString());
+			}
+			if (ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(AbilityTag) || ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(InputTag))
+			{
+				float CurrentDuration = ActiveGE->Spec.Duration;
+				ActiveGE->Spec.Duration = FMath::Max(CurrentDuration - reductionAmount, SMALL_NUMBER);
 
 				
 				ActiveGameplayEffects.MarkItemDirty(*ActiveGE);

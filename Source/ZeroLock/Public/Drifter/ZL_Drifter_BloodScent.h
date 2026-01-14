@@ -45,7 +45,7 @@ protected:
 	FActiveGameplayEffectHandle BloodScentEffectHandle;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "GAS")
-	TSubclassOf<UGameplayEffect> IsolatedTargetEffectClass;
+	TSubclassOf<UGameplayEffect> BloodScentEffectClass;
 	// --- Internal Logic ---
 	void UpdateServerLogic();
 

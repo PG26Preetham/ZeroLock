@@ -70,8 +70,12 @@ public:
 
 
 	UFUNCTION(BlueprintCallable)
-	void AdjustActiveEffectsDuration(FGameplayTag ContainerTag, float Multiplier);
+	void AdjustActiveEffectsDurationByPercentage(float Multiplier);
 
+	UFUNCTION(BlueprintCallable)
+	void AdjustActiveEffectsDurationByValue(float reductionAmount);
+
+	
 	FActiveGameplayEffect* GetActiveGameplayEffect_Mutable(FActiveGameplayEffectHandle Handle);
  
 

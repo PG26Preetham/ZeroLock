@@ -91,6 +91,10 @@ void UZL_GA_Drifter_Teleport::EndAbility(const FGameplayAbilitySpecHandle Handle
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
+	if (Villan && AppliedEffectHandle.IsValid())
+	{
+		Villan->GetAbilitySystemComponent()->RemoveActiveGameplayEffect(AppliedEffectHandle);
+	}
 	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }

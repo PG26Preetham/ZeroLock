@@ -24,13 +24,15 @@ protected:
 	float MaxRange = 1000.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
-	int32 MaxTargets = 3;
+	FScalableFloat MaxTargets = 3;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	TSubclassOf<UGameplayEffect> BlindEffectClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
 	TSubclassOf<UGameplayEffect> PlayerBuffEffectClass;
+
+	FActiveGameplayEffectHandle PlayerBuffEffectHandle;
 	
 	UPROPERTY()
 	TArray<FActiveGameplayEffectHandle> CurrentActiveEffectHandles;
@@ -40,8 +42,8 @@ protected:
 	void OnDelayFinished();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
-	float Duration = 5.0f;
+	FScalableFloat Duration = 5.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability")
-	float SpiritDamage = 15.0f;
+	FScalableFloat SpiritDamage = 15.0f;
 };
