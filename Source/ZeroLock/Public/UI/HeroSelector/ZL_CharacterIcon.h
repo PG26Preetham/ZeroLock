@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
@@ -19,9 +19,14 @@ class ZEROLOCK_API UZL_CharacterIcon : public UCommonActivatableWidget, public I
 	public:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 
+	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 
 	UPROPERTY(EditAnywhere,meta=(BindWidget))
 	UImage* Icon;
+
+	UPROPERTY(EditAnywhere,meta=(BindWidget))
+	UImage* BG;
 
 	
 };

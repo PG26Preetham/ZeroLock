@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
@@ -23,6 +23,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, FieldNotify, Setter, Getter, Category = "State")
 	FVector2D LocalMousePos;
+
+	UPROPERTY(BlueprintReadWrite, FieldNotify, Setter, Getter, Category = "State")
+	FColor ColorSelected;
 	
 	UPROPERTY(BlueprintReadWrite, FieldNotify, Setter, Getter, Category = "State")
 	TArray<TObjectPtr<UZL_Character_Data_Asset>> CharacterList;
@@ -43,4 +46,33 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnCMousePosChanged OnMousePosChanged;
+
+
+	FColor GetColorSelected() const { return ColorSelected; }
+	void SetColorSelected(FColor InColorSelected);
+	UPROPERTY(BlueprintReadWrite,FieldNotify,Setter,Getter, Category = "State")
+	UTexture2D* Ability1;
+	UPROPERTY(BlueprintReadWrite,FieldNotify,Setter,Getter, Category = "State")
+	UTexture2D* Ability2;
+	UPROPERTY(BlueprintReadWrite,FieldNotify,Setter,Getter, Category = "State")
+	UTexture2D* Ability3;
+	UPROPERTY(BlueprintReadWrite,FieldNotify,Setter,Getter, Category = "State")
+	UTexture2D* Ability4;
+
+	void SetAbility1(UTexture2D* InAbility1);
+	void SetAbility2(UTexture2D* InAbility2);
+	void SetAbility3(UTexture2D* InAbility3);
+	void SetAbility4(UTexture2D* InAbility4);
+
+	UTexture2D* GetAbility1() const { return Ability1; }
+	UTexture2D* GetAbility2() const { return Ability2; }
+	UTexture2D* GetAbility3() const { return Ability3; }
+	UTexture2D* GetAbility4() const { return Ability4; }
+
+	UPROPERTY(BlueprintReadWrite,FieldNotify,Setter,Getter, Category = "State")
+	FText CharacterName;
+
+	void SetCharacterName(FText InCharacterName);
+
+	FText GetCharacterName() const { return CharacterName; }
 };

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
@@ -27,7 +27,17 @@ public:
 	void OnInputPressed(float TimeWaited);
 	UFUNCTION()
 	void OnTimeFinish();
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> MarkEffectClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TSubclassOf<UGameplayEffect> AfterTeleportEffectClass;
+
+	
+	FActiveGameplayEffectHandle AppliedEffectHandle;
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag MarkedCueTag;
 };

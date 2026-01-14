@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 
 #include "UI/HeroSelector/ZL_CharacterIcon.h"
@@ -15,4 +15,18 @@ void UZL_CharacterIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 	if (!HeroData) return;
 
 	Icon->SetBrushFromTexture(HeroData->Icon);
+	//Icon->SetBrushTintColor(HeroData->IconColor);
+	BG->SetColorAndOpacity(HeroData->IconColor);
+}
+
+void UZL_CharacterIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+	Icon->SetRenderScale(FVector2D(1.5,1.5));
+}
+
+void UZL_CharacterIcon::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+{
+	Super::NativeOnMouseLeave(InMouseEvent);
+	Icon->SetRenderScale(FVector2D(1,1));
 }

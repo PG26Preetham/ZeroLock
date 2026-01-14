@@ -14,6 +14,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Zero_BasePlayerController.h"
+#include "Zero_BasePlayerState.h"
 #include "Gamemode/Zero_BaseGameModeBase.h"
 #include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
@@ -105,7 +106,8 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	ParryComp->SetupAttachment(RootComponent);
 	ParryComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-
+	GetMesh()->CustomDepthStencilValue =1;
+	GetMesh()->SetRenderInDepthPass(true);
 	AbilityUIManager = CreateDefaultSubobject<UZL_AbilityUIManagerComponent>(TEXT("AbilityUIManager"));
 }
 
@@ -115,10 +117,9 @@ void AZeroLockCharacter::BeginPlay()
 	Super::BeginPlay();
 	ParryComp->SetVisibility(false);
 	CreateVM_Att();
-	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);
-
-	
-	
+	GetMesh()->CustomDepthStencilValue =1;
+	GetMesh()->SetRenderInDepthPass(true);
+	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);	
 }
 
 FCollisionQueryParams AZeroLockCharacter::GetIgnoreCharacterParams() const
@@ -199,6 +200,18 @@ UBaseCharAttributeSet* AZeroLockCharacter::GetMyAttributeSet() const
 	return AttributeSet;
 }
 
+void AZeroLockCharacter::MovementLocked(FGameplayTag GameplayTag, int NewCount)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (NewCount>0)
+	{
+	}
+	else
+	{
+	
+	}
+}
+
 void AZeroLockCharacter::InitializeAttributes()
 {
 	
@@ -217,9 +230,13 @@ void AZeroLockCharacter::InitializeAttributes()
 		FGameplayTag StunTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Stun"),false);
 		FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);
 		AbilitySystemComp->RegisterGameplayTagEvent(StunTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Stunned);
+		AbilitySystemComp->RegisterGameplayTagEvent(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock"),EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::MovementLocked);
 		AbilitySystemComp->RegisterGameplayTagEvent(ParryTag,EGameplayTagEventType::NewOrRemoved).AddUObject(this,&AZeroLockCharacter::Parry);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaximumHealthAttribute()).AddUObject(this,&AZeroLockCharacter::HealthAttributeChanged);
+		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentSpeedAttribute()).AddUObject(this,&AZeroLockCharacter::SpeedAttributeChanged);
+		ZeroMovementComp->MaxWalkSpeed = AttributeSet->GetCurrentSpeed();
+		ZeroMovementComp->Walk_MaxSpeed = AttributeSet->GetCurrentSpeed();
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 		AbilitySystemComp->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetCurrentAmmoAttribute()).AddUObject(this,&AZeroLockCharacter::AmmoAttributeChange);
 		
@@ -296,10 +313,11 @@ void AZeroLockCharacter::GrantAbilityOfClassX(TSubclassOf<class UBaseGameplayAbi
 		
 		EGASAbilityInputID AbiltyInputID = InputToBindTo;
 		FGameplayAbilitySpecHandle GrantedHandle;
-		FGameplayAbilitySpec GrantedSpec=FGameplayAbilitySpec(AbilityToGrant, 1, static_cast<int32>(AbiltyInputID), this);
+		FGameplayAbilitySpec GrantedSpec=FGameplayAbilitySpec(AbilityToGrant, 0, static_cast<int32>(AbiltyInputID), this);
 		if (inputTags.Contains(AbiltyInputID))
 		{
-			GrantedSpec.DynamicAbilityTags.AddTag(inputTags.FindRef(InputToBindTo));
+			//GrantedSpec.DynamicAbilityTags.AddTag(inputTags.FindRef(InputToBindTo));
+			GrantedSpec.GetDynamicSpecSourceTags().AddTag(inputTags.FindRef(InputToBindTo));
 		}
 		
 		
@@ -679,6 +697,15 @@ void AZeroLockCharacter::CreateVM_Att()
 	}
 }
 
+bool AZeroLockCharacter::IsOnSameTeam(AZeroLockCharacter* CharacterToCheck)
+{
+	AZero_BasePlayerState* MyPS =Cast<AZero_BasePlayerState>(GetPlayerState());
+	if (!MyPS) return false;
+	AZero_BasePlayerState* OtherPS =Cast<AZero_BasePlayerState>(CharacterToCheck->GetPlayerState());
+	if (!OtherPS) return false;
+	return MyPS->TeamID == OtherPS->TeamID;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Input
@@ -738,6 +765,10 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 		EnhancedInputComponent->BindAction(EI_Confirm,ETriggerEvent::Completed,AbilitySystemComp,&UAbilitySystemComponent::LocalInputConfirm);
 		EnhancedInputComponent->BindAction(EI_Cancel,ETriggerEvent::Completed,AbilitySystemComp,&UAbilitySystemComponent::LocalInputCancel);
+
+
+		EnhancedInputComponent->BindAction(EI_UIInfo,ETriggerEvent::Started,this,&AZeroLockCharacter::UIInfoPressed);
+		EnhancedInputComponent->BindAction(EI_UIInfo,ETriggerEvent::Completed,this,&AZeroLockCharacter::UIInfoReleased);
 		
 	}
 	else
@@ -824,6 +855,7 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	}
 	if (currentH <= 0.0f && currentH < MaxH)
 	{
+		AddEventForDeath();
 		//HandleDeath();
 	}
 	OnTakeDamage(currentH);
@@ -848,9 +880,44 @@ void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAtt
 	}
 }
 
+void AZeroLockCharacter::SpeedAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData)
+{
+	if (!AttributeSet) return;
+
+	float currentS= OnAttributeChangeData.NewValue;
+	GetCharacterMovement()->MaxWalkSpeed = currentS;
+	ZeroMovementComp->MaxWalkSpeed = currentS;
+	ZeroMovementComp->Walk_MaxSpeed = currentS;
+}
+
+void AZeroLockCharacter::AddEventForDeath()
+{
+	if (LastHitCharacter)
+	{
+		FGameplayTag DeathTag = FGameplayTag::RequestGameplayTag("Event.Death");
+		LastHitCharacter->GetMyAbilitySystemComp()->SendGameplayEventToTarget(DeathTag, GetAbilitySystemComponent());
+		FGameplayTag KillTag = FGameplayTag::RequestGameplayTag("Event.Kill");
+		LastHitCharacter->GetMyAbilitySystemComp()->SendGameplayEventToSelf(KillTag, GetAbilitySystemComponent());
+	}
+	if (AssistListCharacters.Num() > 0)
+	{
+		for (AZeroLockCharacter* AssitChar : AssistListCharacters)
+		{
+			if (!AssitChar ) continue;
+			if (AssitChar == LastHitCharacter)continue;
+			FGameplayTag AssistTag = FGameplayTag::RequestGameplayTag("Event.Assist");
+			AssitChar->GetMyAbilitySystemComp()->SendGameplayEventToTarget(AssistTag, GetAbilitySystemComponent());
+		}
+	}
+}
+
 
 void AZeroLockCharacter::Move(const FInputActionValue& Value)
 {
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock")))
+	{
+		return;
+	}
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
@@ -887,6 +954,10 @@ void AZeroLockCharacter::Look(const FInputActionValue& Value)
 
 void AZeroLockCharacter::DashPressed()
 {
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock")))
+	{
+		return;
+	}
 	ZeroMovementComp->DashPressed();
 }
 
@@ -897,6 +968,10 @@ void AZeroLockCharacter::DashReleased()
 
 void AZeroLockCharacter::CrouchPressed()
 {
+	if (GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("ZeroLock.Abilities.MovementLock")))
+	{
+		return;
+	}
 	ZeroMovementComp->CrouchPressed();
 }
 
@@ -907,6 +982,7 @@ void AZeroLockCharacter::CrouchReleased()
 
 void AZeroLockCharacter::MeleePressed()
 {
+	
 	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Melee));
 }
 
@@ -918,4 +994,22 @@ void AZeroLockCharacter::MeleeReleased()
 void AZeroLockCharacter::ParryPressed()
 {
 	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Parry));
+}
+
+void AZeroLockCharacter::UIInfoPressed()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->bShowMouseCursor = true;
+		PC->SetInputMode(FInputModeGameAndUI());
+	}
+}
+
+void AZeroLockCharacter::UIInfoReleased()
+{
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		PC->bShowMouseCursor = false;
+		PC->SetInputMode(FInputModeGameOnly());
+	}
 }

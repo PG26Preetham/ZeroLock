@@ -1,9 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "CommonButtonBase.h"
 #include "Abilities/GameplayAbility.h"
 #include "ZL_HUD_AbilityIcon.generated.h"
 
@@ -17,7 +18,7 @@ class UImage;
  * 
  */
 UCLASS()
-class ZEROLOCK_API UZL_HUD_AbilityIcon : public UCommonActivatableWidget
+class ZEROLOCK_API UZL_HUD_AbilityIcon : public UCommonButtonBase
 {
 	GENERATED_BODY()
 
@@ -31,5 +32,16 @@ public:
 	UZL_VM_AbilityIcon* VM_AbilityIcon;
 
 	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
+	UCommonTextBlock* Ability_StackText;
+
+	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
 	UImage* AbilityIcon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tooltip")
+	TSubclassOf<class UZL_AbilityToolTips> TooltipWidgetClass;
+
+	virtual void NativeOnClicked() override;
+
+	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	
 };

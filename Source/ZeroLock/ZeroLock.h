@@ -15,6 +15,7 @@
 #define ZPOINT(x, c)
 #define ZLINE(x1, x2, c)
 #define ZCAPSULE(x, c)
+#define ZLOG_COLOR_TIME(x,c,t)
 #endif
 
 UENUM(BlueprintType)

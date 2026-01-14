@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 
 #include "UI/ItemShop/ZL_ITemIcon.h"
@@ -31,7 +31,7 @@ void UZL_ITemIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	if (TooltipWidgetClass)
 	{
-		// 2. Create the Tooltip Widget
+
 		UZL_ItemTooltipWidget* TooltipWidget = CreateWidget<UZL_ItemTooltipWidget>(
 			GetOwningPlayer(), 
 			TooltipWidgetClass
@@ -39,17 +39,9 @@ void UZL_ITemIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 		if (TooltipWidget)
 		{
-			// 3. Set the data on the newly created widget
 			TooltipWidget->SetupFromItem(ItemData);
-            
-			// 4. Assign the instantiated widget using SetToolTip (or SetToolTipWidget)
-			// UWidget has a SetToolTipText and SetToolTipWidget function.
-			// Using the UWidget::SetToolTipWidget:
-			SetToolTip(TooltipWidget);
 			
-            
-			// NOTE: There is also a global Blueprint library function that does the same:
-			// UWidgetBlueprintLibrary::SetToolTIp(this, TooltipWidget);
+			SetToolTip(TooltipWidget);
 		}
 	}
 	

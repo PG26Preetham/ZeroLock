@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
@@ -43,6 +43,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere)
 	class USpringArmComponent* SpringArm;
+	FRotator TargetSpringArmRot;
 
 	// Function to change mesh + animation at runtime
 	void SetPreview(USkeletalMesh* NewMesh, class UAnimSequence* NewAnim);
@@ -53,6 +54,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Camera Control")
 	float InterpSpeed = 2.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Camera Control")
+	float Maxangle = 10.0f;
 
 private:
 	// Stored reference to the VM so we can access the data

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 
 #include "UI/HeroSelector/ZL_HeroSelectionScreen.h"
@@ -82,12 +82,18 @@ void UZL_HeroSelectionScreen::HandleOnSelectionChanged(UObject* Item)
 
 FReply UZL_HeroSelectionScreen::NativeOnMouseMove(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	
 	FVector2D LocalMousePos = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
 
-	// 3. Update the ViewModel
+
+	FVector2D WidgetSize = InGeometry.GetLocalSize();
+
+
+	FVector2D RelativeToCenter = LocalMousePos - (WidgetSize * 0.5f);
+
 	if (SelectionVM)
 	{
-		SelectionVM->SetLocalMousePos(LocalMousePos);
+		SelectionVM->SetLocalMousePos(RelativeToCenter);
 	}
 	return Super::NativeOnMouseMove(InGeometry, InMouseEvent);
 }

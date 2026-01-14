@@ -1,9 +1,57 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 
 #include "UI/MVVM/Abilities/ZL_VM_AbilityIcon.h"
 
 #include "ZeroLock/ZeroLock.h"
+
+void UZL_VM_AbilityIcon::SetAbilityDescription(FText mAbilityDescription)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityDescription,mAbilityDescription))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel1Description(FText mAbilityLevel1Description)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel1Description,mAbilityLevel1Description))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel2Description(FText mAbilityLevel2Description)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel2Description,mAbilityLevel2Description))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel3Description(FText mAbilityLevel3Description)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel3Description,mAbilityLevel3Description))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetMaxCoolDownTime(float mMaxCoolDownTime)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(MaxCoolDownTime,mMaxCoolDownTime))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetAbilityName(FText mAbilityName)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityName,mAbilityName))
+	{
+		
+	}
+}
 
 void UZL_VM_AbilityIcon::SetIconTexture(UTexture2D* NewIcon)
 {
@@ -22,4 +70,33 @@ void UZL_VM_AbilityIcon::UpdateCooldown(float Remaining, float Duration)
 		
 		int32 Seconds = FMath::CeilToInt(Remaining);
 		UE_MVVM_SET_PROPERTY_VALUE(CooldownText, Seconds > 0 ? FText::AsNumber(Seconds) : FText::GetEmpty());
+}
+
+void UZL_VM_AbilityIcon::SetbHasStacks(bool bstacks)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(bHasStacks, bstacks))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::SetStackNum(int32 NewStackNum)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(StackNum, NewStackNum))
+	{
+		
+	}
+}
+
+void UZL_VM_AbilityIcon::IncrementAbilityLevel()
+{
+	OnAbilityLevelChanged.Broadcast(this,GetAbilityLevel()+1);
+}
+
+void UZL_VM_AbilityIcon::SetAbilityLevel(int32 NewAbilityLevel)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityLevel, NewAbilityLevel))
+	{
+		
+	}
 }

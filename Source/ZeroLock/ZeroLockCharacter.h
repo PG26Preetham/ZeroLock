@@ -47,6 +47,7 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	protected:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Movement")
 	class UZeroBaseCharacterMovementComp* ZeroMovementComp;
+	
 
 	virtual void OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode = 0) override;
 	
@@ -115,6 +116,9 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* EI_Cancel;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EI_UIInfo;
 	
 public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
@@ -136,6 +140,8 @@ protected:
 	void MeleePressed();
 	void MeleeReleased();
 	void ParryPressed();
+	void UIInfoPressed();
+	void UIInfoReleased();
 
 
 public:
@@ -158,6 +164,8 @@ protected:
 
 	void HealthAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
 	void AmmoAttributeChange(const FOnAttributeChangeData& OnAttributeChangeData);
+	void SpeedAttributeChanged(const FOnAttributeChangeData& OnAttributeChangeData);
+	void AddEventForDeath();
 	
 	// To add mapping context
 	virtual void BeginPlay();
@@ -208,6 +216,7 @@ public:
 
 	virtual UBaseCharAttributeSet* GetMyAttributeSet()const;
 
+	void MovementLocked(FGameplayTag GameplayTag, int NewCount);
 	virtual void InitializeAttributes();
 	UFUNCTION()
 	void NewAbilityAddedLocal(FGameplayAbilitySpec& AbilitySpec);
@@ -315,10 +324,10 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerHandleDeath(APlayerController* PC);
 	
-	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	UPROPERTY(BlueprintReadOnly,Replicated,Category = "Assist")
 	AZeroLockCharacter* LastHitCharacter;
 
-	UPROPERTY(BlueprintReadOnly,Category = "Assist")
+	UPROPERTY(BlueprintReadOnly,Replicated,Category = "Assist")
 	TArray<TObjectPtr<AZeroLockCharacter>> AssistListCharacters;
 
 	UPROPERTY(BlueprintReadOnly,Category = "Assist")
@@ -400,7 +409,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "UI")
 	UZL_AbilityUIManagerComponent* GetAbilityUIManager() const { return AbilityUIManager; }
 
-	
+	UFUNCTION(BlueprintCallable, Category = "Teams")
+	bool IsOnSameTeam(AZeroLockCharacter* CharacterToCheck);
 };
 
 

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
@@ -27,6 +27,7 @@ enum ECustomMovementMode
 	CMOVE_Slide UMETA(DisplayName = "Slide"),
 	CMOVE_Zipline UMETA(DisplayName = "Zipline"),
 	CMOVE_Melee UMETA(DisplayName = "Melee"),
+	CMOVE_To_Location UMETA(DisplayName = "To_Location"),
 	CMOVE_Max   UMETA(DisplayName = "Max")
 };
 

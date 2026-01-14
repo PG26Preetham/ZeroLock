@@ -1,20 +1,23 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 
 #include "GAS/BaseCharAbilitySystemComponent.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "GAS/BaseGameplayAbility.h"
+#include "ZeroLock/ZeroLock.h"
 
 void UBaseCharAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 {
 	Super::OnGiveAbility(AbilitySpec);
-
+	
 	if (OnNewAbilityAdded.IsBound())
 	{
 		OnNewAbilityAdded.Broadcast(AbilitySpec);
 	}
 	
 }
+
 
 void UBaseCharAbilitySystemComponent::OnRep_ActivateAbilities()
 {
@@ -26,10 +29,37 @@ void UBaseCharAbilitySystemComponent::OnRep_ActivateAbilities()
 	}
 }
 
+void UBaseCharAbilitySystemComponent::LevelUpAbility(UGameplayAbility* AbilityToUpgrade, int32 mLevel)
+{
+	ZLOG("AbilityUpgrade clicked");
+
+	if (FGameplayAbilitySpec* AbilitySpec = FindAbilitySpecFromClass(AbilityToUpgrade->GetClass()))
+	{
+		AbilitySpec->Level = mLevel;
+    
+		// 1. Mark for replication
+		MarkAbilitySpecDirty(*AbilitySpec);
+
+		// 2. Update active instances (if any exist)
+		TArray<UGameplayAbility*> Instances = AbilitySpec->GetAbilityInstances();
+		for (UGameplayAbility* Instance : Instances)
+		{
+			if (UBaseGameplayAbility* BaseAbilityInstance = Cast<UBaseGameplayAbility>(Instance))
+			{
+				// Optional: Call a function on the instance to react to the level up
+				// BaseAbilityInstance->OnLevelChanged(mLevel);
+			}
+		}
+
+		// 3. Notify UI/Global VM
+		OnAbilityUpgraded.Broadcast(AbilityToUpgrade, AbilitySpec->Level);
+	}
+}
+
 void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
 {
 	if (!TargetASC || !GE_WeaponClass)return;
-
+	if (!GetOwner()->HasAuthority()) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -44,21 +74,21 @@ void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent*
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
 
 	//Sending event to the source
-	FGameplayEventData WeaponHitEventData;
-	WeaponHitEventData.EventTag =FGameplayTag::RequestGameplayTag("Event.WeaponHit",false);
-	WeaponHitEventData.ContextHandle =MakeEffectContext();
-	WeaponHitEventData.ContextHandle.AddSourceObject(GetAvatarActor());
-	WeaponHitEventData.Instigator= GetAvatarActor();
-	WeaponHitEventData.Target =TargetASC->GetAvatarActor();
+	
 
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),FGameplayTag::RequestGameplayTag("Event.WeaponHit",false),WeaponHitEventData);
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.WeaponHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.WeaponRecieved",false);
+	SendGameplayEventToTarget(TagToSend, TargetASC);
+
+	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),FGameplayTag::RequestGameplayTag("Event.WeaponHit",false),WeaponHitEventData);
 	
 }
 
 void UBaseCharAbilitySystemComponent::ApplySpiritDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
 {
 	if (!TargetASC || !GE_SpiritClass)return;
-
+	if (!GetOwner()->HasAuthority()) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -71,12 +101,17 @@ void UBaseCharAbilitySystemComponent::ApplySpiritDamage(UAbilitySystemComponent*
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.DamageCalc.Spirit",false), DamageValue);
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.SpiritHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.SpiritRecieved",false);
+	SendGameplayEventToTarget(TagToSend, TargetASC);
 }
 
 void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* TargetASC, float DamageValue)
 {
 	if (!TargetASC || !GE_MeleeClass)return;
-
+	if (!GetOwner()->HasAuthority()) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -89,6 +124,11 @@ void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* 
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.DamageCalc.Melee",false), DamageValue);
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.MeleeHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.MeleeRecieved",false);
+	SendGameplayEventToTarget(TagToSend, TargetASC);
 }
 
 void UBaseCharAbilitySystemComponent::ApplyHeal(UAbilitySystemComponent* TargetASC, float HealValue)
@@ -107,4 +147,139 @@ void UBaseCharAbilitySystemComponent::ApplyHeal(UAbilitySystemComponent* TargetA
 	SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Zerolock.HealCalc.Healing",false), HealValue);
 
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+	FGameplayTag TagToSend =FGameplayTag::RequestGameplayTag("Event.HealHit",false);
+	SendGameplayEventToSelf(TagToSend, TargetASC);
+	TagToSend = FGameplayTag::RequestGameplayTag("Event.HealRecieved",false);
+}
+
+void UBaseCharAbilitySystemComponent::ApplyGameplayEffect(UAbilitySystemComponent* TargetASC,
+	TSubclassOf<UGameplayEffect> EffectClass, int32 level)
+{
+
+	if (!TargetASC || !EffectClass)return;
+
+	FGameplayEffectContextHandle Context = MakeEffectContext();
+	Context.AddSourceObject(GetAvatarActor());
+
+	FGameplayEffectSpecHandle SpecHandle =
+		MakeOutgoingSpec(EffectClass, level, Context);
+
+	if (!SpecHandle.IsValid())
+		return;
+	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
+
+}
+
+void UBaseCharAbilitySystemComponent::SendGameplayEventToSelf(FGameplayTag Tag, UAbilitySystemComponent* TargetASC)
+{
+
+	FGameplayEventData EventDataToSend;
+	EventDataToSend.Instigator = GetAvatarActor();
+	EventDataToSend.EventTag =Tag;
+	EventDataToSend.ContextHandle =MakeEffectContext();
+	EventDataToSend.ContextHandle.AddSourceObject(GetAvatarActor());
+	EventDataToSend.Instigator= GetAvatarActor();
+	EventDataToSend.Target =TargetASC->GetAvatarActor();
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(),Tag,EventDataToSend);
+	
+}
+
+void UBaseCharAbilitySystemComponent::SendGameplayEventToTarget(FGameplayTag Tag, UAbilitySystemComponent* TargetASC)
+{
+	FGameplayEventData EventDataToSend;
+	EventDataToSend.Instigator = GetAvatarActor();
+	EventDataToSend.EventTag =Tag;
+	EventDataToSend.ContextHandle =MakeEffectContext();
+	EventDataToSend.ContextHandle.AddSourceObject(GetAvatarActor());
+	EventDataToSend.Instigator= GetAvatarActor();
+	EventDataToSend.Target =TargetASC->GetAvatarActor();
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetASC->GetAvatarActor(),Tag,EventDataToSend);
+	
+}
+
+void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDurationByPercentage( float Multiplier)
+{
+	if (GetOwnerRole() != ROLE_Authority) return;
+
+	FGameplayTag AbilityTag  = FGameplayTag::RequestGameplayTag("ZerolockAbilities.Cooldown",false);
+	FGameplayTag InputTag  = FGameplayTag::RequestGameplayTag("Zerolock.InputBindTags",false);
+	for (FActiveGameplayEffectHandle Handle : ActiveGameplayEffects.GetAllActiveEffectHandles())
+	{
+		FActiveGameplayEffect* ActiveGE = ActiveGameplayEffects.GetActiveGameplayEffect(Handle);
+
+
+		if (ActiveGE && ActiveGE->Spec.Def->DurationPolicy == EGameplayEffectDurationType::HasDuration)
+		{
+			for (auto tagssss : ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->GetGameplayTagArray())
+			{
+				ZLOG(tagssss.ToString());
+			}
+			if (ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(AbilityTag) || ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(InputTag))
+			{
+				float CurrentDuration = ActiveGE->Spec.Duration;
+				ActiveGE->Spec.Duration = FMath::Max(CurrentDuration * Multiplier, SMALL_NUMBER);
+
+				
+				ActiveGameplayEffects.MarkItemDirty(*ActiveGE);
+				ActiveGameplayEffects.CheckDuration(Handle);
+			}
+		}
+	}
+}
+
+void UBaseCharAbilitySystemComponent::AdjustActiveEffectsDurationByValue(float reductionAmount)
+{
+	if (GetOwnerRole() != ROLE_Authority) return;
+
+	FGameplayTag AbilityTag  = FGameplayTag::RequestGameplayTag("ZerolockAbilities.Cooldown",false);
+	FGameplayTag InputTag  = FGameplayTag::RequestGameplayTag("Zerolock.InputBindTags",false);
+	for (FActiveGameplayEffectHandle Handle : ActiveGameplayEffects.GetAllActiveEffectHandles())
+	{
+		FActiveGameplayEffect* ActiveGE = ActiveGameplayEffects.GetActiveGameplayEffect(Handle);
+
+
+		if (ActiveGE && ActiveGE->Spec.Def->DurationPolicy == EGameplayEffectDurationType::HasDuration)
+		{
+			for (auto tagssss : ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->GetGameplayTagArray())
+			{
+				ZLOG(tagssss.ToString());
+			}
+			if (ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(AbilityTag) || ActiveGE->Spec.CapturedSourceTags.GetAggregatedTags()->HasTag(InputTag))
+			{
+				float CurrentDuration = ActiveGE->Spec.Duration;
+				ActiveGE->Spec.Duration = FMath::Max(CurrentDuration - reductionAmount, SMALL_NUMBER);
+
+				
+				ActiveGameplayEffects.MarkItemDirty(*ActiveGE);
+				ActiveGameplayEffects.CheckDuration(Handle);
+			}
+		}
+	}
+}
+
+FActiveGameplayEffect* UBaseCharAbilitySystemComponent::GetActiveGameplayEffect_Mutable(
+	FActiveGameplayEffectHandle Handle)
+{
+	return ActiveGameplayEffects.GetActiveGameplayEffect(Handle);
+}
+
+TArray<FActiveGameplayEffectHandle> UBaseCharAbilitySystemComponent::GetAllActiveEffectHandles() const
+{
+	return ActiveGameplayEffects.GetAllActiveEffectHandles();
+}
+
+void UBaseCharAbilitySystemComponent::MarkActiveGameplayEffectDirty(FActiveGameplayEffect* ActiveGE)
+{
+	if (ActiveGE)
+	{
+		ActiveGameplayEffects.MarkItemDirty(*ActiveGE);
+	}
+}
+
+void UBaseCharAbilitySystemComponent::CheckActiveEffectDuration(const FActiveGameplayEffectHandle& Handle)
+{
+	ActiveGameplayEffects.CheckDuration(Handle);
 }

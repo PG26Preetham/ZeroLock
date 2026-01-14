@@ -16,6 +16,7 @@ public class ZeroLock : ModuleRules
 			"GameplayTags",
 			"GameplayTasks",
 			"Paper2D",
+			"NetCore",
 			"AIModule",
 			"NavigationSystem",
 			"UMG",

@@ -1,13 +1,18 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//Copyright Preetham Mukundan (C) 2026
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
+#include "GameplayEffectTypes.h"
 #include "ZL_AbilityUIManagerComponent.generated.h"
 
 
+class UBaseGameplayAbility;
+class UAbilitySystemComponent;
+struct FGameplayEffectSpec;
+struct FActiveGameplayEffectHandle;
 struct FGameplayAbilitySpec;
 class UZL_VM_AbilitiesContainer;
 class UZL_VM_AbilityIcon;
@@ -24,16 +29,42 @@ public:
 	UObject* GetAbilitiesViewModel() ;
 
 	UFUNCTION()
+	void AbilityUpgradeCallBackFromUI(UZL_VM_AbilityIcon* AbilityIconVM, int32 NewLevel);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UpgradeAbility(TSubclassOf<UBaseGameplayAbility> AbilityClass, int32 NewLevel);
+
+	UFUNCTION()
+	void AbilityUpgradeCallBackFromASC(UGameplayAbility* AbilityLeveledUp, int32 NewLevel);
+	
+	UFUNCTION()
 	void OnAbilityAdded(FGameplayAbilitySpec& Spec);
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY()
+	TMap<FGameplayTag, UZL_VM_AbilityIcon*> StackTagToSlotMap;
 
-	
+	UPROPERTY()
+	TMap< UZL_VM_AbilityIcon*,UGameplayAbility*> SlotToAbilityMap;
+
+	// Callback for when stack tags change
+	void OnStackTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	UPROPERTY()
 	TMap<FGameplayTag, UZL_VM_AbilityIcon*> AbilityTagMap;
 
 	void InitializeTagMap();
-	
+
+
+	void OnStackChanged(FActiveGameplayEffectHandle Handle, int32 NewCount, int32 OldCount);
+
+
+	void OnGEApplied(UAbilitySystemComponent* ASC, const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveHandle);
+
+
+	UPROPERTY()
+	TMap<FActiveGameplayEffectHandle, UZL_VM_AbilityIcon*> ActiveHandleToSlotMap;
 
 	void OnCooldownTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 	void RefreshCooldowns();
