@@ -55,9 +55,26 @@ void AZero_BasePlayerController::OnPossess(APawn* InPawn)
 	
 }
 
+
+void AZero_BasePlayerController::ShowDamageNumber_Implementation(float DamageAmount,
+                                                                 AZeroLockCharacter* TargetCharacter, FGameplayTagContainer DamageNumberTags)
+{
+	if (IsValid(TargetCharacter))
+	{
+		TargetCharacter->AddDamageNumber(DamageAmount, DamageNumberTags);
+	}
+}
+
+bool AZero_BasePlayerController::ShowDamageNumber_Validate(float DamageAmount, AZeroLockCharacter* TargetCharacter,
+	FGameplayTagContainer DamageNumberTags)
+{
+	return true;
+}
+
 void AZero_BasePlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AZero_BasePlayerController,SelectedHeroClass);
 	DOREPLIFETIME(AZero_BasePlayerController,SelectedStartLocation);
 }
+

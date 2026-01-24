@@ -70,6 +70,9 @@ void UCalc_Healing::Execute_Implementation(const FGameplayEffectCustomExecutionP
 	float HealingIncreace = Healing *(1+((HealingBonus/100)-(HealingReduction/100)));
 
 
+	FGameplayEffectSpec* MutableSpec = ExecutionParams.GetOwningSpecForPreExecuteMod();
+	MutableSpec->AddDynamicAssetTag(FGameplayTag::RequestGameplayTag(FName("Damage.Tag.Heal")));
+	
 
 	if (HealingIncreace >= 0.f)
 	{

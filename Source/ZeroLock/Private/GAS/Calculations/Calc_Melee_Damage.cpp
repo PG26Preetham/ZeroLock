@@ -110,7 +110,9 @@ void UCalc_Melee_Damage::Execute_Implementation(const FGameplayEffectCustomExecu
 	
 	float MitigatedDamage = (UnmitigatedDamage) * (1- (NetWeaponResistance/100) * (1-NetMeleeResistance/100));
 
-
+	FGameplayEffectSpec* MutableSpec = ExecutionParams.GetOwningSpecForPreExecuteMod();
+	MutableSpec->AddDynamicAssetTag(FGameplayTag::RequestGameplayTag(FName("Damage.Tag.Melee")));
+	
 
 	if (MitigatedDamage >= 0.f)
 	{

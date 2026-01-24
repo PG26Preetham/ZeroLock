@@ -7,6 +7,7 @@
 #include "Zero_BasePlayerController.generated.h"
 
 
+struct FGameplayTagContainer;
 class AZero_BasePlayerState;
 class AZeroLockCharacter;
 
@@ -42,6 +43,13 @@ public:
 	FOnPlayerStateChanged OnPSInit;
 
 	virtual void OnPossess(APawn* InPawn) override;
+
+
+	UFUNCTION(Client, Reliable, WithValidation)
+	void ShowDamageNumber(float DamageAmount, AZeroLockCharacter* TargetCharacter, FGameplayTagContainer DamageNumberTags);
+	void ShowDamageNumber_Implementation(float DamageAmount, AZeroLockCharacter* TargetCharacter, FGameplayTagContainer DamageNumberTags);
+	bool ShowDamageNumber_Validate(float DamageAmount, AZeroLockCharacter* TargetCharacter, FGameplayTagContainer DamageNumberTags);
+
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

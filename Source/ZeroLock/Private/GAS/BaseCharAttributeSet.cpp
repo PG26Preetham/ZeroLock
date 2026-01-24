@@ -5,6 +5,7 @@
 
 #include "GameplayEffect.h"
 #include "GameplayEffectExtension.h"
+#include "Zero_BasePlayerController.h"
 #include "Zero_BasePlayerState.h"
 #include "Chaos/Deformable/MuscleActivationConstraints.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -118,6 +119,10 @@ void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 					
 					if (wasAlive && TargetCharacter)
 					{
+						if (AZero_BasePlayerController* MyPC = Cast<AZero_BasePlayerController>(SourceCharacter->GetController()))
+						{
+							MyPC->ShowDamageNumber(LocalDamageDone,TargetCharacter,Data.EffectSpec.GetDynamicAssetTags());
+						}
 						const float NewHealth = GetCurrentHealth() - LocalDamageDone;
 						SetCurrentHealth(FMath::Clamp(NewHealth, 0.0f, GetMaximumHealth()));	
 						TargetCharacter->AddLastHit(SourceCharacter);

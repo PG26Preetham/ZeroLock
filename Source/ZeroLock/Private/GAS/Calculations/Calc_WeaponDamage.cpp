@@ -93,7 +93,9 @@ void UCalc_WeaponDamage::Execute_Implementation(const FGameplayEffectCustomExecu
 	
 	float MitigatedDamage = (UnmitigatedDamage) * (1- (NetWeaponResistance/100));
 
-
+	FGameplayEffectSpec* MutableSpec = ExecutionParams.GetOwningSpecForPreExecuteMod();
+	MutableSpec->AddDynamicAssetTag(FGameplayTag::RequestGameplayTag(FName("Damage.Tag.Weapon")));
+	
 
 	if (MitigatedDamage >= 0.f)
 	{

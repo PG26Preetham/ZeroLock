@@ -94,6 +94,10 @@ void UCalc_Spirit_Damage::Execute_Implementation(const FGameplayEffectCustomExec
 	float NetSpiritResistance = SpiritResistance - SpiritResistanceReduction;
 	float MitigatedDamage = (UnmitigatedDamage) * (1- (NetSpiritResistance/100));
 
+	FGameplayEffectSpec* MutableSpec = ExecutionParams.GetOwningSpecForPreExecuteMod();
+	MutableSpec->AddDynamicAssetTag(FGameplayTag::RequestGameplayTag(FName("Damage.Tag.Spirit")));
+	
+	
 	if (MitigatedDamage >= 0.f)
 	{
 

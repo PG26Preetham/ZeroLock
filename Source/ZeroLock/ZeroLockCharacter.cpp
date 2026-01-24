@@ -24,6 +24,7 @@
 #include "Items/Zero_Item_Inventory_Component.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/Damage/ZL_BaseDamageWidgetComponent.h"
 #include "UI/MVVM/ZL_VM_Attributes.h"
 #include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
@@ -109,6 +110,10 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	GetMesh()->CustomDepthStencilValue =1;
 	GetMesh()->SetRenderInDepthPass(true);
 	AbilityUIManager = CreateDefaultSubobject<UZL_AbilityUIManagerComponent>(TEXT("AbilityUIManager"));
+
+
+	DamageWidgetComp = CreateDefaultSubobject<UZL_BaseDamageWidgetComponent>(TEXT("DamageNumberComp"));
+	DamageWidgetComp->SetupAttachment(RootComponent);
 }
 
 void AZeroLockCharacter::BeginPlay()
@@ -709,6 +714,18 @@ bool AZeroLockCharacter::IsOnSameTeam(AZeroLockCharacter* CharacterToCheck)
 
 //////////////////////////////////////////////////////////////////////////
 // Input
+
+void AZeroLockCharacter::AddDamageNumber(float Damage, FGameplayTagContainer DamageNumberTags)
+{
+	DamageWidgetComp->ShowDamageNumber(Damage, DamageNumberTags);
+	
+	
+}
+
+void AZeroLockCharacter::ShowDamageNumber()
+{
+	
+}
 
 void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

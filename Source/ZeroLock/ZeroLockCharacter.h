@@ -12,6 +12,7 @@
 #include "GAS/BaseGameplayAbility.h"
 #include "ZeroLockCharacter.generated.h"
 
+class UZL_BaseDamageWidgetComponent;
 class UZL_VM_Attributes;
 //enum class EGASAbilityInputID;
 class USpringArmComponent;
@@ -38,7 +39,22 @@ struct FMyAbilityMap
 	UPROPERTY()
 	EGASAbilityInputID InputID;
 };
+USTRUCT(BlueprintType)
+struct  FZL_DamageNumber
+{
+	GENERATED_USTRUCT_BODY()
 
+	float DamageAmount;
+
+	FGameplayTagContainer Tags;
+
+	FZL_DamageNumber() {}
+
+	FZL_DamageNumber(float InDamageAmount, FGameplayTagContainer InTags) : DamageAmount(InDamageAmount)
+	{
+		Tags.AppendTags(InTags);
+	}
+};
 UCLASS(config=Game)
 class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 {
@@ -151,7 +167,18 @@ public:
 	FTimerHandle MeleePressedTimer;
 	bool bMeleeUsed = false;
 
+	void AddDamageNumber(float Damage, FGameplayTagContainer DamageNumberTags);
+	TArray<FZL_DamageNumber> DamageNumberQueue;
+	FTimerHandle DamageNumberTimer;
+	virtual void ShowDamageNumber();
+
+	UFUNCTION(BlueprintCallable)
+	UZL_BaseDamageWidgetComponent* GetMyDamageNumberComp()const { return DamageWidgetComp;};
+
+	
 protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UZL_BaseDamageWidgetComponent* DamageWidgetComp;
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
