@@ -27,6 +27,8 @@
 #include "UI/Damage/ZL_BaseDamageWidgetComponent.h"
 #include "UI/MVVM/ZL_VM_Attributes.h"
 #include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
+#include "UI/OverHead/ZL_OverHeadDisplay.h"
+#include "UI/OverHead/ZL_OverHeadWidgetComponent.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -114,6 +116,46 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 
 	DamageWidgetComp = CreateDefaultSubobject<UZL_BaseDamageWidgetComponent>(TEXT("DamageNumberComp"));
 	DamageWidgetComp->SetupAttachment(RootComponent);
+
+	OverHeadDisplay = CreateDefaultSubobject<UZL_OverHeadWidgetComponent>(TEXT("OverHeadDisplay"));
+	OverHeadDisplay->SetupAttachment(RootComponent);
+	
+}
+
+void AZeroLockCharacter::InitializeFloatingStatusBar()
+{
+	if (IsNetMode(NM_DedicatedServer)) return;
+
+	if (IsLocallyControlled()) return;
+
+	APlayerController* PC = GetWorld()->GetFirstPlayerController();
+	if (!PC || !OverHeadDisplay) return;
+	
+	UZL_OverHeadDisplay* WidgetInstance = Cast<UZL_OverHeadDisplay>(OverHeadDisplay->GetWidget());
+	
+	if (!WidgetInstance && OverHeadClass)
+	{
+		WidgetInstance = CreateWidget<UZL_OverHeadDisplay>(PC, OverHeadClass);
+		OverHeadDisplay->SetWidget(WidgetInstance);
+	}
+	
+	if (WidgetInstance)
+	{
+		OverHeadDisplayRef = WidgetInstance;
+        
+
+		if (UZL_VM_Attributes* VM = GetVM_Attributes())
+		{
+			WidgetInstance->SetViewModel(VM);
+
+			if (AttributeSet)
+			{
+				VM->SetHealth(AttributeSet->GetCurrentHealth());
+				VM->SetMaxHealth(AttributeSet->GetMaximumHealth());
+			}
+			ZLOG("Overhead Widget Initialized and Linked");
+		}
+	}
 }
 
 void AZeroLockCharacter::BeginPlay()
@@ -121,7 +163,7 @@ void AZeroLockCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	ParryComp->SetVisibility(false);
-	CreateVM_Att();
+	//CreateVM_Att();
 	GetMesh()->CustomDepthStencilValue =1;
 	GetMesh()->SetRenderInDepthPass(true);
 	//AttributeSet->OnCharacterDied.AddUniqueDynamic(this,&ThisClass::AZeroLockCharacter::OnDied);	
@@ -363,9 +405,10 @@ void AZeroLockCharacter::PossessedBy(AController* NewController)
 	//server GAS 
 	AbilitySystemComp->InitAbilityActorInfo(this, this);
 
-	//CreateVM_Att();
+	CreateVM_Att();
 	InitializeAttributes();
 	GiveAbilities();
+	InitializeFloatingStatusBar();
 	
 }
 
@@ -377,8 +420,10 @@ void AZeroLockCharacter::OnRep_PlayerState()
 	AbilitySystemComp->InitAbilityActorInfo(this, this);
 
 	InitializeAttributes();
+	
 
 	CreateVM_Att();
+	InitializeFloatingStatusBar();
 }
 
 void AZeroLockCharacter::PrimaryFirePressed()
@@ -806,6 +851,7 @@ void AZeroLockCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AZeroLockCharacter,bIsDead);
 	DOREPLIFETIME(AZeroLockCharacter,StartLocation);
+	//DOREPLIFETIME(AZeroLockCharacter,VM_Attributes);
 }
 
 void AZeroLockCharacter::Stunned(FGameplayTag GameplayTag, int NewCount)
@@ -864,7 +910,11 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	
 	float currentH= AttributeSet->GetCurrentHealth();
 	float MaxH = AttributeSet->GetMaximumHealth();
-	
+
+	if (OverHeadDisplay && !OverHeadDisplayRef)
+	{
+		InitializeFloatingStatusBar();
+	}
 	
 	if (HealthChangeDelegate.IsBound())
 	{
@@ -880,6 +930,11 @@ void AZeroLockCharacter::HealthAttributeChanged(const FOnAttributeChangeData& On
 	{
 		VM->SetHealth(currentH);
 		VM->SetMaxHealth(MaxH);
+	}
+	
+	if (OverHeadDisplay && !OverHeadDisplayRef)
+	{
+		InitializeFloatingStatusBar();
 	}
 }
 

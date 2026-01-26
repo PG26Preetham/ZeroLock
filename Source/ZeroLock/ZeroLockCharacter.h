@@ -12,6 +12,7 @@
 #include "GAS/BaseGameplayAbility.h"
 #include "ZeroLockCharacter.generated.h"
 
+class UWidgetComponent;
 class UZL_BaseDamageWidgetComponent;
 class UZL_VM_Attributes;
 //enum class EGASAbilityInputID;
@@ -138,6 +139,9 @@ class AZeroLockCharacter : public ACharacter , public IAbilitySystemInterface
 	
 public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
+
+
+	
 	
 
 protected:
@@ -230,7 +234,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UZero_Item_Inventory_Component* ItemInventoryComp;
-
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UZL_OverHeadWidgetComponent* OverHeadDisplay;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UBaseCharAttributeSet* AttributeSet;
@@ -427,6 +433,14 @@ public:
 
 	UFUNCTION()
 	void CreateVM_Att();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class UZL_OverHeadDisplay> OverHeadClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	class UZL_OverHeadDisplay* OverHeadDisplayRef;
+	UFUNCTION()
+	void InitializeFloatingStatusBar();
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
