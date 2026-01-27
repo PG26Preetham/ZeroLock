@@ -155,6 +155,11 @@ void AZero_BaseGameState::ProcessTeamUpdate(const TArray<AZero_BasePlayerState*>
 		if (!PlayerVMMapping.Contains(PS))
 		{
 			UZL_VM_PlayerInfo* NewVM = NewObject<UZL_VM_PlayerInfo>(this);
+			PS->SetPlayerIconVM(NewVM);
+			if (PS->CurrentVM)
+			{
+				NewVM->SetVM_Attributes(PS->CurrentVM);
+			}
 			PlayerVMMapping.Add(PS, NewVM);
 		}
 		

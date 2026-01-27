@@ -7,12 +7,15 @@
 #include "ZeroLock/ZeroLock.h"
 #include "Zero_BasePlayerState.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatChanged,int32,newStatValue);
+class UZL_VM_PlayerInfo;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatChanged, int32, newStatValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamChanged,ETeamID,newStatValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerIconChanged,UTexture2D*,Playerimage);
 /**
  * 
  */
+
+class UZL_VM_Attributes;
 UCLASS()
 class ZEROLOCK_API AZero_BasePlayerState : public APlayerState
 {
@@ -65,7 +68,17 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPlayerIconChanged OnPlayerIconChanged;
 
-protected:
+
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "MVVM")
+	TObjectPtr<UZL_VM_Attributes> CurrentVM;
+
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "MVVM")
+	TObjectPtr<UZL_VM_PlayerInfo> PlayerIconVM;
+
+	void SetPlayerIconVM(TObjectPtr<UZL_VM_PlayerInfo> NewVM){PlayerIconVM = NewVM;};
+
+	void SetCurrentVM(UZL_VM_Attributes* InVM);
 
 	UFUNCTION()
 	void OnRep_Kills();

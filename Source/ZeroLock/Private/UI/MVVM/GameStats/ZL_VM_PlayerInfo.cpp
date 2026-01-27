@@ -3,6 +3,13 @@
 
 #include "UI/MVVM/GameStats/ZL_VM_PlayerInfo.h"
 
+#include "UI/MVVM/ZL_VM_Attributes.h"
+
+void UZL_VM_PlayerInfo::SetVM_Attributes(UZL_VM_Attributes* newAttVM)
+{
+	UE_MVVM_SET_PROPERTY_VALUE(VM_Attributes, newAttVM);
+}
+
 void UZL_VM_PlayerInfo::SetPlayerName(const FText& NewPlayerName)
 {
 	UE_MVVM_SET_PROPERTY_VALUE(PlayerName, NewPlayerName);

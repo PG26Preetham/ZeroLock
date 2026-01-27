@@ -3,7 +3,9 @@
 
 #include "UI/MVVM/ZL_VMCR_Attributes.h"
 
+#include "Zero_BasePlayerState.h"
 #include "Components/WidgetComponent.h"
+#include "UI/MVVM/ZL_VM_Attributes.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 UObject* UZL_VMCR_Attributes::CreateInstance(const UClass* ExpectedType, const UUserWidget* UserWidget,
@@ -13,8 +15,8 @@ UObject* UZL_VMCR_Attributes::CreateInstance(const UClass* ExpectedType, const U
 	
 	if (AZeroLockCharacter* MyChar = Cast<AZeroLockCharacter>(UserWidget->GetOwningPlayerPawn()))
 	{
-		return MyChar->GetVMObject_Attributes();
+		return MyChar->GetVM_Attributes();
 	}
-
+	
 	return nullptr;
 }

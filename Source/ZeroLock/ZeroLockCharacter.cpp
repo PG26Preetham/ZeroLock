@@ -44,12 +44,12 @@ void AZeroLockCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, u
 	{
 		if (ZeroMovementComp->IsCustomMovementMode(ECustomMovementMode::CMOVE_Slide))
 		{
-			VM_Attributes->SetIsInfiniteAmmo(true);
+			GetVM_Attributes()->SetIsInfiniteAmmo(true);
 		}
 	}
 	if (PreviousCustomMode == ECustomMovementMode::CMOVE_Slide)
 	{
-		VM_Attributes->SetIsInfiniteAmmo(false);
+		GetVM_Attributes()->SetIsInfiniteAmmo(false);
 	}
 }
 
@@ -723,6 +723,13 @@ UZL_VM_Attributes* AZeroLockCharacter::GetVM_Attributes()
 	{
 		CreateVM_Att();
 	}
+	if (AZero_BasePlayerState* PS = GetPlayerState<AZero_BasePlayerState>())
+	{
+		if (!PS->CurrentVM)
+		{
+			PS->SetCurrentVM(VM_Attributes);
+		}
+	}
 	return VM_Attributes;
 }
 
@@ -744,6 +751,10 @@ void AZeroLockCharacter::CreateVM_Att()
 		VM_Attributes->SetAmmo(static_cast<int32>(AttributeSet->GetCurrentAmmo()));
 		VM_Attributes->SetMaxAmmo(static_cast<int32>(AttributeSet->GetMaxAmmo()));
 		VM_Attributes->SetIsInfiniteAmmo(false);
+	}
+	if (AZero_BasePlayerState* PS = GetPlayerState<AZero_BasePlayerState>())
+	{
+		PS->SetCurrentVM(VM_Attributes);
 	}
 }
 
@@ -943,8 +954,8 @@ void AZeroLockCharacter::AmmoAttributeChange(const FOnAttributeChangeData& OnAtt
 	if (!AttributeSet) return;
 	float currentA= AttributeSet->GetCurrentAmmo();
 	float MaxA = AttributeSet->GetMaxAmmo();
-	VM_Attributes->SetMaxAmmo(static_cast<int32>(MaxA));
-	VM_Attributes->SetAmmo(static_cast<int32>(currentA));
+	GetVM_Attributes()->SetMaxAmmo(static_cast<int32>(MaxA));
+	GetVM_Attributes()->SetAmmo(static_cast<int32>(currentA));
 	if (AmmoChangeDelegate.IsBound())
 	{
 		

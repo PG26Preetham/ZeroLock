@@ -12,6 +12,7 @@
 #include "GAS/BaseGameplayAbility.h"
 #include "ZeroLockCharacter.generated.h"
 
+class UZL_AbilityUIManagerComponent;
 class UWidgetComponent;
 class UZL_BaseDamageWidgetComponent;
 class UZL_VM_Attributes;

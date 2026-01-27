@@ -6,6 +6,8 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_PlayerInfoBox.generated.h"
 
+class UZL_VM_Attributes;
+class UProgressBar;
 class UZL_VM_PlayerInfo;
 class AZero_BasePlayerState;
 class UImage;
@@ -33,9 +35,19 @@ class ZEROLOCK_API UZL_PlayerInfoBox : public UCommonActivatableWidget
 	TObjectPtr<UCommonTextBlock> Assist;
 
 
+	UPROPERTY(BlueprintReadOnly,Category="Stat",meta = (BindWidget))
+	TObjectPtr<UProgressBar> HealthBar;
+
+
 	void SetViewModel(UZL_VM_PlayerInfo* ViewModel);
+
+	UFUNCTION(BlueprintCallable)
+	void SetAttributeVM(UZL_VM_Attributes* AtVM);
 
 	UPROPERTY()
 	UZL_VM_PlayerInfo* myVM;
+
+	UPROPERTY()
+	UZL_VM_Attributes* myAttributes;
 	
 };

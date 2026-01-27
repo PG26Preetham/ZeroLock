@@ -6,6 +6,7 @@
 #include "MVVMViewModelBase.h"
 #include "ZL_VM_PlayerInfo.generated.h"
 
+class UZL_VM_Attributes;
 /**
  * 
  */
@@ -31,7 +32,11 @@ public:
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "Data")
 	int32 Assists;
 
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "Data")
+	UZL_VM_Attributes* VM_Attributes;
 
+
+	void SetVM_Attributes(UZL_VM_Attributes* newAttVM);
 	void SetPlayerName(const FText& NewPlayerName);
 	void SetIcon(UTexture2D* NewIcon);
 	void SetKills(int32 NewKills);
@@ -43,4 +48,5 @@ public:
 	int32 GetDeaths()const{return Deaths;};
 	int32 GetAssists()const{return Assists;};
 	UTexture2D* GetIcon()const{return Icon;};
+	UZL_VM_Attributes* GetVM_Attributes()const {return VM_Attributes;};
 };

@@ -5,6 +5,8 @@
 
 #include "Gamemode/Zero_BaseGameState.h"
 #include "Net/UnrealNetwork.h"
+#include "UI/MVVM/ZL_VM_Attributes.h"
+#include "UI/MVVM/GameStats/ZL_VM_PlayerInfo.h"
 #include "ZeroLock/ZeroLock.h"
 
 AZero_BasePlayerState::AZero_BasePlayerState()
@@ -91,6 +93,14 @@ void AZero_BasePlayerState::SetPlayerIconImage(UTexture2D* NewImage)
 }
 
 
+void AZero_BasePlayerState::SetCurrentVM(UZL_VM_Attributes* InVM)
+{
+	CurrentVM = InVM;
+	if (PlayerIconVM)
+	{
+		PlayerIconVM->SetVM_Attributes(InVM);
+	}
+}
 
 void AZero_BasePlayerState::OnRep_Kills()
 {

@@ -7,6 +7,8 @@
 #include "ZeroLock/ZeroLock.h"
 #include "Zero_BasePlayerStart.generated.h"
 
+class UZL_VM_Attributes;
+
 UCLASS()
 class ZEROLOCK_API AZero_BasePlayerStart : public APlayerStart
 {
@@ -18,4 +20,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ETeamID TeamID;
+
+
+
+
 };
