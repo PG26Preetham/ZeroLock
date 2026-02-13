@@ -171,6 +171,17 @@ void UBaseCharAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCa
 	{
 		SetHealthRegeneration(FMath::Clamp(GetHealthRegeneration(), 0.0f, GetMaximumHealth()));
 	}
+	if (Data.EvaluatedData.Attribute == GetAbilityCharges_1Attribute()) 
+		SetAbilityCharges_1(FMath::Clamp(GetAbilityCharges_1(), 0.0f, GetMaxCharges_1()));
+	
+	if (Data.EvaluatedData.Attribute == GetAbilityCharges_2Attribute()) 
+		SetAbilityCharges_2(FMath::Clamp(GetAbilityCharges_2(), 0.0f, GetMaxCharges_2()));
+	
+	if (Data.EvaluatedData.Attribute == GetAbilityCharges_3Attribute()) 
+		SetAbilityCharges_3(FMath::Clamp(GetAbilityCharges_3(), 0.0f, GetMaxCharges_3()));
+	
+	if (Data.EvaluatedData.Attribute == GetAbilityCharges_4Attribute()) 
+		SetAbilityCharges_4(FMath::Clamp(GetAbilityCharges_4(), 0.0f, GetMaxCharges_4()));
 }
 
 void UBaseCharAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
@@ -250,7 +261,56 @@ void UBaseCharAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,CooldownReduction, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,DebufReduction, COND_None, REPNOTIFY_OnChanged);
 	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet,DurationExtension, COND_None, REPNOTIFY_OnChanged);
-	
+
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, AbilityCharges_1, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaxCharges_1, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, AbilityCharges_2, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaxCharges_2, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, AbilityCharges_3, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaxCharges_3, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, AbilityCharges_4, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UBaseCharAttributeSet, MaxCharges_4, COND_None, REPNOTIFY_Always);
+}
+
+void UBaseCharAttributeSet::OnRep_AbilityCharges_1(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, AbilityCharges_1, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MaxCharges_1(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, MaxCharges_1, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_AbilityCharges_2(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, AbilityCharges_2, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MaxCharges_2(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, MaxCharges_2, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_AbilityCharges_3(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, AbilityCharges_3, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MaxCharges_3(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, MaxCharges_3, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_AbilityCharges_4(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, AbilityCharges_4, OldValue);
+}
+
+void UBaseCharAttributeSet::OnRep_MaxCharges_4(const FGameplayAttributeData& OldValue)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UBaseCharAttributeSet, MaxCharges_4, OldValue);
 }
 
 void UBaseCharAttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, const float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const

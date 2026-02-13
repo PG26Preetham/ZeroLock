@@ -41,6 +41,11 @@ void UZL_Lash_Grapple::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 			{
 				if (OutVillan)
 				{
+					if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+					{
+						EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+						return;
+					}
 					FVector LaunchDiraction = (OutVillan->GetActorLocation() - Hero->GetActorLocation()).GetSafeNormal();
 					LaunchDiraction.Z = 0.75;
 					FVector LaunchVelocity = LaunchDiraction * GrappleLaunchStrength;
@@ -50,7 +55,7 @@ void UZL_Lash_Grapple::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 					{
 						Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Hero->GetMyAbilitySystemComp(),OnGrappleEffect,mylevel);
 					}
-					CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
+					//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 					EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
 		
 				}

@@ -17,7 +17,6 @@ void UZL_ITemIcon::SetupFromItem(class UZero_Item_data* ItemData)
 	ItemDataToStore = ItemData; 
 	ItemName->SetText(FText::FromName(ItemData->ItemID));
 	ItemIcon->SetBrushFromTexture(ItemData->Icon);
-	
 }
 
 void UZL_ITemIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
@@ -31,20 +30,13 @@ void UZL_ITemIcon::NativeOnListItemObjectSet(UObject* ListItemObject)
 
 	if (TooltipWidgetClass)
 	{
-
-		UZL_ItemTooltipWidget* TooltipWidget = CreateWidget<UZL_ItemTooltipWidget>(
-			GetOwningPlayer(), 
-			TooltipWidgetClass
-		);
-
+		UZL_ItemTooltipWidget* TooltipWidget = CreateWidget<UZL_ItemTooltipWidget>(GetOwningPlayer(),TooltipWidgetClass	);
 		if (TooltipWidget)
 		{
 			TooltipWidget->SetupFromItem(ItemData);
-			
 			SetToolTip(TooltipWidget);
 		}
 	}
-	
 }
 
 
@@ -60,7 +52,6 @@ void UZL_ITemIcon::SetOnItemPurchased()
 
 void UZL_ITemIcon::SetOnItemSold()
 {
-	
 	ItemStates->SetVisibility(ESlateVisibility::Collapsed);
 	ItemIcon->SetOpacity(1.0f);
 	ItemCurrentState = EItemState::Default;
@@ -77,7 +68,6 @@ void UZL_ITemIcon::SetItemCanBeUpgradedTo(bool bCnaBeUpgraded, UZero_Item_data* 
 		ItemCurrentState = EItemState::ReadyToUpgrade;
 		OnAnimationPlay(true);
 		ItemUpgradedFrom = ItemFrom;
-		
 	}
 	else
 	{
@@ -108,7 +98,6 @@ void UZL_ITemIcon::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointe
 	{
 		BackGroundCommon->SetStyle(HoverCBStyle);
 	}
-
 }
 
 void UZL_ITemIcon::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)

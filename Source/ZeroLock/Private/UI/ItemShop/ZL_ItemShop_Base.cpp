@@ -50,12 +50,10 @@ void UZL_ItemShop_Base::LoadItemsAsync()
 	{
 		if (Row && Row->ItemAsset.IsValid())
 		{
-			// Already loaded asset
 			LoadedItems.AddUnique(Row->ItemAsset.Get());
 		}
 		else if (Row && !Row->ItemAsset.IsNull())
 		{
-			// Not loaded yet, add to load list
 			Paths.Add(Row->ItemAsset.ToSoftObjectPath());
 		}
 	}
@@ -67,13 +65,9 @@ void UZL_ItemShop_Base::LoadItemsAsync()
 		return;
 	}
 
-	// 4. Async load missing ones
 	FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
 
-	Streamable.RequestAsyncLoad(
-		Paths,
-		FStreamableDelegate::CreateUObject(this, &UZL_ItemShop_Base::OnItemsLoaded)
-	);
+	Streamable.RequestAsyncLoad(Paths,FStreamableDelegate::CreateUObject(this, &UZL_ItemShop_Base::OnItemsLoaded));
 }
 
 void UZL_ItemShop_Base::OnItemsLoaded()
@@ -95,7 +89,7 @@ void UZL_ItemShop_Base::OnItemsLoaded()
 			AddtoCategory(Item);
 		}
 	}
-	// Push loaded items into the CommonUI ListView
+
 	if (ItemListView)
 		ItemListView->SetListItems(LoadedItems);
 	
@@ -160,7 +154,6 @@ void UZL_ItemShop_Base::RecSellFunction(UZero_Item_data* ItemData)
 		icon->SetOnItemSold();
 		if (icon->ItemUpgradedFrom)
 		{
-			//OnItemClickedOn.Broadcast(icon->ItemUpgradedFrom);
 			for (UZero_Item_data* it : icon->ItemUpgradedFrom->NextItemsToUpgrade)
 			{
 				ZLOG(it->ItemName);

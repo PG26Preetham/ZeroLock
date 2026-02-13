@@ -5,6 +5,7 @@
 
 #include "GameplayTagContainer.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
+#include "GAS/BaseCharAttributeSet.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilitiesContainer.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilityIcon.h"
 #include "ZeroLock/ZeroLockCharacter.h"
@@ -177,6 +178,26 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 		TargetSlot->SetAbilityLevel3Description(FText::FromString(Ability->AbilityDescription3));
 		//TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
 		TargetSlot->SetAbilityName(FText::FromString(Ability->AbilityName));
+		TargetSlot->SetbHasCharges(false);
+
+		if (Ability->bIsChargedAbility)
+		{
+			AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
+			if (Hero && Hero->GetAbilitySystemComponent())
+			{
+				FGameplayAttribute ChargeAttr = GetChargeAttributeForSlot(Ability->Slot);
+             
+				if (ChargeAttr.IsValid())
+				{
+					TargetSlot->SetbHasCharges(true);
+
+					float CurrentVal = Hero->GetAbilitySystemComponent()->GetNumericAttribute(ChargeAttr);
+					TargetSlot->SetAbilityCharges((int32)CurrentVal);
+					
+					Hero->GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(ChargeAttr).AddUObject(this, &ThisClass::OnChargeAttributeChanged, TargetSlot);
+				}
+			}
+		}
 		
 		const FGameplayTagContainer* CooldownTags = Ability->GetCooldownTags();
 		if (CooldownTags)
@@ -280,6 +301,24 @@ void UZL_AbilityUIManagerComponent::RefreshCooldowns()
 	if (!bAnyActive)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+	}
+}
+
+void UZL_AbilityUIManagerComponent::OnChargeAttributeChanged(const FOnAttributeChangeData& Data,
+	UZL_VM_AbilityIcon* SlotVM)
+{
+	SlotVM->SetAbilityCharges((int32)Data.NewValue);
+}
+
+FGameplayAttribute UZL_AbilityUIManagerComponent::GetChargeAttributeForSlot(EGameplayAbilitySlot Slot) const
+{
+	switch (Slot)
+	{
+		case EGameplayAbilitySlot::AbilitySlot1: return UBaseCharAttributeSet::GetAbilityCharges_1Attribute();
+		case EGameplayAbilitySlot::AbilitySlot2: return UBaseCharAttributeSet::GetAbilityCharges_2Attribute();
+		case EGameplayAbilitySlot::AbilitySlot3: return UBaseCharAttributeSet::GetAbilityCharges_3Attribute();
+		case EGameplayAbilitySlot::UltimateSlot: return UBaseCharAttributeSet::GetAbilityCharges_4Attribute();
+		default: return FGameplayAttribute();
 	}
 }
 

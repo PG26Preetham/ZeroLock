@@ -5,6 +5,18 @@
 
 #include "ZeroLock/ZeroLock.h"
 
+
+
+void UZL_VM_AbilityIcon::SetAbilityCharges(int32 Charges)
+{
+	UE_MVVM_SET_PROPERTY_VALUE(AbilityCharges, Charges);
+}
+
+void UZL_VM_AbilityIcon::SetbHasCharges(bool mbHasCharges)
+{
+	UE_MVVM_SET_PROPERTY_VALUE(bHasCharges, mbHasCharges);
+}
+
 void UZL_VM_AbilityIcon::SetAbilityDescription(FText mAbilityDescription)
 {
 	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityDescription,mAbilityDescription))

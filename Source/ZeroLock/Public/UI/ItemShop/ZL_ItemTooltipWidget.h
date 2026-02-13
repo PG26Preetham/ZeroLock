@@ -10,9 +10,7 @@
 class UImage;
 class UCommonTextBlock;
 class UZero_Item_data;
-/**
- * 
- */
+
 UCLASS()
 class ZEROLOCK_API UZL_ItemTooltipWidget : public UUserWidget
 {

@@ -102,7 +102,12 @@ void UBaseGameplayAbility::ApplyCooldown(const FGameplayAbilitySpecHandle Handle
 		
 		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(CooldownGE->GetClass(), GetAbilityLevel());
 		SpecHandle.Data.Get()->DynamicGrantedTags.AppendTags(CooldownTags);
-		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName(  "Ability.Cooldown.Duration" )), GetCoolDownTime());
+		float CooldownTimeToUse =GetCoolDownTime();
+		if (bIsChargedAbility)
+		{
+			CooldownTimeToUse = ChargeRechargeDuration;
+		}
+		SpecHandle.Data.Get()->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag(FName(  "Ability.Cooldown.Duration" )), CooldownTimeToUse);
 		FActiveGameplayEffectHandle GEHandle=ApplyGameplayEffectSpecToOwner(Handle, ActorInfo, ActivationInfo, SpecHandle);
 		if (GEHandle.IsValid())
 		{
@@ -276,6 +281,95 @@ bool UBaseGameplayAbility::GetConeOverlap(UWorld* World, TArray<FOverlapResult>&
 	}
 
 	return OutResults.Num() > 0;
+}
+
+void UBaseGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+{
+	Super::OnGiveAbility(ActorInfo, Spec);
+	
+	if (bIsChargedAbility && GetCurrentActivationInfo().ActivationMode== EGameplayAbilityActivationMode::Authority)
+	{
+		UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
+		FGameplayAttribute ChargeAttr = GetChargeAttribute();
+		FGameplayAttribute MaxAttr = GetMaxChargeAttribute();
+
+		if (ASC && ChargeAttr.IsValid() && MaxAttr.IsValid())
+		{
+			ASC->SetNumericAttributeBase(MaxAttr, MaxChargesConfig);
+			ASC->SetNumericAttributeBase(ChargeAttr, MaxChargesConfig);
+		}
+	}
+}
+
+bool UBaseGameplayAbility::CheckCost(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	if (!bIsChargedAbility)
+	{
+		return Super::CheckCost(Handle, ActorInfo, OptionalRelevantTags);
+	}
+	
+	UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
+	if (ASC)
+	{
+		float CurrentCharges = ASC->GetNumericAttribute(GetChargeAttribute());
+		return CurrentCharges >= 1.0f;
+	}
+
+	return false;
+}
+
+void UBaseGameplayAbility::ApplyCost(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) const
+{
+	if (!bIsChargedAbility)
+	{
+		Super::ApplyCost(Handle, ActorInfo, ActivationInfo);
+		return;
+	}
+
+	if (HasAuthority(&ActivationInfo))
+	{
+		UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
+		if (ASC)
+		{
+			ASC->ApplyModToAttribute(GetChargeAttribute(), EGameplayModOp::Additive, -1.0f);
+
+			if (ChargeRechargeGEClass)
+			{
+				FGameplayEffectSpecHandle RechargeSpec = MakeOutgoingGameplayEffectSpec(ChargeRechargeGEClass, GetAbilityLevel());
+				if (RechargeSpec.IsValid())
+				{
+					RechargeSpec.Data.Get()->SetSetByCallerMagnitude(RechargeDurationTag, GetCoolDownTime());
+					ASC->ApplyGameplayEffectSpecToSelf(*RechargeSpec.Data.Get());
+				}
+			}
+		}
+	}
+}
+
+FGameplayAttribute UBaseGameplayAbility::GetChargeAttribute() const
+{
+	switch (Slot)
+	{
+	case EGameplayAbilitySlot::AbilitySlot1: return UBaseCharAttributeSet::GetAbilityCharges_1Attribute();
+	case EGameplayAbilitySlot::AbilitySlot2: return UBaseCharAttributeSet::GetAbilityCharges_2Attribute();
+	case EGameplayAbilitySlot::AbilitySlot3: return UBaseCharAttributeSet::GetAbilityCharges_3Attribute();
+	case EGameplayAbilitySlot::UltimateSlot: return UBaseCharAttributeSet::GetAbilityCharges_4Attribute();
+	default: return FGameplayAttribute();
+	}
+}
+
+FGameplayAttribute UBaseGameplayAbility::GetMaxChargeAttribute() const
+{
+	switch (Slot)
+	{
+	case EGameplayAbilitySlot::AbilitySlot1: return UBaseCharAttributeSet::GetMaxCharges_1Attribute();
+	case EGameplayAbilitySlot::AbilitySlot2: return UBaseCharAttributeSet::GetMaxCharges_2Attribute();
+	case EGameplayAbilitySlot::AbilitySlot3: return UBaseCharAttributeSet::GetMaxCharges_3Attribute();
+	case EGameplayAbilitySlot::UltimateSlot: return UBaseCharAttributeSet::GetMaxCharges_4Attribute();
+	default: return FGameplayAttribute();
+	}
 }
 
 

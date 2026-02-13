@@ -12,9 +12,7 @@ class UZL_ITemIcon;
 class UZero_Item_data;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemClickedOn ,UZero_Item_data* ,ItemClickedOn);
 
-/**
- * 
- */
+
 UCLASS()
 class ZEROLOCK_API UZL_ItemShopCategory : public UCommonActivatableWidget
 {
@@ -54,7 +52,7 @@ public:
 	void OnItemSelected2(UObject* Object);
 	void OnItemSelected3(UObject* Object);
 	void OnItemSelected4(UObject* Object);
-	//void OnITemHovered(UObject* Object, bool bArg);
+	
 	void AddDelegates();
 	virtual void NativeOnInitialized() override;
 

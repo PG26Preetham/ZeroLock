@@ -37,6 +37,9 @@ public:
 	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
 	UImage* AbilityIcon;
 
+	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
+	UCommonTextBlock* AbilityChargesText;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tooltip")
 	TSubclassOf<class UZL_AbilityToolTips> TooltipWidgetClass;
 

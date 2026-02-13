@@ -16,6 +16,7 @@
 
 void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
 {
+	AbilityChargesText->SetVisibility(ESlateVisibility::Hidden);
 	Ability_StackText->SetVisibility(ESlateVisibility::Hidden);
 	VM_AbilityIcon = InViewModel;
 	if (!VM_AbilityIcon) return;
@@ -36,6 +37,12 @@ void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
 						Ability_StackText->SetVisibility(ESlateVisibility::Visible);
 						FString StackCountText = FString::FromInt(VM_AbilityIcon->GetStackNum());
 						Ability_StackText->SetText(FText::FromString(StackCountText));
+					}
+					if (VM_AbilityIcon->GetbHasCharges())
+					{
+						AbilityChargesText->SetVisibility(ESlateVisibility::Visible);
+						FString ChargeCountText = FString::FromInt(VM_AbilityIcon->GetAbilityCharges());
+						AbilityChargesText->SetText(FText::FromString(ChargeCountText));
 					}
 				}
 				if (TooltipWidgetClass)

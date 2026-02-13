@@ -166,11 +166,55 @@ public:
 
 	
 
-	
+	//AbilityCharges
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_AbilityCharges_1)
+	FGameplayAttributeData AbilityCharges_1;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, AbilityCharges_1)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_MaxCharges_1)
+	FGameplayAttributeData MaxCharges_1;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaxCharges_1)
+
+	// --- SLOT 2 ---
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_AbilityCharges_2)
+	FGameplayAttributeData AbilityCharges_2;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, AbilityCharges_2)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_MaxCharges_2)
+	FGameplayAttributeData MaxCharges_2;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaxCharges_2)
+
+	// --- SLOT 3 ---
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_AbilityCharges_3)
+	FGameplayAttributeData AbilityCharges_3;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, AbilityCharges_3)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_MaxCharges_3)
+	FGameplayAttributeData MaxCharges_3;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaxCharges_3)
+
+	// --- SLOT 4 ---
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_AbilityCharges_4)
+	FGameplayAttributeData AbilityCharges_4;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, AbilityCharges_4)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Charges", ReplicatedUsing = OnRep_MaxCharges_4)
+	FGameplayAttributeData MaxCharges_4;
+	ATTRIBUTE_ACCESSORS(UBaseCharAttributeSet, MaxCharges_4)
+
+protected:
+	UFUNCTION() virtual void OnRep_AbilityCharges_1(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_MaxCharges_1(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_AbilityCharges_2(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_MaxCharges_2(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_AbilityCharges_3(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_MaxCharges_3(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_AbilityCharges_4(const FGameplayAttributeData& OldValue);
+	UFUNCTION() virtual void OnRep_MaxCharges_4(const FGameplayAttributeData& OldValue);
 	
 	
 
-protected:
+
 
 	void AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute, const FGameplayAttributeData& MaxAttribute, float NewMaxValue, const FGameplayAttribute& AffectedAttributeProperty) const;
 

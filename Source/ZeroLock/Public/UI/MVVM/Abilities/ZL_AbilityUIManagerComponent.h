@@ -6,7 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayEffectTypes.h"
+#include "GAS/BaseGameplayAbility.h"
 #include "ZL_AbilityUIManagerComponent.generated.h"
+
 
 
 class UBaseGameplayAbility;
@@ -75,5 +77,13 @@ private:
 
 	TMap<FGameplayTag, UZL_VM_AbilityIcon*> TagToSlotMap;
 	FTimerHandle CooldownTimerHandle;
+
+
+public:
+protected:
+
+	void OnChargeAttributeChanged(const FOnAttributeChangeData& Data, UZL_VM_AbilityIcon* SlotVM);
+
+	FGameplayAttribute GetChargeAttributeForSlot(EGameplayAbilitySlot Slot) const;
 		
 };

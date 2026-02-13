@@ -55,6 +55,18 @@ public:
 	float MaxCoolDownTime;
 
 
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	int32 AbilityCharges;
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	bool bHasCharges;
+
+	void SetAbilityCharges(int32 Charges);
+	void SetbHasCharges(bool mbHasCharges);
+
+	int32 GetAbilityCharges()const {return AbilityCharges;};
+	bool GetbHasCharges()const {return bHasCharges;};
+
+
 	void SetAbilityDescription(FText mAbilityDescription);
 	void SetAbilityLevel1Description(FText mAbilityLevel1Description);
 	void SetAbilityLevel2Description(FText mAbilityLevel2Description);

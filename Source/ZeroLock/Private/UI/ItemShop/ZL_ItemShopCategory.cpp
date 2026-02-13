@@ -150,15 +150,6 @@ void UZL_ItemShopCategory::AddDelegates()
 	Tier2_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected2);
 	Tier3_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected3);
 	Tier4_ItemListView->OnItemClicked().AddUObject(this,&UZL_ItemShopCategory::OnItemSelected4);
-
-	//Tier1_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
-	//Tier2_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
-	//Tier3_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
-	//Tier4_ItemListView->OnItemIsHoveredChanged().AddUObject(this,&UZL_ItemShopCategory::OnITemHovered);
-
-	//DescriptionCommonBorder->SetVisibility(ESlateVisibility::Collapsed);
-
-	//DescriptionPanel->AddChildToCanvas(DescriptionCommonBorder);
 }
 
 void UZL_ItemShopCategory::NativeOnInitialized()
@@ -170,7 +161,6 @@ void UZL_ItemShopCategory::NativeOnInitialized()
 void UZL_ItemShopCategory::FindAndSetToUpgradeOrRemove(UZero_Item_data* ItemsToSetReadyToUpgrade,
 	bool setToUpgradeState, UZero_Item_data* FromItem)
 {
-
 	if (UZL_ITemIcon* iconToChange =Cast<UZL_ITemIcon>(Tier2_ItemListView->GetEntryWidgetFromItem(ItemsToSetReadyToUpgrade)))
 	{
 		iconToChange->SetItemCanBeUpgradedTo(setToUpgradeState,FromItem);
@@ -214,7 +204,6 @@ void UZL_ItemShopCategory::RecSellFunction(UZero_Item_data* ItemData)
 		icon->SetOnItemSold();
 		if (icon->ItemUpgradedFrom)
 		{
-			//OnItemClickedOn.Broadcast(icon->ItemUpgradedFrom);
 			for (UZero_Item_data* it : icon->ItemUpgradedFrom->NextItemsToUpgrade)
 			{
 				ZLOG(it->ItemName);
