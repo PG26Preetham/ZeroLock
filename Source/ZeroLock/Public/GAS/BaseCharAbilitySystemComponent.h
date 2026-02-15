@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyGameplayEffect(UAbilitySystemComponent* TargetASC,TSubclassOf<UGameplayEffect> EffectClass,int32 level);
 
+	UFUNCTION(BlueprintCallable)
+	void ApplyGameplayEffectWithStacks(UAbilitySystemComponent* TargetASC,TSubclassOf<UGameplayEffect> EffectClass,int32 level,int32 StackNum);
+
 
 	UFUNCTION(BlueprintCallable)
 	void SendGameplayEventToSelf(FGameplayTag Tag, UAbilitySystemComponent* TargetASC);

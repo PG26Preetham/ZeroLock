@@ -19,7 +19,7 @@ void UZL_Xayah_CleanCut::OnEventRecived(FGameplayEventData Payload)
     
 	if (ConstFeather)
 	{
-		ZLOG("feather down");
+
 		AZL_Xayah_projectile* MutableFeather = const_cast<AZL_Xayah_projectile*>(ConstFeather);
 		ActiveFeathers.Add(TWeakObjectPtr<AZL_Xayah_projectile>(MutableFeather));
 	}

@@ -38,9 +38,9 @@ void UZL_Xayah_Double_daggers::OnAnimationPointTrigger()
 			SpawnParameters.Owner = Hero;
 			SpawnParameters.Instigator = Hero->GetInstigator();
 			SpawnParameters.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			FRotator RotNew = Rotation + FRotator(0, -5, 0);
+			FRotator RotNew = Rotation + FRotator(0, -2.5, 0);
 			Fire(Hero,Location,RotNew,SpawnParameters);
-			RotNew = Rotation + FRotator(0, 5, 0);
+			RotNew = Rotation + FRotator(0, 2.5, 0);
 			Fire(Hero,Location,RotNew,SpawnParameters);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 		}
@@ -52,6 +52,13 @@ void UZL_Xayah_Double_daggers::OnAnimationPointTrigger()
 void UZL_Xayah_Double_daggers::Fire(AZeroLockCharacter* Hero, FVector Location, FRotator Rotation,
 	FActorSpawnParameters SpawnParm)
 {
+	if (HasAuthority(&CurrentActivationInfo))
+	{
+		if (Hero)
+		{
+			Hero->GetMyAbilitySystemComp()->ApplyGameplayEffectWithStacks(Hero->GetMyAbilitySystemComp(),FeatherDownClassClass,1,1);
+		}
+	}
 	if (!GetCurrentActivationInfo().ActivationMode == EGameplayAbilityActivationMode::Authority)
 	{
 		return;
@@ -60,7 +67,7 @@ void UZL_Xayah_Double_daggers::Fire(AZeroLockCharacter* Hero, FVector Location, 
 	if (proj)
 	{
 		proj->SetOwner(Hero);
-		proj->SetAutoPull(true);
+		//proj->SetAutoPull(true);
 		proj->OwnerCharacter = Hero;
 	}
 }
@@ -71,12 +78,13 @@ void UZL_Xayah_Double_daggers::EndAbility(const FGameplayAbilitySpecHandle Handl
 {
 	if (!bWasCancelled)
 	{
-		AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-		if (Hero)
+		if (HasAuthority(&CurrentActivationInfo))
 		{
-			ZLOG("TagAdded");
-			//Hero->GetMyAbilitySystemComp()->AddReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Event.Xayah.ActivateFeather"),false));
-			Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Hero->GetMyAbilitySystemComp(),FeatherDownClassClass,1);
+			AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+			if (Hero)
+			{
+				Hero->GetMyAbilitySystemComp()->ApplyGameplayEffectWithStacks(Hero->GetMyAbilitySystemComp(),FeatherDownClassClass,1,3);
+			}
 		}
 	}
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);

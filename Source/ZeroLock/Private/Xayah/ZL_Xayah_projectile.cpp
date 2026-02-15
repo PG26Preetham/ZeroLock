@@ -26,12 +26,12 @@ void AZL_Xayah_projectile::StartReturn(AActor* TargetActor)
 
 	bIsReturning = true;
 	
-	SetLifeSpan(10.0f);
+	SetLifeSpan(2.0f);
 	
 	ProjectileMovement->UpdatedComponent = CollisionComp;
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Overlap);
-	const float Speed = 10000.f;
+	const float Speed = 20000.f;
 	ProjectileMovement->MaxSpeed = Speed;
 	FVector Direction = (TargetActor->GetActorLocation() - GetActorLocation()).GetSafeNormal();
 	ProjectileMovement->Velocity = Direction * Speed;
@@ -59,6 +59,7 @@ void AZL_Xayah_projectile::BeginPlay()
 	Super::BeginPlay();
 	SetReplicateMovement(true);
 	bIsReturning =false;
+	CheckISAutoActiavted();
 }
 
 void AZL_Xayah_projectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -93,30 +94,31 @@ void AZL_Xayah_projectile::SendGameplayEventToACtor()
 	}
 }
 
+void AZL_Xayah_projectile::CheckISAutoActiavted()
+{
+	if (bIsActivatedToPull) return;
+	if (AZeroLockCharacter* myHero = Cast<AZeroLockCharacter>(GetOwner()))
+	{
+		OwnerCharacter = myHero;
+		if (OwnerCharacter ->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Event.Xayah.ActivateFeather"),false)))
+		{
+			if (HasAuthority())
+			{
+				SetAutoPull(true);
+				OwnerCharacter->GetMyAbilitySystemComp()->RemoveActiveGameplayEffectBySourceEffect(FeatherDownClassClass,OwnerCharacter->GetMyAbilitySystemComp(),1);
+			}
+		}
+	}
+
+}
+
 void AZL_Xayah_projectile::HitEventCallBack(UPrimitiveComponent* HitComponent, AActor* OtherActor,
                                             UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	if (bIsActivatedToPull)
 	{
 		SendGameplayEventToACtor();
-		return;
 	}
-	if (AZeroLockCharacter* myHero = Cast<AZeroLockCharacter>(GetOwner()))
-		{
-		ZLOG("MyHero is good");
-		OwnerCharacter = myHero;
-			if (OwnerCharacter ->GetAbilitySystemComponent()->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag(FName("Event.Xayah.ActivateFeather"),false)))
-			{
-				SendGameplayEventToACtor();
-				FGameplayTagContainer EventTags;
-				EventTags.AddTag(FGameplayTag::RequestGameplayTag(FName("Event.Xayah.ActivateFeather"),false));
-				OwnerCharacter->GetAbilitySystemComponent()->RemoveReplicatedLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("Event.Xayah.ActivateFeather"),false));
-				OwnerCharacter->GetAbilitySystemComponent()->RemoveActiveEffectsWithGrantedTags(EventTags);
-				return;
-			}
-		}
-	Destroy();
-	
 }
 
 
@@ -136,6 +138,10 @@ void AZL_Xayah_projectile::OverlapEventCallBack(UPrimitiveComponent* OverlappedC
 			return;
 		}
 	}
+	if (OwnerCharacter == OtherActor && bIsReturning)
+	{
+		Destroy();
+	}
 	if (AZeroLockCharacter* enemy = Cast<AZeroLockCharacter>(OtherActor))
 	{
 		if (bIsReturning)
@@ -147,12 +153,17 @@ void AZL_Xayah_projectile::OverlapEventCallBack(UPrimitiveComponent* OverlappedC
 			else
 			{
 				OwnerCharacter->GetMyAbilitySystemComp()->ApplySpiritDamage(enemy->GetMyAbilitySystemComp(),5);
-	
 			}
 		}
 		else
 		{
+			
 			OwnerCharacter->GetMyAbilitySystemComp()->ApplyWeaponDamage(enemy->GetMyAbilitySystemComp(),1);
+
+			if (!bIsActivatedToPull)
+			{
+				Destroy();
+			}
 		}
 		
 	}

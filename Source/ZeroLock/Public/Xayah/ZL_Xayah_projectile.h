@@ -6,6 +6,7 @@
 #include "Weapon/Zero_BaseProjectile.h"
 #include "ZL_Xayah_projectile.generated.h"
 
+class UGameplayEffect;
 /**
  * 
  */
@@ -45,6 +46,11 @@ protected:
 	
 	void SendGameplayEventToACtor();
 
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> FeatherDownClassClass;
+	
+	void CheckISAutoActiavted();
 	virtual void HitEventCallBack(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 	virtual void OverlapEventCallBack(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 };
