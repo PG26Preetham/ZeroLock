@@ -6,6 +6,7 @@
 #include "GAS/BaseGameplayAbility.h"
 #include "ZL_Xayah_Featherstorm.generated.h"
 
+class AGameplayAbilityTargetActor_GroundTrace;
 /**
  * 
  */
@@ -18,6 +19,7 @@ public:
 	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Fan Configuration")
 	TSubclassOf<class AZL_Xayah_projectile> ProjectileClass;
@@ -53,4 +55,16 @@ protected:
 
 	UFUNCTION()
 	void FireFeathers();
+	
+	UFUNCTION()
+	void OnTargetDataReady(const FGameplayAbilityTargetDataHandle& Data);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Targeting")
+	TSubclassOf<AGameplayAbilityTargetActor_GroundTrace> TargetActorClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Targeting")
+	float TargetingDelay = 1.f;
+	
+	UFUNCTION()
+	void TargetTimeDone();
 };
