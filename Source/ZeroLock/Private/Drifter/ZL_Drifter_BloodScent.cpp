@@ -168,6 +168,7 @@ void UZL_Drifter_BloodScent::UpdateServerLogic()
 
 void UZL_Drifter_BloodScent::OnTargetDied(const FGameplayEventData Payload)
 {
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	ZLOG("DeathTrigger");
 	const AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(Payload.Target);
 	const UAbilitySystemComponent* VictimASC = Villan->GetAbilitySystemComponent();
@@ -175,7 +176,7 @@ void UZL_Drifter_BloodScent::OnTargetDied(const FGameplayEventData Payload)
 	{
 		if (GetAbilityLevel()>=2)
 		{
-			AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+			
 			if (Hero)
 			{
 				Hero->GetMyAbilitySystemComp()->AdjustActiveEffectsDurationByValue(15);
@@ -184,33 +185,27 @@ void UZL_Drifter_BloodScent::OnTargetDied(const FGameplayEventData Payload)
 		
 		if (OnKillStackEffectClass)
 		{
-			FGameplayEffectContextHandle Context = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-			FGameplayEffectSpecHandle Spec = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(OnKillStackEffectClass, 1.f, Context);
-			for (int i = 0 ;i<KillStackReward;i++)
+			if (Hero)
 			{
-				GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+				Hero->GetMyAbilitySystemComp()->ApplyGameplayEffectWithStacks(Hero->GetAbilitySystemComponent(),OnKillStackEffectClass,GetAbilityLevel(),KillStackReward);
 			}
-			UE_LOG(LogTemp, Log, TEXT("Drifter: Isolated enemy killed. Stack applied!"));
 		}
 	}
 }
 
 void UZL_Drifter_BloodScent::OnTargetAssist(const FGameplayEventData Payload)
 {
-	ZLOG("DeathTrigger");
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	const AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(Payload.Target);
 	const UAbilitySystemComponent* VictimASC = Villan->GetAbilitySystemComponent();
 	if (VictimASC && VictimASC->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Zerolock.Drifter.BloodScent")))
 	{
 		if (OnKillStackEffectClass)
 		{
-			FGameplayEffectContextHandle Context = GetAbilitySystemComponentFromActorInfo()->MakeEffectContext();
-			FGameplayEffectSpecHandle Spec = GetAbilitySystemComponentFromActorInfo()->MakeOutgoingSpec(OnKillStackEffectClass, 1.f, Context);
-			for (int i = 0 ;i<AssistStackReward;i++)
+			if (Hero)
 			{
-				GetAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToSelf(*Spec.Data.Get());
+				Hero->GetMyAbilitySystemComp()->ApplyGameplayEffectWithStacks(Hero->GetAbilitySystemComponent(),OnKillStackEffectClass,GetAbilityLevel(),AssistStackReward);
 			}
-			UE_LOG(LogTemp, Log, TEXT("Drifter: Isolated enemy killed. Stack applied!"));
 		}
 	}
 }

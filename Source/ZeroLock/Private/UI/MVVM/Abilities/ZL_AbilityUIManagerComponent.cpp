@@ -179,7 +179,7 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 		//TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
 		TargetSlot->SetAbilityName(FText::FromString(Ability->AbilityName));
 		TargetSlot->SetbHasCharges(false);
-
+		//Ability->AbilityChangeIcon.AddUniqueDynamic(this,&UZL_AbilityUIManagerComponent::OnAbilityIconChanged);
 		if (Ability->bIsChargedAbility)
 		{
 			AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
@@ -320,6 +320,11 @@ FGameplayAttribute UZL_AbilityUIManagerComponent::GetChargeAttributeForSlot(EGam
 		case EGameplayAbilitySlot::UltimateSlot: return UBaseCharAttributeSet::GetAbilityCharges_4Attribute();
 		default: return FGameplayAttribute();
 	}
+}
+
+void UZL_AbilityUIManagerComponent::OnAbilityIconChanged(EGameplayAbilitySlot Slot, UTexture2D* newIcon)
+{
+	ZLOG("IConChanged");
 }
 
 

@@ -40,4 +40,12 @@ public:
 	FActiveGameplayEffectHandle AppliedEffectHandle;
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag MarkedCueTag;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Duration")
+	FScalableFloat DurationOfMark;
+	
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite,Category="Duration")
+	UTexture2D* TelportReadyTexture;
+	
 };

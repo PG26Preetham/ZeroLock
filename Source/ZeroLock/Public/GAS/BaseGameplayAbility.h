@@ -13,9 +13,6 @@ class AZeroLockCharacter;
 class UImage;
 class APredictedProjectile;
 class UBaseCharAbilitySystemComponent;
-/**
- * 
- */
 
 UENUM(BlueprintType)
 enum class EGameplayAbilitySlot : uint8
@@ -25,6 +22,8 @@ enum class EGameplayAbilitySlot : uint8
 	AbilitySlot3 UMETA(DisplayName = "Ability Slot 3"),
 	UltimateSlot UMETA(DisplayName = "Ultimate Slot "),
 };
+
+
 UCLASS()
 class ZEROLOCK_API UBaseGameplayAbility : public UGameplayAbility
 {
@@ -99,12 +98,11 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Stacks")
 	FGameplayTag StackTag;
-	// Temp container that we will return the pointer to in GetCooldownTags().
-	// This will be a union of our CooldownTags and the Cooldown GE's cooldown tags.
+	
 	UPROPERTY(Transient)
 	FGameplayTagContainer TempCooldownTags;
 
-
+	
 	
 	static bool ConeTraceMulti(const UObject* WorldContextObject, const FVector Start, const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex, const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits, TArray<AZeroLockCharacter*>& OutVillans, bool bIgnoreSelf, FLinearColor TraceColor = FLinearColor::Red, FLinearColor TraceHitColor = FLinearColor::Green, float DrawTime = 5.0f );
 
@@ -112,6 +110,7 @@ public:
 
 public:
 
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ZeroLock|Charges")
 	bool bIsChargedAbility = false;
 

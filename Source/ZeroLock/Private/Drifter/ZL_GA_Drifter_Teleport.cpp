@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
@@ -41,11 +42,12 @@ void UZL_GA_Drifter_Teleport::OnEventRecived(FGameplayEventData Payload)
 	}
 	ZLOG("EnemyHitRecieved");
 	
+	TargetASC->AddGameplayCue(MarkedCueTag);
 	InputPTask = UAbilityTask_WaitInputPress::WaitInputPress(this,false);
 	InputPTask->OnPress.AddDynamic(this, &ThisClass::OnInputPressed);
 	InputPTask->ReadyForActivation();
 
-	WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this,3);
+	WaitDelay = UAbilityTask_WaitDelay::WaitDelay(this,DurationOfMark.GetValueAtLevel(GetAbilityLevel()));
 	WaitDelay->OnFinish.AddDynamic(this, &ThisClass::OnTimeFinish);
 	WaitDelay->ReadyForActivation();
 	
@@ -65,8 +67,13 @@ void UZL_GA_Drifter_Teleport::OnInputPressed(float TimeWaited)
 	}
 	if (Villan && IsValid(Hero))
 	{
-		Hero->SetActorLocation(Villan->GetActorLocation()+ FVector(0,0,200));
-		//Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
+		FVector ForwardDirection = Villan->GetActorForwardVector().GetSafeNormal();
+		
+		Hero->SetActorLocation(Villan->GetActorLocation()+ ForwardDirection* -125);
+		Hero->GetController()->SetControlRotation(Villan->GetControlRotation());
+		Hero->GetCharacterMovement()->StopMovementImmediately();
+		//Hero->SetActorRotation(Villan->GetActorRotation(),ETeleportType::TeleportPhysics);
+		Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
 	}
 	//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -81,7 +88,7 @@ void UZL_GA_Drifter_Teleport::OnTimeFinish()
 	}
 	if (Villan && IsValid(Villan))
 	{
-		//Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
+		Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
 	}
 	//CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
@@ -91,9 +98,11 @@ void UZL_GA_Drifter_Teleport::EndAbility(const FGameplayAbilitySpecHandle Handle
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
+
 	if (Villan && AppliedEffectHandle.IsValid())
 	{
 		Villan->GetAbilitySystemComponent()->RemoveActiveGameplayEffect(AppliedEffectHandle);
+		Villan->GetAbilitySystemComponent()->RemoveGameplayCue(MarkedCueTag);
 	}
 	CommitAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
