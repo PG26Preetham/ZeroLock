@@ -39,6 +39,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
 	UCommonTextBlock* AbilityChargesText;
+	
+	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
+	UImage* ChargeBar;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Tooltip")
 	TSubclassOf<class UZL_AbilityToolTips> TooltipWidgetClass;
@@ -46,5 +49,8 @@ public:
 	virtual void NativeOnClicked() override;
 
 	virtual FReply NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
+	
+	UFUNCTION(BlueprintCallable, Category = "MVVM")
+	void AbilityChargeUpdates(int32 chargeChange);
 	
 };

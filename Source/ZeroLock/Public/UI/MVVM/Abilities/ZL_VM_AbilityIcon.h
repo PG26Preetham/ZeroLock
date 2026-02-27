@@ -57,13 +57,19 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
 	int32 AbilityCharges;
+	
+	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
+	int32 MaxAbilityCharges;
+	
 	UPROPERTY(BlueprintReadOnly, FieldNotify,Setter,Getter, Category = "UI")
 	bool bHasCharges;
 
 	void SetAbilityCharges(int32 Charges);
+	void SetMaxAbilityCharges(int32 Charges);
 	void SetbHasCharges(bool mbHasCharges);
 
 	int32 GetAbilityCharges()const {return AbilityCharges;};
+	int32 GetMaxAbilityCharges()const {return MaxAbilityCharges;};
 	bool GetbHasCharges()const {return bHasCharges;};
 
 
@@ -96,7 +102,10 @@ public:
 	void IncrementAbilityLevel();
 	void SetAbilityLevel(int32 NewAbilityLevel);
 	int32 GetAbilityLevel()const { return AbilityLevel; }
-
+	
+	
+	UFUNCTION(BlueprintPure,FieldNotify)
+	float GetChargePercent()const { return AbilityCharges/MaxAbilityCharges;}
 
 	UPROPERTY(BlueprintAssignable)
 	FAbilityLevelChanged OnAbilityLevelChanged;

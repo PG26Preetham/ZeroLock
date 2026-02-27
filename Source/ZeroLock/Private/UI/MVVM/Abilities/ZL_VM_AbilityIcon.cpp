@@ -9,7 +9,18 @@
 
 void UZL_VM_AbilityIcon::SetAbilityCharges(int32 Charges)
 {
-	UE_MVVM_SET_PROPERTY_VALUE(AbilityCharges, Charges);
+	if (UE_MVVM_SET_PROPERTY_VALUE(AbilityCharges, Charges))
+	{
+		UE_MVVM_BROADCAST_FIELD_VALUE_CHANGED(GetChargePercent);
+	}
+}
+
+void UZL_VM_AbilityIcon::SetMaxAbilityCharges(int32 Charges)
+{
+	if (UE_MVVM_SET_PROPERTY_VALUE(MaxAbilityCharges, Charges))
+	{
+		UE_MVVM_BROADCAST_FIELD_VALUE_CHANGED(GetChargePercent);
+	}
 }
 
 void UZL_VM_AbilityIcon::SetbHasCharges(bool mbHasCharges)

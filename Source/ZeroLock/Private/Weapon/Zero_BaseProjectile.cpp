@@ -22,16 +22,36 @@ AZero_BaseProjectile::AZero_BaseProjectile()
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>("ProjectileComponent");
 
 
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this,&ThisClass::CollisionOverLap);
-	CollisionComp->OnComponentHit.AddDynamic(this,&ThisClass::CollisionHit);
+	//CollisionComp->OnComponentBeginOverlap.AddDynamic(this,&AZero_BaseProjectile::CollisionOverLap);
+	//CollisionComp->OnComponentHit.AddDynamic(this,&AZero_BaseProjectile::CollisionHit);
 }
 
 // Called when the game starts or when spawned
 void AZero_BaseProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	CollisionComp->OnComponentBeginOverlap.AddDynamic(this,&ThisClass::CollisionOverLap);
-	CollisionComp->OnComponentHit.AddDynamic(this,&ThisClass::CollisionHit);
+	
+	
+	
+}
+
+void AZero_BaseProjectile::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (CollisionComp)
+	{      
+		if (!CollisionComp->OnComponentBeginOverlap.IsAlreadyBound(this, &AZero_BaseProjectile::CollisionOverLap))
+		{
+			CollisionComp->OnComponentBeginOverlap.AddDynamic(this,&AZero_BaseProjectile::CollisionOverLap);
+		}
+		
+	
+		if (!CollisionComp->OnComponentHit.IsAlreadyBound(this, &AZero_BaseProjectile::CollisionHit))
+		{
+			CollisionComp->OnComponentHit.AddDynamic(this,&AZero_BaseProjectile::CollisionHit);
+		}
+		
+	}
 }
 
 // Called every frame

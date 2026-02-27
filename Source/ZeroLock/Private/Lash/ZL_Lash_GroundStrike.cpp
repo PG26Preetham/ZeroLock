@@ -28,7 +28,7 @@ bool UZL_Lash_GroundStrike::GetLookAtLocation(const AZeroLockCharacter* InActor,
 	
 	FHitResult HeightCheckHit;
 	float Height = 0.f;
-	if (World->LineTraceSingleByChannel(HeightCheckHit, ActorLoc - FVector(0,0,45), ActorLoc + (FVector::DownVector * 10000.f), ECC_Visibility, Params))
+	if (World->LineTraceSingleByChannel(HeightCheckHit, ActorLoc - FVector(0,0,45), ActorLoc + (FVector::DownVector * 10000.f), ECC_Vehicle, Params))
 	{
 		Height = FVector::Dist(ActorLoc, HeightCheckHit.ImpactPoint);
 	}
@@ -78,6 +78,13 @@ void UZL_Lash_GroundStrike::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		DistanceTravelled = FVector::Dist(Hero->GetActorLocation(), CurrentDashDestination);
 		CaughtVictims.Empty();
 		CaughtVictims.Add(Hero);
+		
+		
+		FGameplayCueParameters LandCueParam;
+		LandCueParam.Location = CurrentDashDestination;
+		LandCueParam.Instigator = Hero;
+		
+		Hero->GetAbilitySystemComponent()->AddGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Lash.GroundStrike"),false),LandCueParam);
 
 		FVector OffSetOfSphere = Hero->GetActorForwardVector().GetSafeNormal() * 100 ;
 		ActiveDragSphere = NewObject<USphereComponent>(Hero);
@@ -242,7 +249,7 @@ void UZL_Lash_GroundStrike::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 	}
 	VictimStunHandles.Empty();
 
-
+	GetAbilitySystemComponentFromActorInfo()->RemoveGameplayCue(FGameplayTag::RequestGameplayTag(FName("GameplayCue.Lash.GroundStrike"),false));
 	if (ActiveDragSphere)
 	{
 		ActiveDragSphere->DestroyComponent();

@@ -176,10 +176,8 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 		TargetSlot->SetAbilityLevel1Description(FText::FromString(Ability->AbilityDescription1));
 		TargetSlot->SetAbilityLevel2Description(FText::FromString(Ability->AbilityDescription2));
 		TargetSlot->SetAbilityLevel3Description(FText::FromString(Ability->AbilityDescription3));
-		//TargetSlot->SetMaxCoolDownTime(Ability->GetCoolDownTime());
 		TargetSlot->SetAbilityName(FText::FromString(Ability->AbilityName));
 		TargetSlot->SetbHasCharges(false);
-		//Ability->AbilityChangeIcon.AddUniqueDynamic(this,&UZL_AbilityUIManagerComponent::OnAbilityIconChanged);
 		if (Ability->bIsChargedAbility)
 		{
 			AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetOwner());
@@ -195,6 +193,15 @@ void UZL_AbilityUIManagerComponent::OnAbilityAdded(FGameplayAbilitySpec& Spec)
 					TargetSlot->SetAbilityCharges((int32)CurrentVal);
 					
 					Hero->GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(ChargeAttr).AddUObject(this, &ThisClass::OnChargeAttributeChanged, TargetSlot);
+				}
+				ChargeAttr = GetMaxChargeAttributeForSlot(Ability->Slot);
+				if (ChargeAttr.IsValid())
+				{
+					float CurrentVal = Hero->GetAbilitySystemComponent()->GetNumericAttribute(ChargeAttr);
+					TargetSlot->SetMaxAbilityCharges((int32)CurrentVal);
+					
+					Hero->GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(ChargeAttr).AddUObject(this, &ThisClass::OnMaxChargeAttributeChanged, TargetSlot);
+				
 				}
 			}
 		}
@@ -310,6 +317,12 @@ void UZL_AbilityUIManagerComponent::OnChargeAttributeChanged(const FOnAttributeC
 	SlotVM->SetAbilityCharges((int32)Data.NewValue);
 }
 
+void UZL_AbilityUIManagerComponent::OnMaxChargeAttributeChanged(const FOnAttributeChangeData& Data,
+	UZL_VM_AbilityIcon* SlotVM)
+{
+	SlotVM->SetMaxAbilityCharges((int32)Data.NewValue);
+}
+
 FGameplayAttribute UZL_AbilityUIManagerComponent::GetChargeAttributeForSlot(EGameplayAbilitySlot Slot) const
 {
 	switch (Slot)
@@ -319,6 +332,18 @@ FGameplayAttribute UZL_AbilityUIManagerComponent::GetChargeAttributeForSlot(EGam
 		case EGameplayAbilitySlot::AbilitySlot3: return UBaseCharAttributeSet::GetAbilityCharges_3Attribute();
 		case EGameplayAbilitySlot::UltimateSlot: return UBaseCharAttributeSet::GetAbilityCharges_4Attribute();
 		default: return FGameplayAttribute();
+	}
+}
+
+FGameplayAttribute UZL_AbilityUIManagerComponent::GetMaxChargeAttributeForSlot(EGameplayAbilitySlot Slot) const
+{
+	switch (Slot)
+	{
+	case EGameplayAbilitySlot::AbilitySlot1: return UBaseCharAttributeSet::GetMaxCharges_1Attribute();
+	case EGameplayAbilitySlot::AbilitySlot2: return UBaseCharAttributeSet::GetMaxCharges_2Attribute();
+	case EGameplayAbilitySlot::AbilitySlot3: return UBaseCharAttributeSet::GetMaxCharges_3Attribute();
+	case EGameplayAbilitySlot::UltimateSlot: return UBaseCharAttributeSet::GetMaxCharges_4Attribute();
+	default: return FGameplayAttribute();
 	}
 }
 

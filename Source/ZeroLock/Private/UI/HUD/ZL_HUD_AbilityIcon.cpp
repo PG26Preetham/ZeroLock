@@ -40,9 +40,15 @@ void UZL_HUD_AbilityIcon::SetViewModel(UZL_VM_AbilityIcon* InViewModel)
 					}
 					if (VM_AbilityIcon->GetbHasCharges())
 					{
-						AbilityChargesText->SetVisibility(ESlateVisibility::Visible);
-						FString ChargeCountText = FString::FromInt(VM_AbilityIcon->GetAbilityCharges());
-						AbilityChargesText->SetText(FText::FromString(ChargeCountText));
+						ChargeBar->SetVisibility(ESlateVisibility::Visible);
+						
+						UMaterialInstanceDynamic* DynMAt = ChargeBar->GetDynamicMaterial();
+						
+						if (DynMAt)
+						{
+							DynMAt->SetScalarParameterValue(FName("CurrentStep"),VM_AbilityIcon->GetAbilityCharges());
+							DynMAt->SetScalarParameterValue(FName("NumSteps"),VM_AbilityIcon->GetMaxAbilityCharges());
+						}
 					}
 				}
 				if (TooltipWidgetClass)
@@ -77,4 +83,18 @@ FReply UZL_HUD_AbilityIcon::NativeOnMouseButtonUp(const FGeometry& InGeometry, c
 		VM_AbilityIcon->IncrementAbilityLevel();
 	}
 	return Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
+}
+
+void UZL_HUD_AbilityIcon::AbilityChargeUpdates(int32 chargeChange)
+{
+	if (VM_AbilityIcon)
+	{
+		UMaterialInstanceDynamic* DynMAt = ChargeBar->GetDynamicMaterial();
+						
+		if (DynMAt)
+		{
+			DynMAt->SetScalarParameterValue(FName("CurrentStep"),VM_AbilityIcon->GetAbilityCharges());
+			DynMAt->SetScalarParameterValue(FName("NumSteps"),VM_AbilityIcon->GetMaxAbilityCharges());
+		}
+	}
 }

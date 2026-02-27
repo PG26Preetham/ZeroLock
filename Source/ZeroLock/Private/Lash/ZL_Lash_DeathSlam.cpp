@@ -43,11 +43,18 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Hero->GetCharacterMovement()->BrakingDecelerationFlying =1000;
 	Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
-	UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,LockOnThreshold);
+	UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,3.0f);
 	InitWait->OnFinish.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
 	InitWait->ReadyForActivation();
 	//Hero->GetCharacterMovement()->StopMovementImmediately();
-	/*AZL_GATargetActor_CylinderCharge* TargetActor = GetWorld()->SpawnActor<AZL_GATargetActor_CylinderCharge>(Targetclass, SpawnTransform);
+	if (!Targetclass)
+	{
+		EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,true);
+
+	}
+		
+	AZL_GATargetActor_CylinderCharge* TargetActor = GetWorld()->SpawnActor<AZL_GATargetActor_CylinderCharge>(Targetclass, SpawnTransform);
+	
 
 	if (TargetActor)
 	{
@@ -94,8 +101,8 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	else
 	{
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-	}*/
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	}
+//	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
 void UZL_Lash_DeathSlam::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

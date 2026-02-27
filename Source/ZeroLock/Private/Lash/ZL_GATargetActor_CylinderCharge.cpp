@@ -11,7 +11,6 @@
 AZL_GATargetActor_CylinderCharge::AZL_GATargetActor_CylinderCharge()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	// Removed ShouldProduceTargetDataOnConfirm as it's not in the base class
 }
 
 void AZL_GATargetActor_CylinderCharge::StartTargeting(UGameplayAbility* Ability)
@@ -29,7 +28,6 @@ FVector AZL_GATargetActor_CylinderCharge::GetCylinderCenter() const
 	if (!Avatar) return GetActorLocation();
 
 	FVector Forward = Avatar->GetFollowCamera()->GetForwardVector();
-	// Offset the cylinder center to be half-height in front of the player
 	return Avatar->GetActorLocation() + (Forward * (CylinderHeight * 0.5f));
 }
 
@@ -53,9 +51,9 @@ void AZL_GATargetActor_CylinderCharge::UpdateTargetingData(float DeltaSeconds)
 	Params.AddIgnoredActor(Avatar);
 
 	TArray<FOverlapResult> Overlaps;
-	// CapsuleRadius is cylinder radius, CapsuleHalfHeight is half the cylinder length
+	
 	FCollisionShape Capsule = FCollisionShape::MakeCapsule(CylinderRadius, CylinderHeight * 0.5f);
-	// Rotate capsule to lie horizontal (pointing forward)
+	
 	FQuat Rotation = Avatar->GetFollowCamera()->GetForwardVector().ToOrientationQuat();
 	DrawDebugCapsule(GetWorld(), GetCylinderCenter(), CylinderHeight * 0.5f, CylinderRadius, Rotation, FColor::Green, false, -1, 0, 2.f);
 

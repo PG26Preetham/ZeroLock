@@ -83,8 +83,10 @@ private:
 protected:
 
 	void OnChargeAttributeChanged(const FOnAttributeChangeData& Data, UZL_VM_AbilityIcon* SlotVM);
+	void OnMaxChargeAttributeChanged(const FOnAttributeChangeData& Data, UZL_VM_AbilityIcon* SlotVM);
 
 	FGameplayAttribute GetChargeAttributeForSlot(EGameplayAbilitySlot Slot) const;
+	FGameplayAttribute GetMaxChargeAttributeForSlot(EGameplayAbilitySlot Slot) const;
 	
 	UFUNCTION()
 	void OnAbilityIconChanged(EGameplayAbilitySlot Slot, UTexture2D* newIcon);

@@ -16,7 +16,7 @@ class ZEROLOCK_API AZL_GATargetActor_CylinderCharge : public AGameplayAbilityTar
 public:
 	AZL_GATargetActor_CylinderCharge();
 
-	// Configuration - Can be set from the Ability
+
 	float CylinderRadius = 200.f;
 	float CylinderHeight = 600.f;
 	float RequiredTime = 1.5f;
@@ -26,12 +26,10 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-protected:
-	/** Map to track progress for each actor */
-	UPROPERTY()
+protected:	UPROPERTY()
 	TMap<AActor*, float> TrackedActors;
 
-	/** Map to manage individual reticles for each actor */
+
 	UPROPERTY()
 	TMap<AActor*, AGameplayAbilityWorldReticle*> SpawnedReticles;
 
@@ -39,7 +37,7 @@ protected:
 	void ManageReticles();
 	bool IsValidTarget(AActor* Actor) const;
 
-	/** Helper to get the cylinder center in front of the avatar */
+
 	FVector GetCylinderCenter() const;
 	
 };
