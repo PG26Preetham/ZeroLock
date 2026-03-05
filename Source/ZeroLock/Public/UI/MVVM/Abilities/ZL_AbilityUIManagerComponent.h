@@ -78,6 +78,14 @@ private:
 	TMap<FGameplayTag, UZL_VM_AbilityIcon*> TagToSlotMap;
 	FTimerHandle CooldownTimerHandle;
 
+public:
+	UZL_VM_ProgressionStack* GetAbilityProgressionStack();
+	
+	UZL_VM_AbilityTimerProgressBar* AddProgressBarVM(FName Abilityname);
+	void RemoveProgressBarVM(UZL_VM_AbilityTimerProgressBar* AbilitynameToRemove);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MVVM")
+	UZL_VM_ProgressionStack* VM_ProgressBarStack;
 
 
 protected:

@@ -11,6 +11,7 @@
 #include "Chaos/Deformable/MuscleActivationConstraints.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
+#include "GAS/Tasks/ZL_WaitDelay_Task.h"
 #include "Lash/ZL_GATargetActor_CylinderCharge.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
@@ -43,9 +44,15 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	Hero->GetCharacterMovement()->BrakingDecelerationFlying =1000;
 	Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
-	UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,3.0f);
-	InitWait->OnFinish.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
-	InitWait->ReadyForActivation();
+	//UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,3.0f);
+//	InitWait->OnFinish.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
+	//InitWait->ReadyForActivation();
+	UZL_WaitDelay_Task* InitWaitTask = UZL_WaitDelay_Task::WaitDealyWithProgressBar(this,10);
+	InitWaitTask->OnProgress.AddDynamic(this,&UZL_Lash_DeathSlam::UpdateProgressionTimer);
+	InitWaitTask->OnStarted.AddDynamic(this,&UZL_Lash_DeathSlam::StartProgressionTimer);
+	InitWaitTask->OnEnd.AddDynamic(this,&UZL_Lash_DeathSlam::StopProgressionTimer);
+	InitWaitTask->OnFinished.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
+	InitWaitTask->ReadyForActivation();
 	//Hero->GetCharacterMovement()->StopMovementImmediately();
 	if (!Targetclass)
 	{

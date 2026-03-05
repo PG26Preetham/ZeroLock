@@ -8,6 +8,8 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilitiesContainer.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilityIcon.h"
+#include "UI/MVVM/Abilities/ZL_VM_AbilityTimerProgressBar.h"
+#include "UI/MVVM/Abilities/ZL_VM_ProgressionStack.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 UZL_AbilityUIManagerComponent::UZL_AbilityUIManagerComponent()
@@ -311,8 +313,34 @@ void UZL_AbilityUIManagerComponent::RefreshCooldowns()
 	}
 }
 
+UZL_VM_ProgressionStack* UZL_AbilityUIManagerComponent::GetAbilityProgressionStack()
+{
+	if (!VM_ProgressBarStack)
+	{
+		VM_ProgressBarStack = NewObject<UZL_VM_ProgressionStack>(GetOwner());
+	}
+	return VM_ProgressBarStack;
+}
+
+UZL_VM_AbilityTimerProgressBar* UZL_AbilityUIManagerComponent::AddProgressBarVM(FName Abilityname)
+{
+	UZL_VM_AbilityTimerProgressBar* VM_ProgressBar  = NewObject<UZL_VM_AbilityTimerProgressBar>(GetOwner());
+	if (VM_ProgressBar)
+	{
+		VM_ProgressBar->SetAbilityName(FText::FromName(Abilityname));
+	}
+	GetAbilityProgressionStack()->AddProgressMeter(VM_ProgressBar);
+	
+	return VM_ProgressBar;
+}
+
+void UZL_AbilityUIManagerComponent::RemoveProgressBarVM(UZL_VM_AbilityTimerProgressBar* AbilitynameToRemove)
+{
+	GetAbilityProgressionStack()->RemoveProgressMeter(AbilitynameToRemove);
+}
+
 void UZL_AbilityUIManagerComponent::OnChargeAttributeChanged(const FOnAttributeChangeData& Data,
-	UZL_VM_AbilityIcon* SlotVM)
+                                                             UZL_VM_AbilityIcon* SlotVM)
 {
 	SlotVM->SetAbilityCharges((int32)Data.NewValue);
 }

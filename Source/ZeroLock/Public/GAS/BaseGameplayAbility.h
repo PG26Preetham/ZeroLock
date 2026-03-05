@@ -9,6 +9,8 @@
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
 
+class UZL_VM_AbilityTimerProgressBar;
+class UZL_VM_ProgressionStack;
 class AZeroLockCharacter;
 class UImage;
 class APredictedProjectile;
@@ -126,8 +128,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ZeroLock|Charges", meta = (EditCondition = "bIsChargedAbility"))
 	FGameplayTag RechargeDurationTag;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ZeroLock")
+	class UZL_AbilityUIManagerComponent* MyAbilityManagerComp;
 	
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ZeroLock")
+	UZL_VM_AbilityTimerProgressBar* MyProgressBarVM;
+	
+	UFUNCTION()
+	void StartProgressionTimer();
+	
+	UFUNCTION()
+	UZL_AbilityUIManagerComponent* GetAbilityUiComp();
+	
+	UFUNCTION()
+	void StopProgressionTimer();
+	
+	UFUNCTION()
+	void UpdateProgressionTimer(float progress);
 	
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;

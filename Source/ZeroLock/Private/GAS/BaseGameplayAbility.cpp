@@ -10,6 +10,8 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/ZL_GameplayTags.h"
 #include "GAS/ZL_GE_BaseCooldown.h"
+#include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
+#include "UI/MVVM/Abilities/ZL_VM_AbilityTimerProgressBar.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 UBaseGameplayAbility::UBaseGameplayAbility()
@@ -281,6 +283,40 @@ bool UBaseGameplayAbility::GetConeOverlap(UWorld* World, TArray<FOverlapResult>&
 	}
 
 	return OutResults.Num() > 0;
+}
+
+
+void UBaseGameplayAbility::StartProgressionTimer()
+{
+	MyProgressBarVM= GetAbilityUiComp()->AddProgressBarVM(FName(AbilityName));
+}
+
+UZL_AbilityUIManagerComponent* UBaseGameplayAbility::GetAbilityUiComp()
+{
+	if (!MyAbilityManagerComp)
+	{
+		AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetCurrentActorInfo()->AvatarActor);
+		if (Hero)
+		{
+			MyAbilityManagerComp = Hero->GetAbilityUIManager();
+		}
+	}
+	return MyAbilityManagerComp;
+}
+
+void UBaseGameplayAbility::StopProgressionTimer()
+{
+	GetAbilityUiComp()->RemoveProgressBarVM(MyProgressBarVM);
+	MyProgressBarVM = nullptr;
+}
+
+void UBaseGameplayAbility::UpdateProgressionTimer(float progress)
+{
+
+	if (MyProgressBarVM)
+	{
+		MyProgressBarVM->SetProgressionLevel(progress);
+	}
 }
 
 void UBaseGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
