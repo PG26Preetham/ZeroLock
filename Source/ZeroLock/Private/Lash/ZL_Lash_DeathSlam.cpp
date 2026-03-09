@@ -47,7 +47,7 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	//UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,3.0f);
 //	InitWait->OnFinish.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
 	//InitWait->ReadyForActivation();
-	UZL_WaitDelay_Task* InitWaitTask = UZL_WaitDelay_Task::WaitDealyWithProgressBar(this,10);
+	UZL_WaitDelay_Task* InitWaitTask = UZL_WaitDelay_Task::WaitDealyWithProgressBar(this,2);
 	InitWaitTask->OnProgress.AddDynamic(this,&UZL_Lash_DeathSlam::UpdateProgressionTimer);
 	InitWaitTask->OnStarted.AddDynamic(this,&UZL_Lash_DeathSlam::StartProgressionTimer);
 	InitWaitTask->OnEnd.AddDynamic(this,&UZL_Lash_DeathSlam::StopProgressionTimer);
@@ -115,6 +115,7 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 void UZL_Lash_DeathSlam::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	for (FActiveGameplayEffectHandle& mHandle : CurrentActiveEffectHandles)
 	{
 		if (mHandle.IsValid())
@@ -123,10 +124,19 @@ void UZL_Lash_DeathSlam::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 			if (TargetASC)
 			{
 				TargetASC->RemoveActiveGameplayEffect(mHandle);
+				if (Hero)
+				{
+					
+					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(TargetASC,SlamDamage.GetValueAtLevel(GetAbilityLevel()));
+					if (AfterSlamEffect)
+					{
+						Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(TargetASC,AfterSlamEffect,GetAbilityLevel());
+					}
+				}
 			}
 		}
 	}
-	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+	
 	if (Hero)
 	{
 		Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
@@ -149,11 +159,6 @@ void UZL_Lash_DeathSlam::TargetSlamFinish()
 			
 		if (AZeroLockCharacter* Victim = Cast<AZeroLockCharacter>(Target.Get()))
 		{
-				Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(Victim->GetMyAbilitySystemComp(),SlamDamage.GetValueAtLevel(myLevel));
-				if (AfterSlamEffect)
-				{
-					Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Victim->GetMyAbilitySystemComp(),AfterSlamEffect,myLevel);
-				}
 		}
 			
 	}
