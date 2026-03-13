@@ -18,9 +18,11 @@ UBaseGameplayAbility::UBaseGameplayAbility()
 {
 	ActivationBlockedTags.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities"),false));
 	BlockAbilitiesWithTag.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities"),false));
-	AbilityTags.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLLock.Abilities"),false));
+	FGameplayTagContainer TagContainer;
+	TagContainer.AddTag(FGameplayTag::RequestGameplayTag(FName("ZeroLLock.Abilities"),false));
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	CooldownGameplayEffectClass = UZL_GE_BaseCooldown::StaticClass();
+	SetAssetTags(TagContainer);
 }
 
 void UBaseGameplayAbility::SetSlot(EGameplayAbilitySlot slot)
@@ -151,10 +153,83 @@ const FGameplayTagContainer* UBaseGameplayAbility::GetCooldownTags() const
 	return MutableTags;
 }
 
-bool UBaseGameplayAbility::ConeTraceMulti(const UObject* WorldContextObject, const FVector Start,
+bool UBaseGameplayAbility::ReverseConeTraceMulti(const UObject* WorldContextObject, const FVector Start,
 	const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex,
-	const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits,TArray<AZeroLockCharacter*>& OutVillans,
-	bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor, float DrawTime)
+	const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits,
+	TArray<AZeroLockCharacter*>& OutVillans, bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor,
+	float DrawTime)
+{
+	OutHits.Reset();
+    OutVillans.Reset();
+
+    UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
+    if (!World) return false;
+
+    ECollisionChannel CollisionChannel = UEngineTypes::ConvertToCollisionChannel(TraceChannel);
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(ReverseConeTraceMulti), bTraceComplex);
+    Params.AddIgnoredActors(ActorsToIgnore);
+
+    const FVector ForwardDir = Direction.Vector();
+    const FVector End = Start + (ForwardDir * ConeHeight);
+    
+    const float ConeHalfAngleRad = FMath::DegreesToRadians(ConeHalfAngle);
+    const float MaxRadius = ConeHeight * FMath::Tan(ConeHalfAngleRad);
+
+    TArray<FHitResult> TempHitResults;
+    FCollisionShape SphereSweep = FCollisionShape::MakeSphere(MaxRadius);
+    World->SweepMultiByChannel(TempHitResults, Start, End, FQuat::Identity, CollisionChannel, SphereSweep, Params);
+
+    for (FHitResult& Hit : TempHitResults)
+    {
+        AActor* HitActor = Hit.GetActor();
+        if (!HitActor) continue;
+
+        FVector HitLocation = Hit.ImpactPoint;
+        if (HitLocation.IsZero()) HitLocation = HitActor->GetActorLocation();
+
+        FVector ToHit = HitLocation - Start;
+        
+        float DistAlongAxis = FVector::DotProduct(ToHit, ForwardDir);
+
+        if (DistAlongAxis < 0.f || DistAlongAxis > ConeHeight) continue;
+
+        float AllowedRadiusAtDist = MaxRadius * (1.0f - (DistAlongAxis / ConeHeight));
+
+
+        FVector PointOnAxis = Start + (ForwardDir * DistAlongAxis);
+        float ActualDistFromAxis = FVector::Dist(HitLocation, PointOnAxis);
+
+        if (ActualDistFromAxis <= AllowedRadiusAtDist)
+        {
+            OutHits.Add(Hit);
+            if (AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(HitActor))
+            {
+                OutVillans.AddUnique(Villan);
+            }
+        }
+    }
+
+#if ENABLE_DRAW_DEBUG
+    if (DrawDebugType != EDrawDebugTrace::None)
+    {
+
+        FColor Color = TraceColor.ToFColor(true);
+        DrawDebugCone(World, End, -ForwardDir, ConeHeight, ConeHalfAngleRad, ConeHalfAngleRad, 24, Color, (DrawDebugType == EDrawDebugTrace::Persistent), DrawTime);
+        
+        for (const FHitResult& Hit : OutHits)
+        {
+            DrawDebugPoint(World, Hit.ImpactPoint, 10.f, TraceHitColor.ToFColor(true), (DrawDebugType == EDrawDebugTrace::Persistent), DrawTime);
+        }
+    }
+#endif
+
+    return (OutVillans.Num() > 0);
+}
+
+bool UBaseGameplayAbility::ConeTraceMulti(const UObject* WorldContextObject, const FVector Start,
+                                          const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex,
+                                          const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits,TArray<AZeroLockCharacter*>& OutVillans,
+                                          bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor, float DrawTime)
 {
 	OutHits.Reset();
 	OutVillans.Reset();

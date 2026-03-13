@@ -142,14 +142,24 @@ public:
 	AZeroLockCharacter(const FObjectInitializer& ObjectInitializer);
 
 
-	
+	FVector2D GetMoveVector()const { return MovementVector;};
 	
 
 protected:
 
+	
+
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Input")
+	FVector2D MovementVector;
+
+
+
+	UFUNCTION(Server, Reliable)
+	void ServerSetMovementVector(FVector2D NewVector);
+	
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 

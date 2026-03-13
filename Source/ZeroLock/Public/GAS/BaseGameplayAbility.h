@@ -105,7 +105,7 @@ public:
 	FGameplayTagContainer TempCooldownTags;
 
 	
-	
+	static bool ReverseConeTraceMulti(const UObject* WorldContextObject, const FVector Start,const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex,const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits, TArray<AZeroLockCharacter*>& OutVillans,bool bIgnoreSelf, FLinearColor TraceColor = FLinearColor::Red, FLinearColor TraceHitColor = FLinearColor::Green, float DrawTime= 5.0f );
 	static bool ConeTraceMulti(const UObject* WorldContextObject, const FVector Start, const FRotator Direction, float ConeHeight, float ConeHalfAngle, ETraceTypeQuery TraceChannel, bool bTraceComplex, const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits, TArray<AZeroLockCharacter*>& OutVillans, bool bIgnoreSelf, FLinearColor TraceColor = FLinearColor::Red, FLinearColor TraceHitColor = FLinearColor::Green, float DrawTime = 5.0f );
 
 	bool GetConeOverlap(UWorld* World, TArray<FOverlapResult>& OutResults, const FVector& Origin, const FVector& Direction, float Radius, float AngleDegrees, ECollisionChannel Channel);

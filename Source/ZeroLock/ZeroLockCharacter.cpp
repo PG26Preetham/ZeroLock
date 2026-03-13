@@ -488,11 +488,12 @@ void AZeroLockCharacter::PrimaryFireTickFunction()
 
 void AZeroLockCharacter::SecondryFirePressed()
 {
-	GetAbilitySystemComponent()->TryActivateAbilityByClass(SecondryFireAbility);
+	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Secondry_Attack));
 }
 
 void AZeroLockCharacter::SecondryFireReleased()
 {
+	GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(EGASAbilityInputID::Secondry_Attack));
 }
 
 void AZeroLockCharacter::Ability_1Pressed()
@@ -862,6 +863,7 @@ void AZeroLockCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AZeroLockCharacter,bIsDead);
 	DOREPLIFETIME(AZeroLockCharacter,StartLocation);
+	DOREPLIFETIME(AZeroLockCharacter, MovementVector);
 	//DOREPLIFETIME(AZeroLockCharacter,VM_Attributes);
 }
 
@@ -1001,9 +1003,12 @@ void AZeroLockCharacter::Move(const FInputActionValue& Value)
 	{
 		return;
 	}
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
-
+	
+	MovementVector = Value.Get<FVector2D>();
+	if (IsLocallyControlled())
+	{
+		ServerSetMovementVector(MovementVector);
+	}
 	if (Controller != nullptr)
 	{
 		// find out which way is forward
@@ -1020,6 +1025,11 @@ void AZeroLockCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
 	}
+}
+
+void AZeroLockCharacter::ServerSetMovementVector_Implementation(FVector2D NewVector)
+{
+	MovementVector = NewVector;
 }
 
 void AZeroLockCharacter::Look(const FInputActionValue& Value)
