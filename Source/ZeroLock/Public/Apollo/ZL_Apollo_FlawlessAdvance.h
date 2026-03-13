@@ -57,8 +57,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Movement")
 	float ChargeVelocity = 400.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Movement")
-	float LungeStrength = 2000.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Damage")
+	FScalableFloat BaseDamageValue =1;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Timing")
 	float MaxLungeDuration = 1.5f;
@@ -74,7 +74,7 @@ public:
 	
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Movement")
-	float LungeBurstVelocity= 2500.f;
+	FScalableFloat LungeBurstVelocity= 2500.f;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Movement")
 	TObjectPtr<UAnimMontage> ChargeMontage;

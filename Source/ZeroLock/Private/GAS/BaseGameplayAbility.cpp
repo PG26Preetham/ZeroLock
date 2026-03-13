@@ -158,8 +158,7 @@ bool UBaseGameplayAbility::ReverseConeTraceMulti(const UObject* WorldContextObje
 	const TArray<AActor*>& ActorsToIgnore, EDrawDebugTrace::Type DrawDebugType, TArray<FHitResult>& OutHits,
 	TArray<AZeroLockCharacter*>& OutVillans, bool bIgnoreSelf, FLinearColor TraceColor, FLinearColor TraceHitColor,
 	float DrawTime)
-{
-	OutHits.Reset();
+{OutHits.Reset();
     OutVillans.Reset();
 
     UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
@@ -170,38 +169,46 @@ bool UBaseGameplayAbility::ReverseConeTraceMulti(const UObject* WorldContextObje
     Params.AddIgnoredActors(ActorsToIgnore);
 
     const FVector ForwardDir = Direction.Vector();
-    const FVector End = Start + (ForwardDir * ConeHeight);
-    
     const float ConeHalfAngleRad = FMath::DegreesToRadians(ConeHalfAngle);
     const float MaxRadius = ConeHeight * FMath::Tan(ConeHalfAngleRad);
 
-    TArray<FHitResult> TempHitResults;
-    FCollisionShape SphereSweep = FCollisionShape::MakeSphere(MaxRadius);
-    World->SweepMultiByChannel(TempHitResults, Start, End, FQuat::Identity, CollisionChannel, SphereSweep, Params);
+    // 1. Use OverlapMulti instead of SweepMulti to ignore occlusion (blocks)
+    // We use a sphere that encompasses the entire cone area.
+    TArray<FOverlapResult> Overlaps;
+    FCollisionShape BoundingSphere = FCollisionShape::MakeSphere(ConeHeight); 
+    
+    // We center the sphere at the start of the cone
+    World->OverlapMultiByChannel(Overlaps, Start, FQuat::Identity, CollisionChannel, BoundingSphere, Params);
 
-    for (FHitResult& Hit : TempHitResults)
+    for (const FOverlapResult& Overlap : Overlaps)
     {
-        AActor* HitActor = Hit.GetActor();
+        AActor* HitActor = Overlap.GetActor();
         if (!HitActor) continue;
 
-        FVector HitLocation = Hit.ImpactPoint;
-        if (HitLocation.IsZero()) HitLocation = HitActor->GetActorLocation();
-
+        // Since Overlap doesn't give an ImpactPoint, we use the Actor's location
+        FVector HitLocation = HitActor->GetActorLocation();
         FVector ToHit = HitLocation - Start;
         
+        // Project the vector to the actor onto the cone's center axis
         float DistAlongAxis = FVector::DotProduct(ToHit, ForwardDir);
 
+        // Filter: Is it within the height of the cone?
         if (DistAlongAxis < 0.f || DistAlongAxis > ConeHeight) continue;
 
+        // Calculate the cone radius at this specific distance (Reverse Cone Logic)
+        // Wide at Start (Dist=0), Tip at End (Dist=ConeHeight)
         float AllowedRadiusAtDist = MaxRadius * (1.0f - (DistAlongAxis / ConeHeight));
 
-
+        // Find how far the actor is from the center axis
         FVector PointOnAxis = Start + (ForwardDir * DistAlongAxis);
         float ActualDistFromAxis = FVector::Dist(HitLocation, PointOnAxis);
 
         if (ActualDistFromAxis <= AllowedRadiusAtDist)
         {
+            // Create a dummy FHitResult since the function signature requires it
+            FHitResult Hit(HitActor, Overlap.GetComponent(), HitLocation, -ForwardDir);
             OutHits.Add(Hit);
+
             if (AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(HitActor))
             {
                 OutVillans.AddUnique(Villan);
@@ -212,8 +219,9 @@ bool UBaseGameplayAbility::ReverseConeTraceMulti(const UObject* WorldContextObje
 #if ENABLE_DRAW_DEBUG
     if (DrawDebugType != EDrawDebugTrace::None)
     {
-
         FColor Color = TraceColor.ToFColor(true);
+        const FVector End = Start + (ForwardDir * ConeHeight);
+        // Draw the reverse cone (pointing back towards Start)
         DrawDebugCone(World, End, -ForwardDir, ConeHeight, ConeHalfAngleRad, ConeHalfAngleRad, 24, Color, (DrawDebugType == EDrawDebugTrace::Persistent), DrawTime);
         
         for (const FHitResult& Hit : OutHits)

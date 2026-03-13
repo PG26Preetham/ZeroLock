@@ -60,6 +60,7 @@ void UBaseCharAbilitySystemComponent::ApplyWeaponDamage(UAbilitySystemComponent*
 {
 	if (!TargetASC || !GE_WeaponClass)return;
 	if (!GetOwner()->HasAuthority()) return;
+	if (IsUntouchable(TargetASC)) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -89,6 +90,7 @@ void UBaseCharAbilitySystemComponent::ApplySpiritDamage(UAbilitySystemComponent*
 {
 	if (!TargetASC || !GE_SpiritClass)return;
 	if (!GetOwner()->HasAuthority()) return;
+	if (IsUntouchable(TargetASC)) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -112,6 +114,7 @@ void UBaseCharAbilitySystemComponent::ApplyMeleeDamage(UAbilitySystemComponent* 
 {
 	if (!TargetASC || !GE_MeleeClass)return;
 	if (!GetOwner()->HasAuthority()) return;
+	if (IsUntouchable(TargetASC)) return;
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
 
@@ -158,6 +161,8 @@ void UBaseCharAbilitySystemComponent::ApplyGameplayEffect(UAbilitySystemComponen
 {
 
 	if (!TargetASC || !EffectClass)return;
+	
+	if (IsUntouchable(TargetASC)) return;
 
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
@@ -176,6 +181,8 @@ void UBaseCharAbilitySystemComponent::ApplyGameplayEffectWithStacks(UAbilitySyst
 {
 	
 	if (!TargetASC || !EffectClass)return;
+	
+	if (IsUntouchable(TargetASC)) return;
 
 	FGameplayEffectContextHandle Context = MakeEffectContext();
 	Context.AddSourceObject(GetAvatarActor());
@@ -188,6 +195,16 @@ void UBaseCharAbilitySystemComponent::ApplyGameplayEffectWithStacks(UAbilitySyst
 	SpecHandle.Data.Get()->SetStackCount(StackNum);
 	ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(),TargetASC);
 
+}
+
+bool UBaseCharAbilitySystemComponent::IsUntouchable(UAbilitySystemComponent* TargetToCheck)
+{
+	 if ( TargetToCheck->HasMatchingGameplayTag(FGameplayTag::RequestGameplayTag("Zerolock.Untouchable",false)))
+	 {
+	 	SendGameplayEventToTarget(FGameplayTag::RequestGameplayTag("Event.UntouchableTrigger",false),TargetToCheck);
+	 	return true;
+	 }
+	return false;
 }
 
 

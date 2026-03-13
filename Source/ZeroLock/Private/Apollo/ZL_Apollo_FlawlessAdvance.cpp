@@ -132,13 +132,13 @@ void UZL_Apollo_FlawlessAdvance::ExecuteLunge(bool bIsPerfect)
 	if (!Character) return;
 	
 	FVector LookDir = Character->GetFollowCamera()->GetForwardVector();
-	float FinalVelocity = bIsPerfect ? LungeBurstVelocity * 1.5f : LungeBurstVelocity;
-	float CalculatedDistance = (FinalVelocity *0.2f) + ( 200);
+	float FinalVelocity = bIsPerfect ? LungeBurstVelocity.GetValueAtLevel(GetAbilityLevel()) * 1.5f : LungeBurstVelocity.GetValueAtLevel(GetAbilityLevel());
+	float CalculatedDistance = (FinalVelocity *0.2f) + ( 500);
 
 	TArray<FHitResult> Hits;
 	TArray<AZeroLockCharacter*> Targets;
 	TArray<AActor*> Ignored;
-	Ignored.Add(GetAvatarActorFromActorInfo());
+	Ignored.Add(Character);
 	
 	if (ReverseConeTraceMulti(GetWorld(),GetAvatarActorFromActorInfo()->GetActorLocation(),LookDir.Rotation(),CalculatedDistance, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Pawn),false,Ignored,EDrawDebugTrace::ForDuration,Hits,Targets,true,FLinearColor::Green,FLinearColor::Red,1.5f))
 	{
@@ -146,13 +146,12 @@ void UZL_Apollo_FlawlessAdvance::ExecuteLunge(bool bIsPerfect)
 		{
 			for (AZeroLockCharacter* villan : Targets)
 			{
-				Character->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),10);
+				Character->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),BaseDamageValue.GetValueAtLevel(GetAbilityLevel()));
 			}
 		}
 	}
 	
 	UAbilityTask_ApplyRootMotionConstantForce* ActiveRootMotionTask = UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this, NAME_None, LookDir, FinalVelocity, ChargeTime, false, nullptr,ERootMotionFinishVelocityMode::SetVelocity, FVector::ZeroVector, 0.f, false);
-    
 	ActiveRootMotionTask->OnFinish.AddDynamic(this, &UZL_Apollo_FlawlessAdvance::OnLungeFinished);
 	ActiveRootMotionTask->ReadyForActivation();
 }

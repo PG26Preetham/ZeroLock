@@ -26,11 +26,16 @@ void UZL_Apollo_DisengagingSigil::OnAnimationPointTrigger()
 	
 	FCollisionShape Capsule = FCollisionShape::MakeCapsule(50.f, 100.f);
     
-	DrawDebugCapsule(GetWorld(),End,50,100,Rotation,FColor::Red,false,10,1);
+	DrawDebugCapsule(GetWorld(),End,50,EffectRadius,Rotation,FColor::Red,false,10,1);
 	TArray<FHitResult> HitResults;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(Hero);
-
+	if (KnockBackMontage)
+	{
+		Hero->GetAbilitySystemComponent()->PlayMontage(this,GetCurrentActivationInfo(),KnockBackMontage,1);
+	}
+	
+	
 	bool bHit = GetWorld()->SweepMultiByChannel(HitResults,Start,End,Rotation,ECC_Pawn,Capsule,Params);
 
 	if (HitResults.Num()>0)
@@ -41,14 +46,14 @@ void UZL_Apollo_DisengagingSigil::OnAnimationPointTrigger()
 			{
 				if(!Hero->IsOnSameTeam(HitHero))
 				{
-					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(HitHero->GetMyAbilitySystemComp(),10);
+					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(HitHero->GetMyAbilitySystemComp(),BaseDamageValue.GetValueAtLevel(GetAbilityLevel()));
 				}
 			}
 		}
 	}
 	FVector ForwardCM = Hero->GetFollowCamera()->GetForwardVector().GetSafeNormal();
 	ForwardCM.Z = -1;
-	FVector LaunchVelocity  = ForwardCM *-1000;
+	FVector LaunchVelocity  = ForwardCM *(-1 * KnockbackStrength);
 	Hero->LaunchCharacter(LaunchVelocity,true,true);
 	
 	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);

@@ -19,4 +19,14 @@ public:
 	
 	virtual void OnAnimationPointTrigger() override;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float KnockbackStrength=1000;
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	FScalableFloat BaseDamageValue =1;
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float EffectRadius =100.0f;
+	
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Montage")
+	TObjectPtr<UAnimMontage> KnockBackMontage;
 };
