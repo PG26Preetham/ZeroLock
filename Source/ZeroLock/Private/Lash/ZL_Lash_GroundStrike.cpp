@@ -90,7 +90,7 @@ void UZL_Lash_GroundStrike::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		ActiveDragSphere = NewObject<USphereComponent>(Hero);
 		ActiveDragSphere->SetSphereRadius(250.f);
 		ActiveDragSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-		ActiveDragSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+		ActiveDragSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
 		ActiveDragSphere->SetupAttachment(Hero->GetRootComponent());
 		ActiveDragSphere->RegisterComponent();
 		ActiveDragSphere->SetVisibility(true);

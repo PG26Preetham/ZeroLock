@@ -29,7 +29,7 @@ void UZL_Drifter_BloodScent::ActivateAbility(const FGameplayAbilitySpecHandle Ha
     
 	// Set collision to only overlap Pawns
 	DetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-	DetectionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	DetectionSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
     
 	DetectionSphere->RegisterComponent();
 

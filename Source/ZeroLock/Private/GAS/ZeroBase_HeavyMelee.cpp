@@ -93,7 +93,7 @@ void UZeroBase_HeavyMelee::MeleeDamageExec(TSubclassOf<class UGameplayEffect> Me
 	FQuat RotationQuat = Hero->GetActorRotation().Quaternion();
 	TArray<AZeroLockCharacter*> HitActors;
 	
-	if(GetWorld()->SweepMultiByObjectType(Hits,TraceLocation,TraceEndLocation,RotationQuat,ECC_Pawn,Cap,Hero->GetIgnoreCharacterParams()))
+	if(GetWorld()->SweepMultiByObjectType(Hits,TraceLocation,TraceEndLocation,RotationQuat,ECC_GameTraceChannel1,Cap,Hero->GetIgnoreCharacterParams()))
 	{
 		ZLOG("Found Hits");
 		FGameplayTag ParryTag = FGameplayTag::RequestGameplayTag(FName("ZeroLock.Melee.Parry"),false);

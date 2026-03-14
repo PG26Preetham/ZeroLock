@@ -72,7 +72,7 @@ void UZL_Task_ApplyRootMotion::CheckForPlayerHit()
 		FVector TraceEndLocation =TraceLocation ;
 		FHitResult Hits;
 		FQuat RotationQuat = MyCharacter->GetActorRotation().Quaternion();
-		if(GetWorld()->SweepSingleByObjectType(Hits,TraceLocation,TraceEndLocation,RotationQuat,ECC_Pawn,Cap,MyCharacter->GetIgnoreCharacterParams()))
+		if(GetWorld()->SweepSingleByObjectType(Hits,TraceLocation,TraceEndLocation,RotationQuat,ECC_GameTraceChannel1,Cap,MyCharacter->GetIgnoreCharacterParams()))
 		{
 			
 			Avatar->ForceNetUpdate();

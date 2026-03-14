@@ -34,7 +34,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Targeting|Cylinder")
 	float CylinderLength = 600.0f;
 
-	/** Optional: Effect to apply to all successfully locked targets upon confirmation */
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	TSubclassOf<UGameplayEffect> LockOnEffect;
 	TArray<TWeakObjectPtr<AActor>> OutActors;
