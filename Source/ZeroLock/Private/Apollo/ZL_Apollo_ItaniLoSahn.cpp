@@ -8,6 +8,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
@@ -47,6 +48,17 @@ void UZL_Apollo_ItaniLoSahn::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 void UZL_Apollo_ItaniLoSahn::ChargedDone()
 {
+    AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+    if (!Hero) return;
+    DashDetectionSphere = NewObject<USphereComponent>(Hero, TEXT("DashDetectionSphere"));
+    DashDetectionSphere->RegisterComponent();
+    DashDetectionSphere->SetSphereRadius(DamageRadius);
+    DashDetectionSphere->AttachToComponent(Hero->GetMesh(), FAttachmentTransformRules::KeepRelativeTransform);
+    DashDetectionSphere->SetHiddenInGame(false);
+    DashDetectionSphere->SetVisibility(true);
+    DashDetectionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    DashDetectionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+    DashDetectionSphere->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Overlap);
     UAbilityTask_WaitInputRelease* InputReleaseTask = UAbilityTask_WaitInputRelease::WaitInputRelease(this, true);
     InputReleaseTask->OnRelease.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::ReleaseInputRelease);
     InputReleaseTask->ReadyForActivation();
@@ -75,16 +87,16 @@ void UZL_Apollo_ItaniLoSahn::ReleaseInputRelease(float TimeHeld)
     FHitResult DashHit;
     UKismetSystemLibrary::CapsuleTraceSingle(this, TraceStart, TraceEnd, 0.1, 0.1, UEngineTypes::ConvertToTraceType(ECC_Camera), false, IgnoreList, EDrawDebugTrace::ForDuration, DashHit, true);
 
-    FVector FinalTarget = DashHit.bBlockingHit ?DashHit.Location :TraceEnd;
+    FVector FinalTarget = TraceEnd;
 
     CurrentTargetData.Clear();
-    TSet<AActor*> UniqueHitActors; 
+    
     TArray<FHitResult> OutHits;
 
     FCollisionShape SweepSphere = FCollisionShape::MakeSphere(DamageRadius); 
     
     bool bHitSomething = GetWorld()->SweepMultiByChannel(OutHits, TraceStart, FinalTarget, FQuat::Identity, ECC_Pawn, SweepSphere);
-
+/*
     if (bHitSomething)
     {
         for (const FHitResult& Hit : OutHits)
@@ -105,19 +117,31 @@ void UZL_Apollo_ItaniLoSahn::ReleaseInputRelease(float TimeHeld)
             }
         }
     }
+    */
+  
     
+
+    UniqueHitActors.Empty();
+    DashDetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnDashSphereOverlap);
+    TArray<AActor*> InitialOverlaps;
+    DashDetectionSphere->GetOverlappingActors(InitialOverlaps, AZeroLockCharacter::StaticClass());
+
+    for (AActor* OverlappedActor : InitialOverlaps)
+    {
+        OnDashSphereOverlap(DashDetectionSphere, OverlappedActor, nullptr, 0, false, FHitResult());
+    }
     if (IsLocallyControlled())
     {
         GetAbilitySystemComponentFromActorInfo()->CallServerSetReplicatedTargetData(CurrentSpecHandle, CurrentActivationInfo.GetActivationPredictionKey(), CurrentTargetData, FGameplayTag(), FPredictionKey());
     }
 
  
-    MoveToTask = UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this, "MoveToTargetTask", FinalTarget, 0.1f, false, MOVE_None, false, nullptr, ERootMotionFinishVelocityMode::SetVelocity, FVector::ZeroVector, 0);
+    MoveToTask = UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this, "MoveToTargetTask", FinalTarget, 0.2f, false, MOVE_None, false, nullptr, ERootMotionFinishVelocityMode::SetVelocity, FVector::ZeroVector, 0);
     
     MoveToTask->OnTimedOutAndDestinationReached.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnMoveToDone);
     MoveToTask->ReadyForActivation();
     
-    UAbilityTask_WaitDelay* TempWaitTask = UAbilityTask_WaitDelay::WaitDelay(this,0.1);
+    UAbilityTask_WaitDelay* TempWaitTask = UAbilityTask_WaitDelay::WaitDelay(this,0.3);
     TempWaitTask->OnFinish.AddDynamic(this,&UZL_Apollo_ItaniLoSahn::OnMoveToDone);
     TempWaitTask->ReadyForActivation();
     
@@ -187,6 +211,12 @@ void UZL_Apollo_ItaniLoSahn::EndAbility(const FGameplayAbilitySpecHandle Handle,
         Hero->GetCapsuleComponent()->SetCapsuleHalfHeight(HeightSave);
         Hero->GetCapsuleComponent()->SetCapsuleRadius(RadiusSave);
     }
+    if (DashDetectionSphere)
+    {
+        DashDetectionSphere->OnComponentBeginOverlap.RemoveDynamic(this, &UZL_Apollo_ItaniLoSahn::OnDashSphereOverlap);
+        DashDetectionSphere->DestroyComponent();
+        DashDetectionSphere = nullptr;
+    }
 
     if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
     {
@@ -195,4 +225,32 @@ void UZL_Apollo_ItaniLoSahn::EndAbility(const FGameplayAbilitySpecHandle Handle,
 
     CurrentTargetData.Clear();
     Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+}
+
+void UZL_Apollo_ItaniLoSahn::OnDashSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+    AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
+    AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(OtherActor);
+
+    if (Hero && Villan && !UniqueHitActors.Contains(Villan))
+    {
+        if (!Hero->IsOnSameTeam(Villan))
+        {
+            UniqueHitActors.Add(Villan);
+
+            // Create Target Data for the final execution
+            FGameplayAbilityTargetData_SingleTargetHit* NewData = new FGameplayAbilityTargetData_SingleTargetHit();
+
+            NewData->HitResult.HitObjectHandle = FActorInstanceHandle(Villan);
+            CurrentTargetData.Add(NewData);
+
+            Villan->GetAbilitySystemComponent()->AddGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Apollo.ItaniLoSahn"));
+            Villan->CustomTimeDilation = 0.05f;
+        }
+    }
+    if (IsLocallyControlled())
+    {
+        GetAbilitySystemComponentFromActorInfo()->CallServerSetReplicatedTargetData(CurrentSpecHandle, CurrentActivationInfo.GetActivationPredictionKey(), CurrentTargetData, FGameplayTag(), FPredictionKey());
+    }
 }
