@@ -20,11 +20,11 @@ void UZL_Apollo_DisengagingSigil::OnAnimationPointTrigger()
 	}
 	
 	FVector Start = Hero->GetActorLocation();
-	FVector End = Start + (Hero->GetActorForwardVector() * 200.0f);
+	FVector End = Start + ( Hero->GetFollowCamera()->GetForwardVector() * 200.0f);
 	FQuat Rotation = Hero->GetActorQuat();
     
 	
-	FCollisionShape Capsule = FCollisionShape::MakeCapsule(50.f, 100.f);
+	FCollisionShape Capsule = FCollisionShape::MakeCapsule(EffectRadius, 100.f);
     
 	DrawDebugCapsule(GetWorld(),End,50,EffectRadius,Rotation,FColor::Red,false,10,1);
 	TArray<FHitResult> HitResults;
@@ -55,6 +55,7 @@ void UZL_Apollo_DisengagingSigil::OnAnimationPointTrigger()
 	ForwardCM.Z = -1;
 	FVector LaunchVelocity  = ForwardCM *(-1 * KnockbackStrength);
 	Hero->LaunchCharacter(LaunchVelocity,true,true);
+	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
 	
 	EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,false);
 

@@ -134,6 +134,8 @@ void UZL_Apollo_Riposte::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 void UZL_Apollo_Riposte::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
+	
 	if (AnimMontageTask && AnimMontageTask->IsActive())
 	{
 		GetAbilitySystemComponentFromActorInfo()->CurrentMontageStop(-1);

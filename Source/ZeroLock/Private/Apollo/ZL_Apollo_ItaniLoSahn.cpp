@@ -66,13 +66,15 @@ void UZL_Apollo_ItaniLoSahn::ChargedDone()
 
 void UZL_Apollo_ItaniLoSahn::ReleaseInputRelease(float TimeHeld)
 {
+    CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
+	
    AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     if (!Hero) return;
 
     Hero->GetCapsuleComponent()->SetCapsuleHalfHeight(0.1);
     Hero->GetCapsuleComponent()->SetCapsuleRadius(0.1);
     Hero->GetCameraBoom()->bEnableCameraLag = true;
-    Hero->GetCameraBoom()->CameraLagSpeed = 1.0f;
+    Hero->GetCameraBoom()->CameraLagSpeed = 0.01f;
 
     FVector CameraLoc; FRotator CameraRot;
     Hero->GetActorEyesViewPoint(CameraLoc, CameraRot);
@@ -95,7 +97,7 @@ void UZL_Apollo_ItaniLoSahn::ReleaseInputRelease(float TimeHeld)
 
     FCollisionShape SweepSphere = FCollisionShape::MakeSphere(DamageRadius); 
     
-    bool bHitSomething = GetWorld()->SweepMultiByChannel(OutHits, TraceStart, FinalTarget, FQuat::Identity, ECC_Pawn, SweepSphere);
+   // bool bHitSomething = GetWorld()->SweepMultiByChannel(OutHits, TraceStart, FinalTarget, FQuat::Identity, ECC_Pawn, SweepSphere);
 /*
     if (bHitSomething)
     {
@@ -157,18 +159,23 @@ void UZL_Apollo_ItaniLoSahn::OnMoveToDone()
     UAbilityTask_WaitDelay* WaitDelayTask = UAbilityTask_WaitDelay::WaitDelay(this, 1.0f);
     WaitDelayTask->OnFinish.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnExecutecallback);
     WaitDelayTask->ReadyForActivation();
+    UAbilityTask_WaitDelay* WaitDelayTaskZ = UAbilityTask_WaitDelay::WaitDelay(this, 2.0f);
+    WaitDelayTaskZ->OnFinish.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnTimeFinish);
+    WaitDelayTaskZ->ReadyForActivation();
 }
 
 void UZL_Apollo_ItaniLoSahn::OnTimeFinish()
 {
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+
 }
 
 void UZL_Apollo_ItaniLoSahn::OnExecutecallback()
 {
-    if (!HasAuthority(&CurrentActivationInfo)) return;
-
     AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     if (!Hero) return;
+    Hero->GetCameraBoom()->CameraLagSpeed = 10.0f;
+    if (!HasAuthority(&CurrentActivationInfo)) return;
     
     for (int32 i = 0; i < CurrentTargetData.Num(); i++)
     {
@@ -197,11 +204,12 @@ void UZL_Apollo_ItaniLoSahn::OnExecutecallback()
         }
     }
 
-    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UZL_Apollo_ItaniLoSahn::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
+    CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
+	
     AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     if (Hero)
     {
