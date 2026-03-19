@@ -60,6 +60,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Damage")
 	FScalableFloat BaseDamageValue =1;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Damage")
+	FScalableFloat PerfectDamage =1;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Damage")
+	FScalableFloat HealValue =1;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Timing")
 	float MaxLungeDuration = 1.5f;
 	

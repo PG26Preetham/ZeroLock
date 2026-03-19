@@ -38,6 +38,9 @@ public:
 	TSubclassOf<UGameplayEffect> ParryEffect;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	TSubclassOf<UGameplayEffect> ResistanceEffect;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	TSubclassOf<UGameplayEffect> StunEffect;
 	
 	class UZL_WaitDelay_Task* WaitTimeTask ;

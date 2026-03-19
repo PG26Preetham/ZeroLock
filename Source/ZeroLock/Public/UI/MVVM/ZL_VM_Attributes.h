@@ -6,6 +6,7 @@
 #include "MVVMViewModelBase.h"
 #include "ZL_VM_Attributes.generated.h"
 
+class UZL_VM_ChargePercent;
 /**
  * 
  */
@@ -50,6 +51,9 @@ public:
 
 	UFUNCTION(BlueprintPure,FieldNotify)
 	const FString GetFinalAmmoText()const;
+	
+	UZL_VM_ChargePercent* GetVM_ChargePhase()const {return VM_ChargePhase;}
+	void SetVM_ChargePhase(UZL_VM_ChargePercent* inVM);
 
 
 private:
@@ -62,5 +66,7 @@ private:
 	UPROPERTY(BlueprintReadOnly,FieldNotify,Getter,Setter,meta=(AllowPrivateAccess=true))
 	bool IsInfiniteAmmo;
 
+	UPROPERTY(BlueprintReadOnly,FieldNotify,Getter,Setter,meta=(AllowPrivateAccess=true))
+	UZL_VM_ChargePercent* VM_ChargePhase;
 	
 };

@@ -59,3 +59,12 @@ const FString UZL_VM_Attributes::GetFinalAmmoText() const
 	}
 	return ammoText;
 }
+
+void UZL_VM_Attributes::SetVM_ChargePhase(UZL_VM_ChargePercent* inVM)
+{
+
+	if (UE_MVVM_SET_PROPERTY_VALUE(VM_ChargePhase,inVM))
+	{
+		
+	}
+}

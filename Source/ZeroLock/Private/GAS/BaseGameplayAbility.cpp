@@ -10,8 +10,10 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/ZL_GameplayTags.h"
 #include "GAS/ZL_GE_BaseCooldown.h"
+#include "UI/MVVM/ZL_VM_Attributes.h"
 #include "UI/MVVM/Abilities/ZL_AbilityUIManagerComponent.h"
 #include "UI/MVVM/Abilities/ZL_VM_AbilityTimerProgressBar.h"
+#include "UI/MVVM/Abilities/ZL_VM_ChargePercent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
 UBaseGameplayAbility::UBaseGameplayAbility()
@@ -400,6 +402,46 @@ void UBaseGameplayAbility::UpdateProgressionTimer(float progress)
 	{
 		MyProgressBarVM->SetProgressionLevel(progress);
 	}
+}
+
+void UBaseGameplayAbility::StartChargePhaseUI(float MaxTIme, float perfectmin, float perfectmax)
+{
+	
+	MyChargePhaseVM = NewObject<UZL_VM_ChargePercent>(GetCurrentActorInfo()->AvatarActor.Get());
+	if (MyChargePhaseVM)
+	{
+		
+		ZLOG("StartChargePhaseUI");
+		GetHeroAttributeVM()->SetVM_ChargePhase(MyChargePhaseVM);
+		MyChargePhaseVM->SetMaxChargeTime(MaxTIme);
+		MyChargePhaseVM->SetPerfectMax(perfectmax);
+		MyChargePhaseVM->SetPerfectMin(perfectmin);
+	}
+}
+
+void UBaseGameplayAbility::UpdateChargePhaseUI(float Progress, bool bIsPerfect, float ElapsedTime)
+{
+	if (MyChargePhaseVM)
+	{
+		MyChargePhaseVM->SetbPerfect(bIsPerfect);
+		MyChargePhaseVM->SetPerfectCharge(Progress);
+	}
+}
+
+void UBaseGameplayAbility::RemoveChargePhaseUI(bool wasPerfect)
+{
+	GetHeroAttributeVM()->SetVM_ChargePhase(nullptr);
+	MyChargePhaseVM = nullptr;
+}
+
+UZL_VM_Attributes* UBaseGameplayAbility::GetHeroAttributeVM()
+{
+	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetCurrentActorInfo()->AvatarActor);
+	if (Hero)
+	{
+		return Hero->GetVM_Attributes();
+	}
+	return nullptr;
 }
 
 void UBaseGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)

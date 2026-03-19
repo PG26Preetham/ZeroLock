@@ -27,6 +27,10 @@ void UZL_Apollo_Riposte::OnPlayerHit(AActor* HitActor)
 	{
 		EndAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo(),true,true);
 	}
+	if (ResistanceEffect)
+	{
+		Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Hero->GetMyAbilitySystemComp(), ResistanceEffect, GetAbilityLevel());
+	}
 	TArray<FOverlapResult> OverlapResults;
 	float SphereRadius = 100.f;
 	FVector SphereLocation = Hero->GetActorLocation() + (Hero->GetActorForwardVector() * 50);
@@ -43,6 +47,7 @@ void UZL_Apollo_Riposte::OnPlayerHit(AActor* HitActor)
 				{
 					Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Villan->GetMyAbilitySystemComp(), StunEffect, GetAbilityLevel());
 				}
+				
 			}
 		}
 	}

@@ -32,13 +32,17 @@ public:
 	float ChargeupTime = 4.0f;
 	
 	UPROPERTY(EditDefaultsOnly,Category="ChargePhase")
-	float MaxTargetRange = 10000;
+	FScalableFloat MaxTargetRange = 1;
 	
 	UPROPERTY(EditDefaultsOnly,Category="Damage")
 	float DamageRadius = 500;
 	
 	UPROPERTY(EditDefaultsOnly,Category="Damage")
 	FScalableFloat Damage = 1.0f;
+	
+	UPROPERTY(EditDefaultsOnly,Category="Damage")
+	FScalableFloat BonusDamagePercent = 1.0f;
+	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;

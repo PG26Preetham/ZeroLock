@@ -25,6 +25,7 @@ UZL_WaitChargeRelease_Task* UZL_WaitChargeRelease_Task::WaitChargeRelease(UGamep
 void UZL_WaitChargeRelease_Task::Activate()
 {
 	ElapsedTime= 0;
+	OnInit.Broadcast(MaxChargeTime,PerfectWindowMin,PerfectWindowMax);
 	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
 	if (ASC && Ability)
 	{
@@ -110,6 +111,7 @@ void UZL_WaitChargeRelease_Task::OnInputReleased()
     
 	if (ShouldBroadcastAbilityTaskDelegates())
 	{
+		OnEnd.Broadcast(bWasPerfect);
 		OnReleased.Broadcast(ElapsedTime, bWasPerfect);
 	}
     

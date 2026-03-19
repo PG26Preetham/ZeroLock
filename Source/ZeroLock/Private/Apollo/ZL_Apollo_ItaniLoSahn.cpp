@@ -28,6 +28,7 @@ void UZL_Apollo_ItaniLoSahn::ActivateAbility(const FGameplayAbilitySpecHandle Ha
     AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     if (Hero)
     {
+        Hero->GetCharacterMovement()->StopMovementImmediately();
         Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
         HeightSave= Hero->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
         RadiusSave= Hero->GetCapsuleComponent()->GetScaledCapsuleRadius();
@@ -81,7 +82,7 @@ void UZL_Apollo_ItaniLoSahn::ReleaseInputRelease(float TimeHeld)
     FVector ForwardDir = CameraRot.Vector();
 
     FVector TraceStart = Hero->GetActorLocation();
-    FVector TraceEnd = TraceStart + (ForwardDir * MaxTargetRange);
+    FVector TraceEnd = TraceStart + (ForwardDir * MaxTargetRange.GetValueAtLevel(GetAbilityLevel()));
     
     TArray<AActor*> IgnoreList;
     IgnoreList.Add(Hero);
@@ -97,32 +98,6 @@ void UZL_Apollo_ItaniLoSahn::ReleaseInputRelease(float TimeHeld)
 
     FCollisionShape SweepSphere = FCollisionShape::MakeSphere(DamageRadius); 
     
-   // bool bHitSomething = GetWorld()->SweepMultiByChannel(OutHits, TraceStart, FinalTarget, FQuat::Identity, ECC_Pawn, SweepSphere);
-/*
-    if (bHitSomething)
-    {
-        for (const FHitResult& Hit : OutHits)
-        {
-            AActor* HitActor = Hit.GetActor();
-            if (AZeroLockCharacter* Villan = Cast<AZeroLockCharacter>(HitActor))
-            {
-                if (!Hero->IsOnSameTeam(Villan) && !UniqueHitActors.Contains(HitActor))
-                {
-                    UniqueHitActors.Add(HitActor);
-
-                    FGameplayAbilityTargetData_SingleTargetHit* NewData = new FGameplayAbilityTargetData_SingleTargetHit();
-                    NewData->HitResult = Hit;
-                    CurrentTargetData.Add(NewData);
-                    Villan->GetAbilitySystemComponent()->AddGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Apollo.ItaniLoSahn",false));
-                    Villan->CustomTimeDilation = 0.05f; 
-                }
-            }
-        }
-    }
-    */
-  
-    
-
     UniqueHitActors.Empty();
     DashDetectionSphere->OnComponentBeginOverlap.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnDashSphereOverlap);
     TArray<AActor*> InitialOverlaps;
@@ -156,10 +131,10 @@ void UZL_Apollo_ItaniLoSahn::OnMoveToDone()
         MoveToTask->OnTimedOutAndDestinationReached.RemoveDynamic(this, &UZL_Apollo_ItaniLoSahn::OnMoveToDone);
         MoveToTask->EndTask();
     }
-    UAbilityTask_WaitDelay* WaitDelayTask = UAbilityTask_WaitDelay::WaitDelay(this, 1.0f);
+    UAbilityTask_WaitDelay* WaitDelayTask = UAbilityTask_WaitDelay::WaitDelay(this, 1.8f);
     WaitDelayTask->OnFinish.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnExecutecallback);
     WaitDelayTask->ReadyForActivation();
-    UAbilityTask_WaitDelay* WaitDelayTaskZ = UAbilityTask_WaitDelay::WaitDelay(this, 2.0f);
+    UAbilityTask_WaitDelay* WaitDelayTaskZ = UAbilityTask_WaitDelay::WaitDelay(this, 3.0f);
     WaitDelayTaskZ->OnFinish.AddDynamic(this, &UZL_Apollo_ItaniLoSahn::OnTimeFinish);
     WaitDelayTaskZ->ReadyForActivation();
 }
@@ -189,9 +164,12 @@ void UZL_Apollo_ItaniLoSahn::OnExecutecallback()
                 if (Villan->GetMyAttributeSet())
                 {
                     float HealthPercent = Villan->GetMyAttributeSet()->GetCurrentHealth() / Villan->GetMyAttributeSet()->GetMaximumHealth();
-                    if (HealthPercent < 0.5f) DamageAmp *= 2.0f;
+                    if (HealthPercent < 0.5f)
+                    {
+                        DamageAmp  = DamageAmp + ((BonusDamagePercent.GetValueAtLevel(GetAbilityLevel())/100)*DamageAmp);
+                    }
                 }
-
+               // ZLOG(FString::SanitizeFloat(DamageAmp));
                 Villan->CustomTimeDilation = 1.0f;
                 Villan->GetAbilitySystemComponent()->RemoveGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Apollo.ItaniLoSahn",false));
                    

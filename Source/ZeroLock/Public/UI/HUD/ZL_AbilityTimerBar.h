@@ -28,9 +28,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "MVVM")
 	UZL_VM_AbilityTimerProgressBar* VM_Progress;
 	
-	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
-	UProgressBar* ProgressBar;
-	
-	UPROPERTY(BlueprintReadWrite,meta=(BindWidget))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(BindWidget))
 	UCommonTextBlock* AbilityName;
 };

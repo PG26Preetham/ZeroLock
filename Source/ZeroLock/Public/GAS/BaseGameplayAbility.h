@@ -9,6 +9,8 @@
 #include "ZeroLock/ZeroLock.h"
 #include "BaseGameplayAbility.generated.h"
 
+class UZL_VM_ChargePercent;
+class UZL_VM_Attributes;
 class UZL_VM_AbilityTimerProgressBar;
 class UZL_VM_ProgressionStack;
 class AZeroLockCharacter;
@@ -134,6 +136,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ZeroLock")
 	UZL_VM_AbilityTimerProgressBar* MyProgressBarVM;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "ZeroLock")
+	UZL_VM_ChargePercent* MyChargePhaseVM;
+	
 	UFUNCTION()
 	void StartProgressionTimer();
 	
@@ -145,6 +150,16 @@ public:
 	
 	UFUNCTION()
 	void UpdateProgressionTimer(float progress);
+	
+	UFUNCTION()
+	void StartChargePhaseUI(float MaxTIme,float perfectmin,float perfectmax);
+	UFUNCTION()
+	void UpdateChargePhaseUI( float Progress, bool bIsPerfect, float ElapsedTime);
+	UFUNCTION()
+	void RemoveChargePhaseUI(bool wasPerfect);
+	
+	UFUNCTION()
+	UZL_VM_Attributes* GetHeroAttributeVM();
 	
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	virtual bool CheckCost(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, OUT FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;

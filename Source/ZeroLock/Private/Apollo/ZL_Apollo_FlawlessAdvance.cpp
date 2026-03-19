@@ -34,6 +34,8 @@ void UZL_Apollo_FlawlessAdvance::EndAbility(const FGameplayAbilitySpecHandle Han
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
+	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
+	
 	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
 		ASC->RemoveLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
@@ -56,6 +58,9 @@ void UZL_Apollo_FlawlessAdvance::OnInitialMoveComplete()
 	UZL_WaitChargeRelease_Task* ZLWaitRelease = UZL_WaitChargeRelease_Task::WaitChargeRelease(this,nullptr,MaxLungeDuration,PerfectWindowMin,PerfectWindowMax);
 	if (ZLWaitRelease)
 	{
+		ZLWaitRelease->OnInit.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::StartChargePhaseUI);
+		ZLWaitRelease->OnProgressUpdate.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::UpdateChargePhaseUI);
+		ZLWaitRelease->OnEnd.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::RemoveChargePhaseUI);
 		ZLWaitRelease->OnReleased.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::OnChargeReleased);
 		ZLWaitRelease->ReadyForActivation();
 	}
@@ -139,14 +144,18 @@ void UZL_Apollo_FlawlessAdvance::ExecuteLunge(bool bIsPerfect)
 	TArray<AZeroLockCharacter*> Targets;
 	TArray<AActor*> Ignored;
 	Ignored.Add(Character);
-	
+	float DamageToUse  = bIsPerfect? PerfectDamage.GetValueAtLevel(GetAbilityLevel()) : BaseDamageValue.GetValueAtLevel(GetAbilityLevel());
 	if (ReverseConeTraceMulti(GetWorld(),GetAvatarActorFromActorInfo()->GetActorLocation(),LookDir.Rotation(),CalculatedDistance, 10.0f, UEngineTypes::ConvertToTraceType(ECC_Pawn),false,Ignored,EDrawDebugTrace::ForDuration,Hits,Targets,true,FLinearColor::Green,FLinearColor::Red,1.5f))
 	{
 		if (Targets.Num() > 0)
 		{
 			for (AZeroLockCharacter* villan : Targets)
 			{
-				Character->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),BaseDamageValue.GetValueAtLevel(GetAbilityLevel()));
+				Character->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),DamageToUse);
+			}
+			if (bIsPerfect)
+			{
+				Character->GetMyAbilitySystemComp()->ApplyHeal(Character->GetMyAbilitySystemComp(),HealValue.GetValueAtLevel(GetAbilityLevel()));
 			}
 		}
 	}

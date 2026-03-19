@@ -4,6 +4,7 @@
 #include "Apollo/ZL_Apollo_DisengagingSigil.h"
 
 #include "Camera/CameraComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 
@@ -51,9 +52,10 @@ void UZL_Apollo_DisengagingSigil::OnAnimationPointTrigger()
 			}
 		}
 	}
-	FVector ForwardCM = Hero->GetFollowCamera()->GetForwardVector().GetSafeNormal();
+	FVector ForwardCM = Hero->GetActorForwardVector().GetSafeNormal();
 	ForwardCM.Z = -1;
 	FVector LaunchVelocity  = ForwardCM *(-1 * KnockbackStrength);
+	Hero->GetMovementComponent()->StopMovementImmediately();
 	Hero->LaunchCharacter(LaunchVelocity,true,true);
 	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
 	

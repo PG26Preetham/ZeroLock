@@ -6,6 +6,8 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_HUD_PlayerBase.generated.h"
 
+class UZL_AbilityChargePhase;
+class UZL_VM_ChargePercent;
 class UZL_HUD_Weapon;
 class UZL_Abilities_Bar;
 class UMyZL_BasePlayerHealthBar;
@@ -39,6 +41,14 @@ public:
 
 	UFUNCTION()
 	void SetCrosshair();
+	
+	UFUNCTION(BlueprintCallable)
+	void CF_ChargePhaseInit(UZL_VM_ChargePercent* NewChargePercent);
+	
+	UZL_AbilityChargePhase* ZL_AbilityChargePhase;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	TSubclassOf<UZL_AbilityChargePhase> ChargePhaseClass;
 
 private:
 	UFUNCTION()
