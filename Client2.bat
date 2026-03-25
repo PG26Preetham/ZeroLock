@@ -1,0 +1,1 @@
+"Z:\epicgames\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"  "E:\Repo\ZeroLock\ZeroLock\ZeroLock.uproject" CharacterSelector -game -AUTH_TYPE="developer" -AUTH_LOGIN=127.0.0.1:8080 -AUTH_PASSWORD=Dev2

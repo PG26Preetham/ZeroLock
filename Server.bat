@@ -1,1 +1,1 @@
-"Z:\epicgames\UE_5.5\Engine\Binaries\Win64\UnrealEditor.exe"  "E:\Repo\ZeroLock\ZeroLock\ZeroLock.uproject" -server -log -epicapp="Zerolock_Server"
+"Z:\epicgames\UE_5.6\Engine\Binaries\Win64\UnrealEditor.exe"  "E:\Repo\ZeroLock\ZeroLock\ZeroLock.uproject" CharacterSelector -server -log -epicapp="Zerolock_Server"
