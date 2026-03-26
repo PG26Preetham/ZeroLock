@@ -21,7 +21,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void Login();
+	
+	UFUNCTION(BlueprintCallable)
+	void ServerTravelAfterPlayersJoin();
  
+	UFUNCTION(BlueprintCallable)
+	void UpdateLobbyConnectionString();
 	//Callback function. This function is ran when signing into EOS Game Services completes. 
 	void HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId, const FString& Error);
  
@@ -52,5 +57,32 @@ public:
  
 	// Delegate to bind callback event for join session.
 	FDelegateHandle JoinSessionDelegateHandle;
+	
+	
+	
+#if P2PMODE
+	// Hardcoded name for the lobby.
+	FName LobbyName = "LobbyName";
+	// Function to create an EOS session. 
+	void CreateLobby(FName KeyName = "KeyName", FString KeyValue = "KeyValue");
+
+	// Callback function. This function will run when creating the session compeletes. 
+	void HandleCreateLobbyCompleted(FName LobbyName, bool bWasSuccessful);
+
+	// Delegate to bind callback event for session creation.
+	FDelegateHandle CreateLobbyDelegateHandle;
+
+	
+	void HandleParticipantJoined(FName SessionName, const FUniqueNetId& ParticipantId);
+	void HandleParticipantLeft(FName Name, const FUniqueNetId& UniqueNetId, EOnSessionParticipantLeftReason OnSessionParticipantLeftReason);
+	// Function used to setup our listeners to lobby notification events - example on participant change only.
+	void SetupNotifications();
+
+	// Callback function. This function will run when a lobby participant joins / leaves.
+	void HandleParticipantChanged(FName EOSLobbyName, const FUniqueNetId& NetId, bool bJoined); 
+	
+	
+
+#endif
 	
 };

@@ -5,6 +5,7 @@
 
 #include "Zero_BasePlayerController.h"
 #include "Zero_BasePlayerState.h"
+#include "EOS/ZL_EOS_SubSystem.h"
 #include "Gamemode/Zero_BaseGameState.h"
 #include "Gamemode/Zero_BasePlayerStart.h"
 #include "GAS/BaseCharAttributeSet.h"
@@ -16,6 +17,7 @@ AZero_BaseGameModeBase::AZero_BaseGameModeBase()
     PlayerControllerClass = AZero_BasePlayerController::StaticClass();
     PlayerStateClass = AZero_BasePlayerState::StaticClass();
     GameStateClass = AZero_BaseGameState::StaticClass();
+    bUseSeamlessTravel =true;
 
     // Optionally set DefaultPawnClass if you want a fallback, but your SpawnDefaultPawnFor_Implementation handles this.
 }
@@ -23,6 +25,15 @@ AZero_BaseGameModeBase::AZero_BaseGameModeBase()
 void AZero_BaseGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
+    ZLOG_COLOR_TIME("Gamemode Begin play", FColor::Red,10);
+    
+        if (UZL_EOS_SubSystem* EOS = GetGameInstance()->GetSubsystem<UZL_EOS_SubSystem>())
+        {
+            ZLOG_COLOR_TIME("Calling Update", FColor::Red,10);
+            EOS->Login();
+        }
+
+    
     AZero_BaseGameState* GS = GetGameState<AZero_BaseGameState>();
     if (!GS) return;
 

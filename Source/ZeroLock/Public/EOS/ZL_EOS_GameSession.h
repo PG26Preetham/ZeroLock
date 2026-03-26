@@ -48,7 +48,7 @@ public:
 	FDelegateHandle RegisterPlayerDelegateHandle;
 	
 	// Function to unregister our players in the EOS Session.
-	virtual void UnregisterPlayer(const APlayerController* ExitingPlayer);
+	virtual void UnregisterPlayer(const APlayerController* ExitingPlayer) override;
 	
 	// Callback function. This function will run when unregistering the player compeletes.
 	void HandleUnregisterPlayerCompleted(FName SessionName, const TArray<FUniqueNetIdRef>& PlayerIds, bool bWasSuccesful);

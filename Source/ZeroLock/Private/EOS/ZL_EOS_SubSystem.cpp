@@ -7,9 +7,11 @@
 #include "OnlineSubsystem.h"
 #include "OnlineSubsystemUtils.h"
 #include "OnlineSubsystemTypes.h"
+#include "Online/OnlineSessionNames.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "Interfaces/OnlineSessionDelegates.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "ZeroLock/ZeroLock.h"
 
 
 UZL_EOS_SubSystem::UZL_EOS_SubSystem()
@@ -86,8 +88,49 @@ void UZL_EOS_SubSystem::Login()
     }
 }
 
+void UZL_EOS_SubSystem::ServerTravelAfterPlayersJoin()
+{
+    GetWorld()->ServerTravel(TEXT("/Game/ThirdPerson/Maps/ThirdPersonMap?listen"));
+}
+
+void UZL_EOS_SubSystem::UpdateLobbyConnectionString()
+{
+    IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+    if (!Subsystem) return;
+
+    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
+    if (!Session.IsValid()) return;
+
+    FOnlineSessionSettings* Settings = Session->GetSessionSettings(LobbyName);
+    if (!Settings) return;
+
+    // Get the current map name
+    FString CurrentMap = GetWorld()->GetMapName();
+
+    // Ask the OSS for the correct connection string
+    FString NewConnectString;
+    if (!Session->GetResolvedConnectString(LobbyName, NewConnectString))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to resolve new connect string after travel"));
+        return;
+    }
+
+    // Update metadata
+    Settings->Set(SETTING_MAPNAME, CurrentMap, EOnlineDataAdvertisementType::ViaOnlineService);
+    Settings->Set(TEXT("CONNECT_STRING"), NewConnectString, EOnlineDataAdvertisementType::ViaOnlineService);
+
+    // Push update to EOS
+    Session->UpdateSession(LobbyName, *Settings, true);
+
+    ZLOG("Updated URL");
+    UE_LOG(LogTemp, Log, TEXT("Updated EOS lobby: Map=%s Connect=%s"),
+        *CurrentMap, *NewConnectString);
+
+
+}
+
 void UZL_EOS_SubSystem::HandleLoginCompleted(int32 LocalUserNum, bool bWasSuccessful, const FUniqueNetId& UserId,
-	const FString& Error)
+                                             const FString& Error)
 {
     /*
     Tutorial 2: This function handles the callback from logging in. You should not proceed with any EOS features until this function is called.
@@ -100,7 +143,7 @@ void UZL_EOS_SubSystem::HandleLoginCompleted(int32 LocalUserNum, bool bWasSucces
         UE_LOG(LogTemp, Log, TEXT("Login callback completed!"));
         UE_LOG(LogTemp, Log, TEXT("Searching for a session..."));
         // Maybe via button or player action? Maybe add parameters here
-        FindSessions(); 
+        FindSessions(FName("Zerolock"), FString("Preetham")); 
     }
     else //Login failed
     {
@@ -115,41 +158,74 @@ void UZL_EOS_SubSystem::HandleLoginCompleted(int32 LocalUserNum, bool bWasSucces
 
 void UZL_EOS_SubSystem::FindSessions(FName SearchKey, FString SearchValue)
 {
-    // Tutorial 4: This function will find our EOS Session that was created by our DedicatedServer. 
+    // Tutorial 4: This function will find our EOS Session that was created by our DedicatedServer.
+    // Tutorial 7: This function will find our EOS lobby. Note that at the OSS layer we are using a Session that is marked as a lobby.  Code is similar with minor tweaks
  
     IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
     TSharedRef<FOnlineSessionSearch> Search = MakeShared<FOnlineSessionSearch>();
  
     // Remove the default search parameters that FOnlineSessionSearch sets up.
-    Search->QuerySettings.SearchParams.Empty();
+   
  
     Search->QuerySettings.Set(SearchKey, SearchValue, EOnlineComparisonOp::Equals); // Seach using our Key/Value pair
+#if P2PMODE
+    Search->bIsLanQuery = false;
+    Search->MaxSearchResults = 20;
+    Search->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+#endif
     FindSessionsDelegateHandle =
         Session->AddOnFindSessionsCompleteDelegate_Handle(FOnFindSessionsCompleteDelegate::CreateUObject(
             this,
             &ThisClass::HandleFindSessionsCompleted,
             Search));
-    
+#if P2PMODE
+    UE_LOG(LogTemp, Log, TEXT("Finding lobby."));
+    ZLOG("FindingLobbies");
+#else 
     UE_LOG(LogTemp, Log, TEXT("Finding session."));
+#endif 
  
     if (!Session->FindSessions(0, Search))
     {
-        UE_LOG(LogTemp, Warning, TEXT("Find session failed"));
+#if P2PMODE
+        UE_LOG(LogTemp, Log, TEXT("Finding lobby failed."));
+        ZLOG("Finding lobby failed");
+#else 
+        UE_LOG(LogTemp, Warning, TEXT("Finding session failed."));
+#endif
+        // Clear our handle and reset the delegate. 
+        Session->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsDelegateHandle);
+        FindSessionsDelegateHandle.Reset();
     }
 }
 
 void UZL_EOS_SubSystem::HandleFindSessionsCompleted(bool bWasSuccessful, TSharedRef<FOnlineSessionSearch> Search)
 {
-    // Tutorial 4: This function is triggered via the callback we set in FindSession once the session is found (or there is a failure)
+    // Tutorial 4: This function is triggered via the callback we set in FindSession once the session is found (or there is a failure). 
+    // Tutorial 7: This function will triggered via the callback we set in FindSession once the lobby is found (or there is a failure). Finding the lobby here has the similar code as finding a session.  
  
     IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
  
     if (bWasSuccessful)
     {
-        UE_LOG(LogTemp, Log, TEXT("Found session."));
- 
+        // added code here to not run into issues when searching for sessions is succesfull, but the number of sessions is 0
+        if (Search->SearchResults.Num() == 0)
+        {
+#if P2PMODE
+            ZLOG("Creating lobby");
+            // If we're in P2P mode and we can't find a lobby on startup, create one. 
+            CreateLobby(FName("Zerolock"), FString("Preetham"));
+#endif
+            return; 
+        }
+#if P2PMODE
+        UE_LOG(LogTemp, Log, TEXT("Found lobby."));
+        ZLOG("Found lobby");
+#else 
+        UE_LOG(LogTemp, Warning, TEXT("Found session."));
+#endif 
         for (auto SessionInSearchResult : Search->SearchResults)
         {
             // Typically you want to check if the session is valid before joining. There is a bug in the EOS OSS where IsValid() returns false when the session is created on a DS. 
@@ -162,32 +238,66 @@ void UZL_EOS_SubSystem::HandleFindSessionsCompleted(bool bWasSuccessful, TShared
             }
             */
            
-            //Ensure the connection string is resolvable and store the info in ConnectInfo and in SessionToJoin
+            //Ensure the connection string is resolvable and store the info in ConnectString and in SessionToJoin
             if (Session->GetResolvedConnectString(SessionInSearchResult, NAME_GamePort, ConnectString))
             {
                 SessionToJoin = &SessionInSearchResult; 
             }
  
-            // For the tutorial we will join the first session found automatically. Usually you would loop through all the sessions and determine which one is best to join. 
+            // For this course we will join the first session found automatically. Usually you would loop through all the sessions and determine which one is best to join. 
             break;            
         }
-        JoinSession(); 
+        JoinSession();  
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Find Sessions failed.")); //print warning in logs of failure
+#if P2PMODE
+        UE_LOG(LogTemp, Log, TEXT("Find lobby failed."));
+        ZLOG("Find lobby failed");
+#else 
+        UE_LOG(LogTemp, Warning, TEXT("Find session failed."));
+#endif 
     }
  
+    // Clear our handle and reset the delegate. 
     Session->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsDelegateHandle);
     FindSessionsDelegateHandle.Reset();
 }
 
 void UZL_EOS_SubSystem::HandleJoinSessionCompleted(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
-{
-    // Tutorial 4: This function is triggered via the callback we set in JoinSession once the session is joined (or there is a failure)
+{ // Tutorial 4: This function is triggered via the callback we set in JoinSession once the session is joined (or there is a failure)
  
     IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
+#if P2PMODE
+    if (Result == EOnJoinSessionCompleteResult::Success)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Join session was success"));
+        if (Session.IsValid())
+        {
+            FString XConnectString;
+            // Get the connection string from the session interface
+            if (Session->GetResolvedConnectString(SessionName, XConnectString))
+            {
+                // Get the first local player controller
+                APlayerController* PC = GetWorld()->GetFirstPlayerController();
+                
+                if (PC)
+                {
+                    // Call ClientTravel on the Player Controller
+                   PC->ClientTravel(XConnectString, ETravelType::TRAVEL_Absolute);
+                    
+                    // Now that we are in/moving, setup notifications
+                    SetupNotifications(); 
+                }
+                else
+                {
+                    UE_LOG(LogTemp, Error, TEXT("Failed to find PlayerController for ClientTravel!"));
+                }
+            }
+        }// Setup our listeners for lobby event notifications
+    }
+#else
     if (Result == EOnJoinSessionCompleteResult::Success)
     {
         UE_LOG(LogTemp, Log, TEXT("Joined session."));
@@ -202,19 +312,21 @@ void UZL_EOS_SubSystem::HandleJoinSessionCompleted(FName SessionName, EOnJoinSes
             {
                 UE_LOG(LogTemp, Error, TEXT("Failed to browse for dedicated server. Error is: %s"), *DedicatedServerJoinError); 
             }
-            
+ 
             // To be thorough here you should modify your derived UGameInstance to handle the NetworkError and TravelError events. 
             // As we are testing locally, and for the purposes of keeping this tutorial simple, this is omitted. 
         }
     }
+#endif
+ 
+    // Clear our handle and reset the delegate. 
     Session->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionDelegateHandle);
     JoinSessionDelegateHandle.Reset();
 }
 
 void UZL_EOS_SubSystem::JoinSession()
 {
-    // Tutorial 4: Join the session. 
- 
+   
     IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
     IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
  
@@ -222,10 +334,140 @@ void UZL_EOS_SubSystem::JoinSession()
         Session->AddOnJoinSessionCompleteDelegate_Handle(FOnJoinSessionCompleteDelegate::CreateUObject(
             this,
             &ThisClass::HandleJoinSessionCompleted));
-    
+#if P2PMODE
+    UE_LOG(LogTemp, Log, TEXT("Joining Lobby."));
+#else 
     UE_LOG(LogTemp, Log, TEXT("Joining session."));
+#endif 
     if (!Session->JoinSession(0, "SessionName", *SessionToJoin))
     {
-        UE_LOG(LogTemp, Warning, TEXT("Join session failed"));
+#if P2PMODE
+        UE_LOG(LogTemp, Log, TEXT("Join Lobby failed."));
+#else 
+        UE_LOG(LogTemp, Log, TEXT("Join session failed."));
+#endif 
+ 
+        // Clear our handle and reset the delegate. 
+        Session->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionDelegateHandle);
+        JoinSessionDelegateHandle.Reset();
     } 
 }
+#if P2PMODE
+void UZL_EOS_SubSystem::CreateLobby(FName KeyName, FString KeyValue)
+{
+    
+    IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
+ 
+    CreateLobbyDelegateHandle =
+        Session->AddOnCreateSessionCompleteDelegate_Handle(FOnCreateSessionCompleteDelegate::CreateUObject(
+            this,
+            &ThisClass::HandleCreateLobbyCompleted));
+ 
+    TSharedRef<FOnlineSessionSettings> SessionSettings = MakeShared<FOnlineSessionSettings>();
+    SessionSettings->NumPublicConnections = 2; //We will test our sessions with 2 players to keep things simple
+    SessionSettings->bShouldAdvertise = true; //This creates a public match and will be searchable.
+    SessionSettings->bUsesPresence = true;   //No presence on dedicated server. This requires a local user.
+    SessionSettings->bAllowJoinViaPresence = true;
+    SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
+    SessionSettings->bAllowInvites = false;    //Allow inviting players into session. This requires presence and a local user. 
+    SessionSettings->bAllowJoinInProgress = false; //Once the session is started, no one can join.
+    SessionSettings->bIsDedicated = false; //Session created on dedicated server.
+    SessionSettings->bUseLobbiesIfAvailable = true; //For P2P we will use a lobby instead of a session
+    SessionSettings->bUseLobbiesVoiceChatIfAvailable = true; //We will also enable voice
+    SessionSettings->bUsesStats = true; //Needed to keep track of player stats.
+    SessionSettings->Settings.Add(KeyName, FOnlineSessionSetting((KeyValue), EOnlineDataAdvertisementType::ViaOnlineService));
+ 
+    UE_LOG(LogTemp, Log, TEXT("Creating Lobby..."));
+    ZLOG("Creating Lobby...");
+ 
+    if (!Session->CreateSession(0, LobbyName, *SessionSettings))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to create Lobby!"));
+    }
+}
+
+void UZL_EOS_SubSystem::HandleCreateLobbyCompleted(FName XLobbyName, bool bWasSuccessful)
+{
+    // Tutorial 7: Callback function: This is called once our lobby is created
+ 
+    IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+    IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
+    if (bWasSuccessful)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Lobby: %s Created!"), *XLobbyName.ToString());
+        FString s = XLobbyName.ToString();
+        ZLOG("LobbyCreated");
+        ZLOG(s);
+        FString Map = "/Game/Content/ThirdPerson/Maps/ThirdPersonMap?listen"; //Hardcoding map name here, should be passed by parameter
+        FURL TravelURL;
+        TravelURL.Map = Map;
+       GetWorld()->Listen(TravelURL);
+       //GetWorld()->ServerTravel(TEXT("/Game/ThirdPerson/Maps/ThirdPersonMap?listen"));
+        SetupNotifications();  
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to create lobby!"));
+    }
+    
+    Session->ClearOnCreateSessionCompleteDelegate_Handle(CreateLobbyDelegateHandle);
+    CreateLobbyDelegateHandle.Reset();
+}
+
+void UZL_EOS_SubSystem::HandleParticipantJoined(FName SessionName, const FUniqueNetId& ParticipantId)
+{
+    UE_LOG(LogTemp, Log, TEXT("A player has joined Lobby: %s"), *LobbyName.ToString()); 
+    ZLOG("PlayerJoined");
+}
+
+void UZL_EOS_SubSystem::HandleParticipantLeft(FName Name, const FUniqueNetId& UniqueNetId,
+    EOnSessionParticipantLeftReason OnSessionParticipantLeftReason)
+{
+    UE_LOG(LogTemp, Log, TEXT("A player has left Lobby: %s"), *Name.ToString());
+    ZLOG("PlayerLeft");
+}
+
+
+void UZL_EOS_SubSystem::SetupNotifications()
+{
+    
+    // Tutorial 7: EOS Lobbies are great as there are notifications sent for our backend 
+    // when there are changes to lobbies (ex: Participant Joins/Leaves, lobby data is updated, etc...) 
+    IOnlineSubsystem* Subsystem = Online::GetSubsystem(GetWorld());
+    
+    if (Subsystem)
+    {
+        IOnlineSessionPtr Session = Subsystem->GetSessionInterface();
+        if (Session.IsValid())
+        {
+            // 1. Handle when a participant JOINS the lobby
+            Session->AddOnSessionParticipantJoinedDelegate_Handle(
+                FOnSessionParticipantJoinedDelegate::CreateUObject(this, &ThisClass::HandleParticipantJoined)
+            ); 
+
+            // 2. Handle when a participant LEAVES the lobby
+            Session->AddOnSessionParticipantLeftDelegate_Handle(
+                FOnSessionParticipantLeftDelegate::CreateUObject(this, &ThisClass::HandleParticipantLeft)
+            );
+            
+            // Note: If you also need to track when a member's data is updated, 
+            // you can use FOnSessionParticipantSettingsUpdatedDelegate here as well.
+        }
+    }
+    
+}
+
+void UZL_EOS_SubSystem::HandleParticipantChanged(FName EOSLobbyName, const FUniqueNetId& NetId, bool bJoined)
+{
+    // Tutorial 7: Callback function called when participants join/leave. 
+    if (bJoined)
+    {
+        UE_LOG(LogTemp, Log, TEXT("A player has joined Lobby: %s"), *LobbyName.ToString()); 
+    }
+    else
+    {
+        UE_LOG(LogTemp, Log, TEXT("A player has left Lobby: %s"), *LobbyName.ToString());
+    }
+}
+#endif

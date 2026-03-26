@@ -24,6 +24,7 @@ public class ZeroLock : ModuleRules
 			"OnlineSubsystem",
 			"OnlineSubsystemEOS",
 			"OnlineSubsystemUtils",
+			"SocketSubsystemEOS",
 			"HTTP",
 			"OpenSSL",
 			"Json",
@@ -31,5 +32,7 @@ public class ZeroLock : ModuleRules
 			"SlateMVVM"
 
 		});
+		
+		PrivateDefinitions.Add("P2PMODE=1");
 	}
 }
