@@ -140,6 +140,7 @@ void UZL_EOS_SubSystem::HandleLoginCompleted(int32 LocalUserNum, bool bWasSucces
     IOnlineIdentityPtr Identity = Subsystem->GetIdentityInterface();
     if (bWasSuccessful)
     {
+        ZLOG("Login");
         UE_LOG(LogTemp, Log, TEXT("Login callback completed!"));
         UE_LOG(LogTemp, Log, TEXT("Searching for a session..."));
         // Maybe via button or player action? Maybe add parameters here
