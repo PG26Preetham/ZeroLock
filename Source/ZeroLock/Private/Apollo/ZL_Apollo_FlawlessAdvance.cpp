@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
+#include "Abilities/Tasks/AbilityTask_ApplyRootMotionMoveToForce.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
@@ -58,9 +59,13 @@ void UZL_Apollo_FlawlessAdvance::OnInitialMoveComplete()
 	UZL_WaitChargeRelease_Task* ZLWaitRelease = UZL_WaitChargeRelease_Task::WaitChargeRelease(this,nullptr,MaxLungeDuration,PerfectWindowMin,PerfectWindowMax);
 	if (ZLWaitRelease)
 	{
-		ZLWaitRelease->OnInit.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::StartChargePhaseUI);
-		ZLWaitRelease->OnProgressUpdate.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::UpdateChargePhaseUI);
-		ZLWaitRelease->OnEnd.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::RemoveChargePhaseUI);
+		if (GetCurrentActorInfo()->IsLocallyControlled())
+		{
+			ZLWaitRelease->OnInit.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::StartChargePhaseUI);
+			ZLWaitRelease->OnProgressUpdate.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::UpdateChargePhaseUI);
+			ZLWaitRelease->OnEnd.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::RemoveChargePhaseUI);
+		}
+		
 		ZLWaitRelease->OnReleased.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::OnChargeReleased);
 		ZLWaitRelease->ReadyForActivation();
 	}
@@ -88,9 +93,10 @@ void UZL_Apollo_FlawlessAdvance::StartChargePhase()
 	AnimMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this,FName("AnimMontageAndWait"),ChargeMontage);
 	AnimMontageTask->ReadyForActivation();
 	FVector MoveDir = GetExactInputDirection();
-	UAbilityTask_ApplyRootMotionConstantForce* ActiveMovementTask = UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this, NAME_None, MoveDir, ChargeVelocity, ChargeTime, false, nullptr,ERootMotionFinishVelocityMode::SetVelocity, FVector::ZeroVector, 0.f, false);
-	ActiveMovementTask->OnFinish.AddDynamic(this, &UZL_Apollo_FlawlessAdvance::OnInitialMoveComplete);
-	ActiveMovementTask->ReadyForActivation();
+	
+	ActiveChargeMovementTask = UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this, NAME_None, MoveDir, ChargeVelocity, ChargeTime, false, nullptr,ERootMotionFinishVelocityMode::SetVelocity, FVector::ZeroVector, 0.f, false);
+	ActiveChargeMovementTask->OnFinish.AddDynamic(this, &UZL_Apollo_FlawlessAdvance::OnInitialMoveComplete);
+	ActiveChargeMovementTask->ReadyForActivation();
 }
 FVector UZL_Apollo_FlawlessAdvance::GetExactInputDirection() const
 {
@@ -133,13 +139,21 @@ void UZL_Apollo_FlawlessAdvance::OnChargeReleased(float TotalTime, bool bWasPerf
 
 void UZL_Apollo_FlawlessAdvance::ExecuteLunge(bool bIsPerfect)
 {
+	if (ActiveChargeMovementTask && ActiveChargeMovementTask->IsActive())
+	{
+		ActiveChargeMovementTask->EndTask();
+	}
 	AZeroLockCharacter* Character = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (!Character) return;
 	
 	FVector LookDir = Character->GetFollowCamera()->GetForwardVector();
+	//FVector LookDir = Character->GetBaseAimRotation().Vector();
 	float FinalVelocity = bIsPerfect ? LungeBurstVelocity.GetValueAtLevel(GetAbilityLevel()) * 1.5f : LungeBurstVelocity.GetValueAtLevel(GetAbilityLevel());
 	float CalculatedDistance = (FinalVelocity *0.2f) + ( 500);
 
+	FVector StartLocation = Character->GetActorLocation();
+	FVector TargetLocation = StartLocation + (LookDir * CalculatedDistance);
+	
 	TArray<FHitResult> Hits;
 	TArray<AZeroLockCharacter*> Targets;
 	TArray<AActor*> Ignored;
@@ -159,10 +173,14 @@ void UZL_Apollo_FlawlessAdvance::ExecuteLunge(bool bIsPerfect)
 			}
 		}
 	}
-	
+	UAbilityTask_ApplyRootMotionMoveToForce* RootMotionTask = UAbilityTask_ApplyRootMotionMoveToForce::ApplyRootMotionMoveToForce(this,FName("lungeTask"),TargetLocation,ChargeTime,false,EMovementMode::MOVE_Falling,true,nullptr,ERootMotionFinishVelocityMode::SetVelocity,FVector::ZeroVector,0.0f);
+	RootMotionTask->OnTimedOutAndDestinationReached.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::OnLungeFinished);
+	RootMotionTask->OnTimedOut.AddDynamic(this,&UZL_Apollo_FlawlessAdvance::OnLungeFinished);
+	RootMotionTask->ReadyForActivation();
+	/*
 	UAbilityTask_ApplyRootMotionConstantForce* ActiveRootMotionTask = UAbilityTask_ApplyRootMotionConstantForce::ApplyRootMotionConstantForce(this, NAME_None, LookDir, FinalVelocity, ChargeTime, false, nullptr,ERootMotionFinishVelocityMode::SetVelocity, FVector::ZeroVector, 0.f, false);
 	ActiveRootMotionTask->OnFinish.AddDynamic(this, &UZL_Apollo_FlawlessAdvance::OnLungeFinished);
-	ActiveRootMotionTask->ReadyForActivation();
+	ActiveRootMotionTask->ReadyForActivation();*/
 }
 
 void UZL_Apollo_FlawlessAdvance::OnLungeFinished()

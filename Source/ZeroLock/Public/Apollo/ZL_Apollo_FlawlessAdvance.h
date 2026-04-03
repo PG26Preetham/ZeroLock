@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
 #include "GAS/BaseGameplayAbility.h"
 #include "ZL_Apollo_FlawlessAdvance.generated.h"
 
@@ -41,6 +42,8 @@ public:
 	
 	class UZL_WaitDelay_Task* WaitTimeTask ;
 	class UAbilityTask_PlayMontageAndWait* AnimMontageTask ;
+	
+	class UAbilityTask_ApplyRootMotionConstantForce* ActiveChargeMovementTask;
 
 	UFUNCTION()
 	void OnRecastPressed(float TimeWaited);
