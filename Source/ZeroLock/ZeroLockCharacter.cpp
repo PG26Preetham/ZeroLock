@@ -21,6 +21,7 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
 #include "GAS/ZL_GameplayTags.h"
+#include "Input/KeybindManagerSubsystem.h"
 #include "Items/Zero_Item_Inventory_Component.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -793,6 +794,13 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+		}
+		if (ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer())
+		{
+			if (UKeybindManagerSubsystem* KeybindSubsystem = LocalPlayer->GetSubsystem<UKeybindManagerSubsystem>())
+			{
+				KeybindSubsystem->InitializeKeybinds(DefaultMappingContext);
+			}
 		}
 	}
 	
