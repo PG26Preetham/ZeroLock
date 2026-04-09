@@ -8,9 +8,7 @@
 
 class UZL_VM_KeyBindingRow;
 class UKeybindManagerSubsystem;
-/**
- * 
- */
+
 UCLASS()
 class ZEROLOCK_API UZL_VM_KeyBindingList : public UMVVMViewModelBase
 {

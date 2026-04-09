@@ -26,6 +26,9 @@ struct FKeybindData
 
 	UPROPERTY()
 	FKey CurrentKey;
+	
+	UPROPERTY()
+	FText DisplayCategory;
 };
 UCLASS()
 class ZEROLOCK_API UKeybindManagerSubsystem : public ULocalPlayerSubsystem

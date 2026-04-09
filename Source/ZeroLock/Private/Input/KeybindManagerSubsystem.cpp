@@ -57,6 +57,7 @@ void UKeybindManagerSubsystem::RefreshKeybindData()
         FKeybindData NewData;
         NewData.Action = Mapping.Action;
         NewData.MappingName = Mapping.GetMappingName();
+        NewData.DisplayCategory = Mapping.GetDisplayCategory();
       
 
         if (!Mapping.Action->ActionDescription.IsEmpty()) {
