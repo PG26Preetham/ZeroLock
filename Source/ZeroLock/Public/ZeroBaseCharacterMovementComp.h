@@ -68,6 +68,7 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 		virtual uint8 GetCompressedFlags() const override;
 		virtual void SetMoveFor(ACharacter* C, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character& ClientData) override;
 		virtual void PrepMoveFor(ACharacter* C) override;
+		//virtual bool IsImportantMove(const FSavedMovePtr& LastAckedMove) const override;
 	};
 
 	class FNetworkPredictionData_Client_Zero :public FNetworkPredictionData_Client_Character
@@ -238,6 +239,10 @@ public:
 	FVector CamFV()const;
 	FVector CamLoc()const;
 	FQuat CamQuat()const;
+	
+	//Debug
+	int32 GetStablePlayerIndex() const;
+	virtual void OnClientCorrectionReceived(class FNetworkPredictionData_Client_Character& ClientData, float TimeStamp, FVector NewLocation, FVector NewVelocity, UPrimitiveComponent* NewBase, FName NewBaseBoneName, bool bHasBase, bool bBaseRelativePosition, uint8 ServerMovementMode, FVector ServerGravityDirection) override;
 
 	
 	

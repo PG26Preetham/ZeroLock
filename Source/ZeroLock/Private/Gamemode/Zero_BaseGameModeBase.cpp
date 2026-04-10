@@ -26,7 +26,7 @@ void AZero_BaseGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
     ZLOG_COLOR_TIME("Gamemode Begin play", FColor::Red,10);
-    
+#if !WITH_EDITOR
         if (UZL_EOS_SubSystem* EOS = GetGameInstance()->GetSubsystem<UZL_EOS_SubSystem>())
         {
             ZLOG_COLOR_TIME("Calling Update", FColor::Red,10);
@@ -34,6 +34,8 @@ void AZero_BaseGameModeBase::BeginPlay()
         }
 
     
+   
+#endif
     AZero_BaseGameState* GS = GetGameState<AZero_BaseGameState>();
     if (!GS) return;
 

@@ -11,7 +11,10 @@
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SplineComponent.h"
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
 
+FVector GServerCharacterLoc[4];
 #pragma region SavedMove
 UZeroBaseCharacterMovementComp::FSavedMove_Zero::FSavedMove_Zero() {}
 
@@ -138,6 +141,30 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
        MaxWalkSpeed = Safe_bWantsToSprint ? Sprint_MaxSpeed : Walk_MaxSpeed;
     }
     Safe_bPrevWantsToCrouch = bWantsToCrouch;
+	
+#if WITH_EDITOR
+	if (GetWorld()->GetNetMode() == NM_Client || GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer)
+	{
+		int32 PlayerIndex = GetStablePlayerIndex();
+		if (PlayerIndex >= 0 && PlayerIndex < 4)
+		{
+			if (IsServer())
+			{
+				// Server writes its authoritative position
+				GServerCharacterLoc[PlayerIndex] = UpdatedComponent->GetComponentLocation();
+			}
+			else if (CharacterOwner->IsLocallyControlled())
+			{
+				// Client reads the server position and draws a wireframe capsule
+				FVector ServerLoc = GServerCharacterLoc[PlayerIndex];
+				if (!ServerLoc.IsZero())
+				{
+					DrawDebugCapsule(GetWorld(), ServerLoc, CapHH(), CapR(), FQuat::Identity, FColor::Blue, false, -1.0f, 0, 2.0f);
+				}
+			}
+		}
+	}
+#endif
 }
 
 void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
@@ -191,8 +218,10 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
     
     if(MovementMode == MOVE_Walking && bWantsToCrouch && Safe_bPrevWantsToCrouch)
     {
+    	// Give the server a 50 unit tolerance so jitter doesn't cause a rejection
+    	float RequiredSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
        FHitResult PotenialSurface;
-       if(Velocity.SizeSquared() > pow(SlideMinSpeed,2) && GetSlideSurface(PotenialSurface))
+       if(Velocity.SizeSquared() > pow(RequiredSpeed, 2) && GetSlideSurface(PotenialSurface))
        {
           SetMovementMode(MOVE_Custom, CMOVE_Slide);
           return;
@@ -265,13 +294,13 @@ bool UZeroBaseCharacterMovementComp::CanCrouchInCurrentState() const
 #pragma region Slide
 void UZeroBaseCharacterMovementComp::EnterSlide()
 {
-    bWantsToCrouch = true;
+   // bWantsToCrouch = true;
     Velocity += Velocity.GetSafeNormal2D() * SlideEnterImpulse;
 }
 
 void UZeroBaseCharacterMovementComp::ExitSlide()
 {
-    bWantsToCrouch = false;
+   // bWantsToCrouch = false;
     FQuat NewRot = FRotationMatrix::MakeFromXZ(UpdatedComponent->GetForwardVector().GetSafeNormal2D(), FVector::UpVector).ToQuat();
     FHitResult Hit;
     SafeMoveUpdatedComponent(FVector::ZeroVector, NewRot, true, Hit);
@@ -282,14 +311,18 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float DeltaTime, int32 Iterations
     if(DeltaTime < MIN_TICK_TIME) return;
 
     RestorePreAdditiveRootMotionVelocity();
+	
+	float ExitSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
 
-    FHitResult SurfaceHit;
-    if(!GetSlideSurface(SurfaceHit) || Velocity.SizeSquared() < pow(SlideMinSpeed,2))
-    {
-       SetMovementMode(MOVE_Walking);
-       StartNewPhysics(DeltaTime, Iterations);
-       return;
-    }
+	FHitResult SurfaceHit;
+	if (!GetSlideSurface(SurfaceHit) || Velocity.SizeSquared() < pow(ExitSpeed, 2))
+	{
+		SetMovementMode(MOVE_Walking);
+		StartNewPhysics(DeltaTime, Iterations);
+		return;
+	}
+
+   
 
     Velocity += SlideGravityForce * FVector::DownVector * DeltaTime;
 
@@ -324,11 +357,11 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float DeltaTime, int32 Iterations
        SlideAlongSurface(Adjusted, (1.f - Hit.Time), Hit.Normal, Hit, true);
     }
 
-    FHitResult NewSurfaceHit;
-    if(!GetSlideSurface(NewSurfaceHit)|| Velocity.SizeSquared() < pow(SlideMinSpeed,2))
-    {
-       SetMovementMode(MOVE_Walking);
-    }
+	FHitResult NewSurfaceHit;
+	if (!GetSlideSurface(NewSurfaceHit) || Velocity.SizeSquared() < pow(ExitSpeed, 2))
+	{
+		SetMovementMode(MOVE_Walking);
+	}
     
     if(!bJustTeleported && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
     {
@@ -591,6 +624,42 @@ FRotator UZeroBaseCharacterMovementComp::CharRotation() const { return UpdatedCo
 FVector UZeroBaseCharacterMovementComp::CamFV() const { return ZeroCharacter_Owner->GetFollowCamera()->GetForwardVector(); }
 FVector UZeroBaseCharacterMovementComp::CamLoc() const { return ZeroCharacter_Owner->GetFollowCamera()->GetComponentLocation(); }
 FQuat UZeroBaseCharacterMovementComp::CamQuat() const { return ZeroCharacter_Owner->GetFollowCamera()->GetComponentRotation().Quaternion(); }
+
+int32 UZeroBaseCharacterMovementComp::GetStablePlayerIndex() const
+{
+	AGameStateBase* GS = GetWorld()->GetGameState();
+	if (GS && !GS->PlayerArray.IsEmpty() && CharacterOwner)
+	{
+		TArray<APlayerState*> SortedArray = GS->PlayerArray;
+        
+		// FIX: Use GetPlayerId(), which replicates correctly over the network
+		SortedArray.Sort([](const APlayerState& A, const APlayerState& B) {
+			return A.GetPlayerId() < B.GetPlayerId();
+		});
+        
+		return SortedArray.IndexOfByKey(CharacterOwner->GetPlayerState());
+	}
+	return -1;
+}
+DEFINE_LOG_CATEGORY_STATIC(LogZeroMovement, Log, All);
+void UZeroBaseCharacterMovementComp::OnClientCorrectionReceived(
+	class FNetworkPredictionData_Client_Character& ClientData, float TimeStamp, FVector NewLocation,
+	FVector NewVelocity, UPrimitiveComponent* NewBase, FName NewBaseBoneName, bool bHasBase, bool bBaseRelativePosition,
+	uint8 ServerMovementMode, FVector ServerGravityDirection)
+{
+	Super::OnClientCorrectionReceived(ClientData, TimeStamp, NewLocation, NewVelocity, NewBase, NewBaseBoneName,
+	                                  bHasBase, bBaseRelativePosition,
+	                                  ServerMovementMode, ServerGravityDirection);
+	
+	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+    
+	UE_VLOG_SPHERE(this, LogZeroMovement, Error, OldLocation, 10.0f, FColor::Red, TEXT("Pre-correction"));
+	UE_VLOG_ARROW(this, LogZeroMovement, Error, OldLocation, NewLocation, FColor::Yellow, TEXT("Correction Shift"));
+	UE_VLOG_SPHERE(this, LogZeroMovement, Error, NewLocation, 10.0f, FColor::Green, TEXT("Post-correction"));
+    
+	UE_VLOG(this, LogZeroMovement, Error, TEXT("Correction! Client Mode: %d | Server Mode: %d"), MovementMode.GetIntValue(), ServerMovementMode);
+}
+
 bool UZeroBaseCharacterMovementComp::IsCustomMovementMode(ECustomMovementMode inCustomMode) const { return MovementMode == MOVE_Custom && CustomMovementMode == inCustomMode; }
 
 // --- UPDATED PHYS MELEE FOR MANUAL SWEEP AND GHOSTING ---
@@ -703,8 +772,8 @@ class FNetworkPredictionData_Client* UZeroBaseCharacterMovementComp::GetPredicti
     {
        UZeroBaseCharacterMovementComp* MutableThis = const_cast<UZeroBaseCharacterMovementComp*>(this);
        MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Zero(*this);
-       MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 92.f;
-       MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 140.f;
+       MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 256.f;
+       MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 384.f;
     }
     return ClientPredictionData;
 }
