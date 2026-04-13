@@ -73,6 +73,18 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::PrepMoveFor(ACharacter* C)
     CharMovementComp->Safe_bHadAnimRootMotion = Saved_bHadAnimRootMotion;
     CharMovementComp->Safe_bTransitionFinished = Saved_bTransitionFinished;
 }
+
+bool UZeroBaseCharacterMovementComp::FSavedMove_Zero::IsImportantMove(const FSavedMovePtr& LastAckedMove) const
+{
+	FSavedMove_Zero* LastAckedZeroMove = static_cast<FSavedMove_Zero*>(LastAckedMove.Get());
+    
+	if (LastAckedZeroMove)
+	{
+		if (Saved_bPressedZeroJump && !LastAckedZeroMove->Saved_bPressedZeroJump) return true;
+	}
+
+	return Super::IsImportantMove(LastAckedMove);
+}
 #pragma endregion
 
 #pragma region PredictionData
@@ -187,17 +199,19 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
        if(TryMantle())
        {
           ZeroCharacter_Owner->StopJumping();
+       	  ZeroCharacter_Owner->bPressedZeroJump = false;
        }
        else if(TryWallBounce())
        {
           ZeroCharacter_Owner->StopJumping();
           Proxy_bWallBounce = !Proxy_bWallBounce;
+       		ZeroCharacter_Owner->bPressedZeroJump = false;
        }
        else
        {
-          ZeroCharacter_Owner->bPressedZeroJump = false;
           CharacterOwner->bPressedJump = true;
           CharacterOwner->CheckJumpInput(DeltaSeconds);
+          ZeroCharacter_Owner->bPressedZeroJump = false;
        }
     }
     
@@ -441,8 +455,14 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
     float CosMMAA = FMath::Cos(FMath::DegreesToRadians(MantleMaxAlignmentAngle));
 
     FHitResult FrontHit;
-    float CheckDistance = FMath::Clamp(Velocity | Fwd, CapR() + 30, MantleMaxDistance);
-    FVector FrontStart = BaseLoc + FVector::UpVector * (MaxStepHeight - 1);
+	float CheckDistance = FMath::Clamp(Velocity | Fwd, CapR() + 30.f, MantleMaxDistance);
+	
+	if (!CharacterOwner->IsLocallyControlled())
+	{
+		CheckDistance += 20.0f; 
+	}
+    
+	FVector FrontStart = BaseLoc + FVector::UpVector * (MaxStepHeight - 1);
     
     for (int i = 0; i < 6; i++)
     {
@@ -504,22 +524,25 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
 #pragma region WallBounce
 bool UZeroBaseCharacterMovementComp::TryWallBounce()
 {
-    if (!IsMovementMode(MOVE_Falling)) return false;
+	if (!IsMovementMode(MOVE_Falling)) return false;
     
-    FHitResult WallHit;
-    FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR() * 1.25, CapHH() / 2);
-    FVector TraceLocation = UpdatedComponent->GetComponentLocation();
-    FQuat RotationX = FQuat::Identity;
+	FHitResult WallHit;
+	
+	float SweepMultiplier = CharacterOwner->IsLocallyControlled() ? 1.25f : 1.5f;
+	FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR() * SweepMultiplier, CapHH() / 2);
     
-    if(GetWorld()->SweepSingleByChannel(WallHit, TraceLocation, TraceLocation, RotationX, ECC_WorldStatic, CapShape, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
-    {
-       FVector WallLaunchDir = WallHit.ImpactNormal.GetSafeNormal() + FVector::UpVector;
-       Velocity = WallLaunchDir * WallBounceImpluse;
-       if (WallBounceDelegate.IsBound()) WallBounceDelegate.Broadcast();
-       SetMovementMode(MOVE_Falling);
-       return true;
-    }
-    return false;
+	FVector TraceLocation = UpdatedComponent->GetComponentLocation();
+	FQuat RotationX = FQuat::Identity;
+    
+	if(GetWorld()->SweepSingleByChannel(WallHit, TraceLocation, TraceLocation, RotationX, ECC_WorldStatic, CapShape, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
+	{
+		FVector WallLaunchDir = WallHit.ImpactNormal.GetSafeNormal() + FVector::UpVector;
+		Velocity = WallLaunchDir * WallBounceImpluse;
+		if (WallBounceDelegate.IsBound()) WallBounceDelegate.Broadcast();
+		SetMovementMode(MOVE_Falling);
+		return true;
+	}
+	return false;
 }
 #pragma endregion
 
@@ -772,8 +795,8 @@ class FNetworkPredictionData_Client* UZeroBaseCharacterMovementComp::GetPredicti
     {
        UZeroBaseCharacterMovementComp* MutableThis = const_cast<UZeroBaseCharacterMovementComp*>(this);
        MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Zero(*this);
-       MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 256.f;
-       MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 384.f;
+       MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 256.f *2;
+       MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 384.f*2;
     }
     return ClientPredictionData;
 }

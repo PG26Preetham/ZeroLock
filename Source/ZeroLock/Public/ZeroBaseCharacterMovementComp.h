@@ -68,7 +68,7 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 		virtual uint8 GetCompressedFlags() const override;
 		virtual void SetMoveFor(ACharacter* C, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character& ClientData) override;
 		virtual void PrepMoveFor(ACharacter* C) override;
-		//virtual bool IsImportantMove(const FSavedMovePtr& LastAckedMove) const override;
+		virtual bool IsImportantMove(const FSavedMovePtr& LastAckedMove) const override;
 	};
 
 	class FNetworkPredictionData_Client_Zero :public FNetworkPredictionData_Client_Character
@@ -89,7 +89,7 @@ class ZEROLOCK_API UZeroBaseCharacterMovementComp : public UCharacterMovementCom
 	bool Safe_bWantsToDash;
 	bool Safe_bHadAnimRootMotion;
 
-	
+	bool Safe_bPressedZeroJump;
 
 	float DashStartTime;//time the dash starts
 	FTimerHandle TimerHandle_DashCoolDown;
@@ -139,8 +139,7 @@ public:
 	UPROPERTY(EditDefaultsOnly) float MantleMinWallSteepnessAngle ;
 	UPROPERTY(EditDefaultsOnly) float MantleMaxSurfaceAngle ;
 	UPROPERTY(EditDefaultsOnly) float MantleMaxAlignmentAngle;
-
-	
+	 
 
 	//Zipline
 	UPROPERTY(EditDefaultsOnly) float ZiplineMinKeyPressTime ;
@@ -173,19 +172,17 @@ protected:
 	
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
-	//called after every perform move (kinda like Tick)
+
 	virtual void OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity) override;
 	virtual void UpdateCharacterStateBeforeMovement(float DeltaSeconds) override;
 	virtual void UpdateCharacterStateAfterMovement(float DeltaSeconds) override;
 	virtual void PhysCustom(float deltaTime, int32 Iterations) override;
 	virtual void OnMovementModeChanged(EMovementMode PreviousMovementMode, uint8 PreviousCustomMode) override;
-
-	//virtual bool DoJump(bool bReplayingMoves) override;
 	
 public:
 	virtual bool IsMovingOnGround() const override;
 	virtual bool CanCrouchInCurrentState() const override;
-	//virtual bool CanAttemptJump() const override;
+	
 	//Slide
 	private:
 	void EnterSlide();
@@ -245,7 +242,6 @@ public:
 	virtual void OnClientCorrectionReceived(class FNetworkPredictionData_Client_Character& ClientData, float TimeStamp, FVector NewLocation, FVector NewVelocity, UPrimitiveComponent* NewBase, FName NewBaseBoneName, bool bHasBase, bool bBaseRelativePosition, uint8 ServerMovementMode, FVector ServerGravityDirection) override;
 
 	
-	
 public:
 	UFUNCTION(BlueprintPure,BlueprintCallable) bool IsCustomMovementMode(ECustomMovementMode inCustomMode) const;
 	
@@ -260,6 +256,4 @@ public:
 
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
-	
-
 };
