@@ -233,7 +233,7 @@ public:
 
 	virtual void Jump() override;
 	virtual void StopJumping() override;
-	virtual void ClearJumpInput(float DeltaTime) override;
+	//virtual void ClearJumpInput(float DeltaTime) override;
 
 	//
 	void Death();

@@ -1,7 +1,6 @@
 //Copyright Preetham Mukundan (C) 2026
 
 #include "ZeroBaseCharacterMovementComp.h"
-#include "ZeroLock/Public/ZeroBaseCharacterMovementComp.h"
 #include "ZeroLock/ZeroLock.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
@@ -9,12 +8,14 @@
 #include "Net/UnrealNetwork.h"
 #include "DrawDebugHelpers.h"
 #include "ZeroLock/Public/Movement/Zero_ZiplineActor.h"
-#include "Camera/CameraComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
+#include "VisualLogger/VisualLogger.h"
 
 FVector GServerCharacterLoc[4];
+DEFINE_LOG_CATEGORY_STATIC(LogZeroMovement, Log, All);
+
 #pragma region SavedMove
 UZeroBaseCharacterMovementComp::FSavedMove_Zero::FSavedMove_Zero() {}
 
@@ -22,8 +23,8 @@ bool UZeroBaseCharacterMovementComp::FSavedMove_Zero::CanCombineWith(const FSave
 {
     FSavedMove_Zero* NewZeroMove = static_cast<FSavedMove_Zero*>(NewMove.Get());
 
-    if(Saved_bWantsToSprint != NewZeroMove->Saved_bWantsToSprint) return false;
-    if(Saved_bWantsToDash != NewZeroMove->Saved_bWantsToDash) return false;
+    if (Saved_bWantsToSprint != NewZeroMove->Saved_bWantsToSprint) return false;
+    if (Saved_bWantsToDash != NewZeroMove->Saved_bWantsToDash) return false;
     
     return FSavedMove_Character::CanCombineWith(NewMove, InCharacter, MaxDelta);
 }
@@ -32,11 +33,11 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::Clear()
 {
     FSavedMove_Character::Clear();
     Saved_bWantsToSprint = 0;
-    Saved_bPrevWantsToCrouch = 0;
     Saved_bWantsToDash = 0;
-    Saved_bTransitionFinished = 0;
-    Saved_bPressedZeroJump = 0;
+    Saved_bPrevPressedJump = 0;
+    Saved_bPrevWantsToCrouch = 0;
     Saved_bHadAnimRootMotion = 0;
+    Saved_bTransitionFinished = 0;
 }
 
 uint8 UZeroBaseCharacterMovementComp::FSavedMove_Zero::GetCompressedFlags() const
@@ -44,7 +45,6 @@ uint8 UZeroBaseCharacterMovementComp::FSavedMove_Zero::GetCompressedFlags() cons
     uint8 Result = Super::GetCompressedFlags();
     if(Saved_bWantsToSprint) Result |= FLAG_Sprint;
     if(Saved_bWantsToDash) Result |= FLAG_Dash;
-    if(Saved_bPressedZeroJump) Result |= FLAG_JumpPressed;
     return Result;
 }
 
@@ -54,9 +54,9 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::SetMoveFor(ACharacter* C, 
     UZeroBaseCharacterMovementComp* CharMovementComp = Cast<UZeroBaseCharacterMovementComp>(C->GetCharacterMovement());
     
     Saved_bWantsToSprint = CharMovementComp->Safe_bWantsToSprint;
-    Saved_bPrevWantsToCrouch = CharMovementComp->Safe_bPrevWantsToCrouch;
     Saved_bWantsToDash = CharMovementComp->Safe_bWantsToDash;
-    Saved_bPressedZeroJump = CharMovementComp->ZeroCharacter_Owner->bPressedZeroJump;
+    Saved_bPrevPressedJump = CharMovementComp->Safe_bPrevPressedJump;
+    Saved_bPrevWantsToCrouch = CharMovementComp->Safe_bPrevWantsToCrouch;
     Saved_bHadAnimRootMotion = CharMovementComp->Safe_bHadAnimRootMotion;
     Saved_bTransitionFinished = CharMovementComp->Safe_bTransitionFinished;
 }
@@ -67,23 +67,23 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::PrepMoveFor(ACharacter* C)
     UZeroBaseCharacterMovementComp* CharMovementComp = Cast<UZeroBaseCharacterMovementComp>(C->GetCharacterMovement());
     
     CharMovementComp->Safe_bWantsToSprint = Saved_bWantsToSprint;
-    CharMovementComp->Safe_bPrevWantsToCrouch = Saved_bPrevWantsToCrouch;
     CharMovementComp->Safe_bWantsToDash = Saved_bWantsToDash;
-    CharMovementComp->ZeroCharacter_Owner->bPressedZeroJump = Saved_bPressedZeroJump;
+    CharMovementComp->Safe_bPrevPressedJump = Saved_bPrevPressedJump;
+    CharMovementComp->Safe_bPrevWantsToCrouch = Saved_bPrevWantsToCrouch;
     CharMovementComp->Safe_bHadAnimRootMotion = Saved_bHadAnimRootMotion;
     CharMovementComp->Safe_bTransitionFinished = Saved_bTransitionFinished;
 }
 
 bool UZeroBaseCharacterMovementComp::FSavedMove_Zero::IsImportantMove(const FSavedMovePtr& LastAckedMove) const
 {
-	FSavedMove_Zero* LastAckedZeroMove = static_cast<FSavedMove_Zero*>(LastAckedMove.Get());
-    
-	if (LastAckedZeroMove)
-	{
-		if (Saved_bPressedZeroJump && !LastAckedZeroMove->Saved_bPressedZeroJump) return true;
-	}
-
-	return Super::IsImportantMove(LastAckedMove);
+    FSavedMove_Zero* LastAckedZeroMove = static_cast<FSavedMove_Zero*>(LastAckedMove.Get());
+    if (LastAckedZeroMove)
+    {
+       // Protect Jump and Dash from packet loss!
+       if (bPressedJump && !LastAckedMove->bPressedJump) return true;
+       if (Saved_bWantsToDash && !LastAckedZeroMove->Saved_bWantsToDash) return true;
+    }
+    return Super::IsImportantMove(LastAckedMove);
 }
 #pragma endregion
 
@@ -152,70 +152,71 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
     {
        MaxWalkSpeed = Safe_bWantsToSprint ? Sprint_MaxSpeed : Walk_MaxSpeed;
     }
+    
+    // Store previous frame data for the next tick
     Safe_bPrevWantsToCrouch = bWantsToCrouch;
-	
+    Safe_bPrevPressedJump = CharacterOwner->bPressedJump;
+    
 #if WITH_EDITOR
-	if (GetWorld()->GetNetMode() == NM_Client || GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer)
-	{
-		int32 PlayerIndex = GetStablePlayerIndex();
-		if (PlayerIndex >= 0 && PlayerIndex < 4)
-		{
-			if (IsServer())
-			{
-				// Server writes its authoritative position
-				GServerCharacterLoc[PlayerIndex] = UpdatedComponent->GetComponentLocation();
-			}
-			else if (CharacterOwner->IsLocallyControlled())
-			{
-				// Client reads the server position and draws a wireframe capsule
-				FVector ServerLoc = GServerCharacterLoc[PlayerIndex];
-				if (!ServerLoc.IsZero())
-				{
-					DrawDebugCapsule(GetWorld(), ServerLoc, CapHH(), CapR(), FQuat::Identity, FColor::Blue, false, -1.0f, 0, 2.0f);
-				}
-			}
-		}
-	}
+    if (GetWorld()->GetNetMode() == NM_Client || GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer)
+    {
+       int32 PlayerIndex = GetStablePlayerIndex();
+       if (PlayerIndex >= 0 && PlayerIndex < 4)
+       {
+          if (IsServer())
+          {
+             GServerCharacterLoc[PlayerIndex] = UpdatedComponent->GetComponentLocation();
+          }
+          else if (CharacterOwner->IsLocallyControlled())
+          {
+             FVector ServerLoc = GServerCharacterLoc[PlayerIndex];
+             if (!ServerLoc.IsZero())
+             {
+                DrawDebugCapsule(GetWorld(), ServerLoc, CapHH(), CapR(), FQuat::Identity, FColor::Blue, false, -1.0f, 0, 2.0f);
+             }
+          }
+       }
+    }
 #endif
 }
 
 void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
 {
-    if(ZeroCharacter_Owner->ZeroJumpHoldTIme > ZiplineMinKeyPressTime && ZeroCharacter_Owner->bStillJumpKeyDown)
+    // Zipline Hold Timer
+    if (CharacterOwner->bPressedJump)
+    {
+        Safe_ZeroJumpHoldTime += DeltaSeconds;
+    }
+    else
+    {
+        Safe_ZeroJumpHoldTime = 0.0f;
+    }
+
+    if(Safe_ZeroJumpHoldTime > ZiplineMinKeyPressTime && CharacterOwner->bPressedJump)
     {
         if(TryZipLine())
         {
            SetMovementMode(MOVE_Custom, CMOVE_Zipline);
-           if(!CharacterOwner->HasAuthority() && ZiplineActorRef)
-           {
-                 Server_EnterZipline(ZiplineActorRef->GetZiplineComponent(), bZiplineMoveingToEnd);
-           }
            return;
         }
     }
     
-    if(ZeroCharacter_Owner->bPressedZeroJump)
+    // Jump Action Routing (Only executes on the first frame it's pressed)
+    if(CharacterOwner->bPressedJump && !Safe_bPrevPressedJump)
     {
        if(TryMantle())
        {
-          ZeroCharacter_Owner->StopJumping();
-       	  ZeroCharacter_Owner->bPressedZeroJump = false;
+          CharacterOwner->StopJumping();
        }
        else if(TryWallBounce())
        {
-          ZeroCharacter_Owner->StopJumping();
+          CharacterOwner->StopJumping();
           Proxy_bWallBounce = !Proxy_bWallBounce;
-       		ZeroCharacter_Owner->bPressedZeroJump = false;
-       }
-       else
-       {
-          CharacterOwner->bPressedJump = true;
-          CharacterOwner->CheckJumpInput(DeltaSeconds);
-          ZeroCharacter_Owner->bPressedZeroJump = false;
        }
     }
     
-    bool bAuthProxy = CharacterOwner->HasAuthority() && !CharacterOwner->IsLocallyControlled();
+    // Dash Routing
+    bool bAuthProxy = IsServer() && !CharacterOwner->IsLocallyControlled();
     if(Safe_bWantsToDash && CanDash())
     {
        if(!bAuthProxy || GetWorld()->GetTimeSeconds() - DashStartTime > AuthDashCoolDownDuration)
@@ -224,17 +225,14 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
           Safe_bWantsToDash = false;
           Proxy_bDashStart = !Proxy_bDashStart;
        }
-       else
-       {
-          UE_LOG(LogTemp, Warning, TEXT("Tried Cheating Dash"));
-       }
     }
     
+    // Slide Routing (With Server Leniency)
     if(MovementMode == MOVE_Walking && bWantsToCrouch && Safe_bPrevWantsToCrouch)
     {
-    	// Give the server a 50 unit tolerance so jitter doesn't cause a rejection
-    	float RequiredSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
+       float RequiredSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
        FHitResult PotenialSurface;
+       
        if(Velocity.SizeSquared() > pow(RequiredSpeed, 2) && GetSlideSurface(PotenialSurface))
        {
           SetMovementMode(MOVE_Custom, CMOVE_Slide);
@@ -242,10 +240,13 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
        }
     }
     
+    // Cancel slide on un-crouch
     if(IsCustomMovementMode(CMOVE_Slide) && !bWantsToCrouch)
     {
        SetMovementMode(MOVE_Walking);
     }
+    
+    // Natively handles bPressedJump checking exactly once per frame
     Super::UpdateCharacterStateBeforeMovement(DeltaSeconds);
 }
 
@@ -308,13 +309,11 @@ bool UZeroBaseCharacterMovementComp::CanCrouchInCurrentState() const
 #pragma region Slide
 void UZeroBaseCharacterMovementComp::EnterSlide()
 {
-   // bWantsToCrouch = true;
     Velocity += Velocity.GetSafeNormal2D() * SlideEnterImpulse;
 }
 
 void UZeroBaseCharacterMovementComp::ExitSlide()
 {
-   // bWantsToCrouch = false;
     FQuat NewRot = FRotationMatrix::MakeFromXZ(UpdatedComponent->GetForwardVector().GetSafeNormal2D(), FVector::UpVector).ToQuat();
     FHitResult Hit;
     SafeMoveUpdatedComponent(FVector::ZeroVector, NewRot, true, Hit);
@@ -325,18 +324,17 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float DeltaTime, int32 Iterations
     if(DeltaTime < MIN_TICK_TIME) return;
 
     RestorePreAdditiveRootMotionVelocity();
-	
-	float ExitSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
+    
+    // Server Leniency checks
+    float ExitSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
 
-	FHitResult SurfaceHit;
-	if (!GetSlideSurface(SurfaceHit) || Velocity.SizeSquared() < pow(ExitSpeed, 2))
-	{
-		SetMovementMode(MOVE_Walking);
-		StartNewPhysics(DeltaTime, Iterations);
-		return;
-	}
-
-   
+    FHitResult SurfaceHit;
+    if (!GetSlideSurface(SurfaceHit) || Velocity.SizeSquared() < pow(ExitSpeed, 2))
+    {
+       SetMovementMode(MOVE_Walking);
+       StartNewPhysics(DeltaTime, Iterations);
+       return;
+    }
 
     Velocity += SlideGravityForce * FVector::DownVector * DeltaTime;
 
@@ -371,11 +369,11 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float DeltaTime, int32 Iterations
        SlideAlongSurface(Adjusted, (1.f - Hit.Time), Hit.Normal, Hit, true);
     }
 
-	FHitResult NewSurfaceHit;
-	if (!GetSlideSurface(NewSurfaceHit) || Velocity.SizeSquared() < pow(ExitSpeed, 2))
-	{
-		SetMovementMode(MOVE_Walking);
-	}
+    FHitResult NewSurfaceHit;
+    if (!GetSlideSurface(NewSurfaceHit) || Velocity.SizeSquared() < pow(ExitSpeed, 2))
+    {
+       SetMovementMode(MOVE_Walking);
+    }
     
     if(!bJustTeleported && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
     {
@@ -398,10 +396,7 @@ void UZeroBaseCharacterMovementComp::OnDashCoolDownFinished()
     Safe_bWantsToDash = true;
 }
 
-bool UZeroBaseCharacterMovementComp::CanDash() const
-{
-    return true;
-}
+bool UZeroBaseCharacterMovementComp::CanDash() const { return true; }
 
 void UZeroBaseCharacterMovementComp::PerformDash()
 {
@@ -455,14 +450,15 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
     float CosMMAA = FMath::Cos(FMath::DegreesToRadians(MantleMaxAlignmentAngle));
 
     FHitResult FrontHit;
-	float CheckDistance = FMath::Clamp(Velocity | Fwd, CapR() + 30.f, MantleMaxDistance);
-	
-	if (!CharacterOwner->IsLocallyControlled())
-	{
-		CheckDistance += 20.0f; 
-	}
     
-	FVector FrontStart = BaseLoc + FVector::UpVector * (MaxStepHeight - 1);
+    // Server Leniency added to reach
+    float CheckDistance = FMath::Clamp(Velocity | Fwd, CapR() + 30.f, MantleMaxDistance);
+    if (!CharacterOwner->IsLocallyControlled())
+    {
+       CheckDistance += 20.0f; 
+    }
+    
+    FVector FrontStart = BaseLoc + FVector::UpVector * (MaxStepHeight - 1);
     
     for (int i = 0; i < 6; i++)
     {
@@ -524,41 +520,47 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
 #pragma region WallBounce
 bool UZeroBaseCharacterMovementComp::TryWallBounce()
 {
-	if (!IsMovementMode(MOVE_Falling)) return false;
+    if (!IsMovementMode(MOVE_Falling)) return false;
     
-	FHitResult WallHit;
-	
-	float SweepMultiplier = CharacterOwner->IsLocallyControlled() ? 1.25f : 1.5f;
-	FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR() * SweepMultiplier, CapHH() / 2);
+    FHitResult WallHit;
     
-	FVector TraceLocation = UpdatedComponent->GetComponentLocation();
-	FQuat RotationX = FQuat::Identity;
+    // Server gets a wider capsule to absorb jitter
+    float SweepMultiplier = CharacterOwner->IsLocallyControlled() ? 1.25f : 1.5f;
+    FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR() * SweepMultiplier, CapHH() / 2);
     
-	if(GetWorld()->SweepSingleByChannel(WallHit, TraceLocation, TraceLocation, RotationX, ECC_WorldStatic, CapShape, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
-	{
-		FVector WallLaunchDir = WallHit.ImpactNormal.GetSafeNormal() + FVector::UpVector;
-		Velocity = WallLaunchDir * WallBounceImpluse;
-		if (WallBounceDelegate.IsBound()) WallBounceDelegate.Broadcast();
-		SetMovementMode(MOVE_Falling);
-		return true;
-	}
-	return false;
+    FVector TraceLocation = UpdatedComponent->GetComponentLocation();
+    FQuat RotationX = FQuat::Identity;
+    
+    if(GetWorld()->SweepSingleByChannel(WallHit, TraceLocation, TraceLocation, RotationX, ECC_WorldStatic, CapShape, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
+    {
+       FVector WallLaunchDir = WallHit.ImpactNormal.GetSafeNormal() + FVector::UpVector;
+       Velocity = WallLaunchDir * WallBounceImpluse;
+       if (WallBounceDelegate.IsBound()) WallBounceDelegate.Broadcast();
+       SetMovementMode(MOVE_Falling);
+       return true;
+    }
+    return false;
 }
 #pragma endregion
 
 #pragma region Zipline
 bool UZeroBaseCharacterMovementComp::TryZipLine()
 {
+	
     if(IsCustomMovementMode(CMOVE_Zipline)) return false;
-    if(GetWorld()->TimeSeconds - ZiplineLastTickTime < ZiplineCheckTickIntervel) return false;
-    ZiplineLastTickTime = GetWorld()->TimeSeconds;
+    if(Safe_ZeroJumpHoldTime < ZiplineMinKeyPressTime) return false;
     
     FCollisionShape ZipCap = FCollisionShape::MakeSphere(ZiplineCheckSphereRadius);
-    FVector TraceLocation = CamLoc() + CamFV() * ZiplineCheckSphereRadius;
-    FVector TraceEndLocation = CamLoc() + CamFV() * ZiplineCheckMaxDistance;
+    
+    // Server Sync Fix: Using BaseAimRotation instead of Camera Component
+    FVector SyncedAimDir = CharacterOwner->GetBaseAimRotation().Vector();
+    
+    FVector TraceLocation = UpdatedComponent->GetComponentLocation() + (SyncedAimDir * ZiplineCheckSphereRadius);
+    FVector TraceEndLocation = UpdatedComponent->GetComponentLocation() + (SyncedAimDir * ZiplineCheckMaxDistance);
+    
     FHitResult ZipHit;
     
-    if(GetWorld()->SweepSingleByObjectType(ZipHit, TraceLocation, TraceEndLocation, CamQuat(), ECC_Vehicle, ZipCap, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
+    if(GetWorld()->SweepSingleByObjectType(ZipHit, TraceLocation, TraceEndLocation, SyncedAimDir.ToOrientationQuat(), ECC_Vehicle, ZipCap, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
     {
        if(Cast<AZero_ZiplineActor>(ZipHit.GetActor()))
        {
@@ -576,13 +578,6 @@ bool UZeroBaseCharacterMovementComp::TryZipLine()
     return false;
 }
 
-void UZeroBaseCharacterMovementComp::Server_EnterZipline_Implementation(USplineComponent* ZiplineToUse, bool InSplineDir)
-{
-    ZiplineSplineComp = ZiplineToUse;
-    bZiplineMoveingToEnd = InSplineDir;
-    SetMovementMode(MOVE_Custom, CMOVE_Zipline);
-}
-
 void UZeroBaseCharacterMovementComp::EnterZipline()
 {
     Velocity = FVector::ZeroVector;
@@ -595,7 +590,12 @@ void UZeroBaseCharacterMovementComp::PhysZipline(float DeltaTime, int32 Iteratio
     if(DeltaTime < MIN_TICK_TIME) return;
 
     RestorePreAdditiveRootMotionVelocity();
-    if(!ZiplineSplineComp) return;
+	if(!ZiplineSplineComp) 
+	{
+		FHitResult ProxyHit;
+		SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentQuat(), false, ProxyHit);
+		return;
+	}
     
     if(Safe_bWantsToDash || bWantsToCrouch)
     {
@@ -644,48 +644,39 @@ float UZeroBaseCharacterMovementComp::CapHH() const { return CharacterOwner->Get
 bool UZeroBaseCharacterMovementComp::IsMovementMode(EMovementMode inMovementMode) const { return inMovementMode == MovementMode; }
 FVector UZeroBaseCharacterMovementComp::CharLocation() const { return UpdatedComponent->GetComponentLocation(); }
 FRotator UZeroBaseCharacterMovementComp::CharRotation() const { return UpdatedComponent->GetComponentRotation(); }
-FVector UZeroBaseCharacterMovementComp::CamFV() const { return ZeroCharacter_Owner->GetFollowCamera()->GetForwardVector(); }
-FVector UZeroBaseCharacterMovementComp::CamLoc() const { return ZeroCharacter_Owner->GetFollowCamera()->GetComponentLocation(); }
-FQuat UZeroBaseCharacterMovementComp::CamQuat() const { return ZeroCharacter_Owner->GetFollowCamera()->GetComponentRotation().Quaternion(); }
 
 int32 UZeroBaseCharacterMovementComp::GetStablePlayerIndex() const
 {
-	AGameStateBase* GS = GetWorld()->GetGameState();
-	if (GS && !GS->PlayerArray.IsEmpty() && CharacterOwner)
-	{
-		TArray<APlayerState*> SortedArray = GS->PlayerArray;
-        
-		// FIX: Use GetPlayerId(), which replicates correctly over the network
-		SortedArray.Sort([](const APlayerState& A, const APlayerState& B) {
-			return A.GetPlayerId() < B.GetPlayerId();
-		});
-        
-		return SortedArray.IndexOfByKey(CharacterOwner->GetPlayerState());
-	}
-	return -1;
+    AGameStateBase* GS = GetWorld()->GetGameState();
+    if (GS && !GS->PlayerArray.IsEmpty() && CharacterOwner)
+    {
+       TArray<APlayerState*> SortedArray = GS->PlayerArray;
+       SortedArray.Sort([](const APlayerState& A, const APlayerState& B) {
+          return A.GetPlayerId() < B.GetPlayerId();
+       });
+       return SortedArray.IndexOfByKey(CharacterOwner->GetPlayerState());
+    }
+    return -1;
 }
-DEFINE_LOG_CATEGORY_STATIC(LogZeroMovement, Log, All);
+
 void UZeroBaseCharacterMovementComp::OnClientCorrectionReceived(
-	class FNetworkPredictionData_Client_Character& ClientData, float TimeStamp, FVector NewLocation,
-	FVector NewVelocity, UPrimitiveComponent* NewBase, FName NewBaseBoneName, bool bHasBase, bool bBaseRelativePosition,
-	uint8 ServerMovementMode, FVector ServerGravityDirection)
+    class FNetworkPredictionData_Client_Character& ClientData, float TimeStamp, FVector NewLocation,
+    FVector NewVelocity, UPrimitiveComponent* NewBase, FName NewBaseBoneName, bool bHasBase, bool bBaseRelativePosition,
+    uint8 ServerMovementMode, FVector ServerGravityDirection)
 {
-	Super::OnClientCorrectionReceived(ClientData, TimeStamp, NewLocation, NewVelocity, NewBase, NewBaseBoneName,
-	                                  bHasBase, bBaseRelativePosition,
-	                                  ServerMovementMode, ServerGravityDirection);
-	
-	const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+    Super::OnClientCorrectionReceived(ClientData, TimeStamp, NewLocation, NewVelocity, NewBase, NewBaseBoneName,
+                                      bHasBase, bBaseRelativePosition,
+                                      ServerMovementMode, ServerGravityDirection);
     
-	UE_VLOG_SPHERE(this, LogZeroMovement, Error, OldLocation, 10.0f, FColor::Red, TEXT("Pre-correction"));
-	UE_VLOG_ARROW(this, LogZeroMovement, Error, OldLocation, NewLocation, FColor::Yellow, TEXT("Correction Shift"));
-	UE_VLOG_SPHERE(this, LogZeroMovement, Error, NewLocation, 10.0f, FColor::Green, TEXT("Post-correction"));
-    
-	UE_VLOG(this, LogZeroMovement, Error, TEXT("Correction! Client Mode: %d | Server Mode: %d"), MovementMode.GetIntValue(), ServerMovementMode);
+    const FVector OldLocation = UpdatedComponent->GetComponentLocation();
+    UE_VLOG_SPHERE(this, LogZeroMovement, Error, OldLocation, 10.0f, FColor::Red, TEXT("Pre-correction"));
+    UE_VLOG_ARROW(this, LogZeroMovement, Error, OldLocation, NewLocation, FColor::Yellow, TEXT("Correction Shift"));
+    UE_VLOG_SPHERE(this, LogZeroMovement, Error, NewLocation, 10.0f, FColor::Green, TEXT("Post-correction"));
+    UE_VLOG(this, LogZeroMovement, Error, TEXT("Correction! Client Mode: %d | Server Mode: %d"), MovementMode.GetIntValue(), ServerMovementMode);
 }
 
 bool UZeroBaseCharacterMovementComp::IsCustomMovementMode(ECustomMovementMode inCustomMode) const { return MovementMode == MOVE_Custom && CustomMovementMode == inCustomMode; }
 
-// --- UPDATED PHYS MELEE FOR MANUAL SWEEP AND GHOSTING ---
 void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations)
 {
     if (DeltaTime < MIN_TICK_TIME) return;
@@ -696,22 +687,19 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
 
     FVector OldLocation = UpdatedComponent->GetComponentLocation();
     
-    // 1. Get the target direction from the Camera (Control Rotation)
-    FVector MeleeDir = CharacterOwner->GetControlRotation().Vector();
+    // Server Sync Fix: Native aim rotation
+    FVector MeleeDir = CharacterOwner->GetBaseAimRotation().Vector();
     MeleeDir.Z = 0.f; // Keep the dash horizontal
     MeleeDir.Normalize();
 
-    // The full distance we WANT to move this frame
     FVector MoveDelta = MeleeDir * (1000.f * DeltaTime); 
     FQuat NewRot = FRotationMatrix::MakeFromXZ(MeleeDir, FVector::UpVector).ToQuat();
     
-    // 2. MANUAL SWEEP FOR PLAYERS
     FHitResult PlayerHit;
     FCollisionShape CapShape = CharacterOwner->GetCapsuleComponent()->GetCollisionShape();
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(CharacterOwner);
 
-    // Sweep against Pawns
     bool bHitPlayer = GetWorld()->SweepSingleByObjectType(
         PlayerHit, 
         OldLocation, 
@@ -724,11 +712,9 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
 
     if (bHitPlayer)
     {
-        // We hit a player! Truncate the MoveDelta so we stop exactly at the impact point
         MoveDelta *= PlayerHit.Time;
     }
 
-    // 3. ACTUAL MOVEMENT
     FHitResult WallHit(1.f);
     SafeMoveUpdatedComponent(MoveDelta, NewRot, true, WallHit);
 
@@ -737,7 +723,6 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
         SlideAlongSurface(MoveDelta, (1.f - WallHit.Time), WallHit.Normal, WallHit, true);
     }
 
-    // 4. PROCESS THE PLAYER HIT
     if (bHitPlayer)
     {
         if (MeleeHitDelegate.IsBound())
@@ -747,7 +732,6 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
         SetMovementMode(MOVE_Falling);
     }
 
-    // Update Velocity for the network/animators
     if (!bJustTeleported && !HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
     {
         Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / DeltaTime;
@@ -758,6 +742,7 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
 #pragma region Inputs
 void UZeroBaseCharacterMovementComp::SprintPressed() { Safe_bWantsToSprint = true; }
 void UZeroBaseCharacterMovementComp::SprintReleased() { Safe_bWantsToSprint = false; }
+
 void UZeroBaseCharacterMovementComp::CrouchPressed() { bWantsToCrouch = true; }
 void UZeroBaseCharacterMovementComp::CrouchReleased() { bWantsToCrouch = false; }
 
@@ -795,8 +780,10 @@ class FNetworkPredictionData_Client* UZeroBaseCharacterMovementComp::GetPredicti
     {
        UZeroBaseCharacterMovementComp* MutableThis = const_cast<UZeroBaseCharacterMovementComp*>(this);
        MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Zero(*this);
-       MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 256.f *2;
-       MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 384.f*2;
+       
+       // Expand smoothing distances to hide lag spikes on simulated proxies
+       MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 256.f * 2;
+       MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 384.f * 2;
     }
     return ClientPredictionData;
 }

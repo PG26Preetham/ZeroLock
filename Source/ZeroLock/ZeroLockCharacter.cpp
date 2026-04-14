@@ -79,6 +79,10 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->NetworkSmoothingMode = ENetworkSmoothingMode::Exponential;
+	GetCharacterMovement()->NetworkSimulatedSmoothLocationTime = 0.15f; 
+	GetCharacterMovement()->NetworkSimulatedSmoothRotationTime = 0.15f; 
+	GetCharacterMovement()->ListenServerNetworkSimulatedSmoothLocationTime = 0.15f;
 	JumpMaxCount =2;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
@@ -198,34 +202,24 @@ bool AZeroLockCharacter::CanJumpInternal_Implementation() const
 void AZeroLockCharacter::Jump()
 {
 	Super::Jump();
+	//ZeroMovementComp->ZeroJumpPressed();
+	//bPressedZeroJump = true;
 
-	bPressedZeroJump = true;
-
-	bPressedJump = false;
-	bStillJumpKeyDown =true;
+	//bPressedJump = false;
+	//bStillJumpKeyDown =true;
 	//ZeroTimeJumpKeyPressed = GetWorld()->TimeSeconds;
-	ZeroJumpHoldTIme =0.0f;
+	//ZeroJumpHoldTIme =0.0f;
 }
 
 void AZeroLockCharacter::StopJumping()
 {
 	Super::StopJumping();
-	bPressedZeroJump = false;
-	bStillJumpKeyDown = false;
+	//ZeroMovementComp->ZeroJumpReleased();
+	//bPressedZeroJump = false;
+	//bStillJumpKeyDown = false;
 }
 
-void AZeroLockCharacter::ClearJumpInput(float DeltaTime)
-{
-	Super::ClearJumpInput(DeltaTime);
-	if(bStillJumpKeyDown)
-	{
-		ZeroJumpHoldTIme += DeltaTime;
-	}
-	else
-	{
-		//	ZeroJumpHoldTIme =0;
-	}
-}
+
 
 void AZeroLockCharacter::Death()
 {
