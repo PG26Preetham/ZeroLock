@@ -13,7 +13,8 @@
 				"GameplayAbilities",
 				"CommonUI",
 				"ModelViewViewModel",
-				"UMG"
+				"UMG",
+				"Mover"
 			]
 		},
 		{
@@ -76,6 +77,14 @@
 		},
 		{
 			"Name": "OnlineServicesOSSAdapter",
+			"Enabled": true
+		},
+		{
+			"Name": "Mover",
+			"Enabled": true
+		},
+		{
+			"Name": "ChaosMover",
 			"Enabled": true
 		}
 	]
