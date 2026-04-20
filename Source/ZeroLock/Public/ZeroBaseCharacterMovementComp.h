@@ -14,16 +14,18 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDashStartDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FWallBounceDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMeleeHitDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FMMDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCustomMoveEventDelegate); 
 
 UENUM(BlueprintType)
 enum ECustomMovementMode
 {
-    CMOVE_None      UMETA(DisplayName = "None"),
-    CMOVE_Slide     UMETA(DisplayName = "Slide"),
-    CMOVE_Zipline   UMETA(DisplayName = "Zipline"),
-    CMOVE_Melee     UMETA(DisplayName = "Melee"),
-    CMOVE_To_Location UMETA(DisplayName = "To_Location"),
-    CMOVE_Max       UMETA(DisplayName = "Max")
+    CMOVE_None            UMETA(DisplayName = "None"),
+    CMOVE_Slide           UMETA(DisplayName = "Slide"),
+    CMOVE_Zipline         UMETA(DisplayName = "Zipline"),
+    CMOVE_Melee           UMETA(DisplayName = "Melee"),
+    CMOVE_DirectionalDash UMETA(DisplayName = "DirectionalDash"), 
+    CMOVE_TargetedLeap    UMETA(DisplayName = "TargetedLeap"),
+    CMOVE_Max             UMETA(DisplayName = "Max")
 };
 
 UCLASS()
@@ -39,8 +41,9 @@ public:
         enum CompressedFlags
         {
             FLAG_Sprint      = 0x10,
-            FLAG_Dash        = 0x20
-            // Native bPressedJump is handled by Unreal Engine natively
+            FLAG_Dash        = 0x20,
+            FLAG_PrevJump    = 0x40, 
+            FLAG_PrevCrouch  = 0x80  
         };
         typedef FSavedMove_Character Super;
 
@@ -50,6 +53,15 @@ public:
         uint8 Saved_bPrevWantsToCrouch: 1;
         uint8 Saved_bHadAnimRootMotion: 1;
         uint8 Saved_bTransitionFinished: 1;
+
+        // Custom State Variables for Client Rewind/Replay
+        FVector Saved_DashDir;
+        float Saved_DashSpeed;
+        float Saved_DashTimeRemaining;
+        uint8 Saved_DashExitMode; 
+
+        FVector Saved_LeapTargetLoc;
+        float Saved_LeapTimeRemaining;
 
     public:
         FSavedMove_Zero();
@@ -78,13 +90,27 @@ public:
     bool Safe_bHadAnimRootMotion;
     bool Safe_bTransitionFinished;
 
+    // --- Directional Dash State ---
+    FVector Safe_DashDir;
+    float Safe_DashSpeed;
+    float Safe_DashTimeRemaining;
+    TEnumAsByte<EMovementMode> Safe_DashExitMode; 
+
+    // --- Targeted Leap State ---
+    FVector Safe_LeapTargetLoc;
+    float Safe_LeapTimeRemaining;
+
     float Safe_ZeroJumpHoldTime;
 
     float DashStartTime;
     FTimerHandle TimerHandle_DashCoolDown;
 
-    UPROPERTY(BlueprintAssignable)
-    FMMDelegate ZeroMovementModeChangedDelegate;
+    // --- Delegates ---
+    UPROPERTY(BlueprintAssignable) FMMDelegate ZeroMovementModeChangedDelegate;
+    UPROPERTY(BlueprintAssignable) FCustomMoveEventDelegate OnDirectionalDashStarted;
+    UPROPERTY(BlueprintAssignable) FCustomMoveEventDelegate OnDirectionalDashFinished;
+    UPROPERTY(BlueprintAssignable) FCustomMoveEventDelegate OnTargetedLeapStarted;
+    UPROPERTY(BlueprintAssignable) FCustomMoveEventDelegate OnTargetedLeapFinished;
 
     // Replicated Triggers
     UPROPERTY(ReplicatedUsing=OnRep_DashStart) bool Proxy_bDashStart;
@@ -111,7 +137,7 @@ public:
     UPROPERTY(EditDefaultsOnly) float SlideGravityForce;
     UPROPERTY(EditDefaultsOnly) float SlideFriction;
 
-    // Dash
+    // Native Dash
     UPROPERTY(EditDefaultsOnly) float DashImpulse;
     UPROPERTY(EditDefaultsOnly) float DashCoolDownDuration;
     UPROPERTY(EditDefaultsOnly) float AuthDashCoolDownDuration;
@@ -167,6 +193,11 @@ public:
     virtual bool CanCrouchInCurrentState() const override;
     
 private:
+    // Custom States
+    void PhysDirectionalDash(float DeltaTime, int32 Iterations);
+    void PhysTargetedLeap(float DeltaTime, int32 Iterations);
+    void ExitDirectionalDash();
+
     // Slide
     void EnterSlide();
     void ExitSlide();
@@ -219,6 +250,19 @@ public:
 
     UFUNCTION(BlueprintCallable) void DashPressed();
     UFUNCTION(BlueprintCallable) void DashReleased();
+
+    // GAS Triggers & Server RPCs
+    UFUNCTION(BlueprintCallable, Category = "ZeroLock|Movement")
+    void StartDirectionalDash(const FVector& Direction, float Speed, float Duration, EMovementMode ExitMode = MOVE_Falling);
+
+    UFUNCTION(Server, Reliable)
+    void Server_StartDirectionalDash(FVector Direction, float Speed, float Duration, EMovementMode ExitMode);
+
+    UFUNCTION(BlueprintCallable, Category = "ZeroLock|Movement")
+    void StartTargetedLeap(const FVector& TargetLocation, float Duration);
+
+    UFUNCTION(Server, Reliable)
+    void Server_StartTargetedLeap(FVector TargetLocation, float Duration);
 
     virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 };

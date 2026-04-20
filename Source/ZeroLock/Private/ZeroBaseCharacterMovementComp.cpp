@@ -38,6 +38,14 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::Clear()
     Saved_bPrevWantsToCrouch = 0;
     Saved_bHadAnimRootMotion = 0;
     Saved_bTransitionFinished = 0;
+
+    // Clear Custom State
+    Saved_DashDir = FVector::ZeroVector;
+    Saved_DashSpeed = 0.0f;
+    Saved_DashTimeRemaining = 0.0f;
+    Saved_DashExitMode = MOVE_Falling;
+    Saved_LeapTargetLoc = FVector::ZeroVector;
+    Saved_LeapTimeRemaining = 0.0f;
 }
 
 uint8 UZeroBaseCharacterMovementComp::FSavedMove_Zero::GetCompressedFlags() const
@@ -45,6 +53,9 @@ uint8 UZeroBaseCharacterMovementComp::FSavedMove_Zero::GetCompressedFlags() cons
     uint8 Result = Super::GetCompressedFlags();
     if(Saved_bWantsToSprint) Result |= FLAG_Sprint;
     if(Saved_bWantsToDash) Result |= FLAG_Dash;
+    
+    if(Saved_bPrevPressedJump) Result |= FLAG_PrevJump;
+    if(Saved_bPrevWantsToCrouch) Result |= FLAG_PrevCrouch;
     return Result;
 }
 
@@ -59,6 +70,14 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::SetMoveFor(ACharacter* C, 
     Saved_bPrevWantsToCrouch = CharMovementComp->Safe_bPrevWantsToCrouch;
     Saved_bHadAnimRootMotion = CharMovementComp->Safe_bHadAnimRootMotion;
     Saved_bTransitionFinished = CharMovementComp->Safe_bTransitionFinished;
+
+    // Save state for client prediction rewind
+    Saved_DashDir = CharMovementComp->Safe_DashDir;
+    Saved_DashSpeed = CharMovementComp->Safe_DashSpeed;
+    Saved_DashTimeRemaining = CharMovementComp->Safe_DashTimeRemaining;
+    Saved_DashExitMode = CharMovementComp->Safe_DashExitMode;
+    Saved_LeapTargetLoc = CharMovementComp->Safe_LeapTargetLoc;
+    Saved_LeapTimeRemaining = CharMovementComp->Safe_LeapTimeRemaining;
 }
 
 void UZeroBaseCharacterMovementComp::FSavedMove_Zero::PrepMoveFor(ACharacter* C)
@@ -72,6 +91,14 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::PrepMoveFor(ACharacter* C)
     CharMovementComp->Safe_bPrevWantsToCrouch = Saved_bPrevWantsToCrouch;
     CharMovementComp->Safe_bHadAnimRootMotion = Saved_bHadAnimRootMotion;
     CharMovementComp->Safe_bTransitionFinished = Saved_bTransitionFinished;
+
+    // Restore state if server corrects client
+    CharMovementComp->Safe_DashDir = Saved_DashDir;
+    CharMovementComp->Safe_DashSpeed = Saved_DashSpeed;
+    CharMovementComp->Safe_DashTimeRemaining = Saved_DashTimeRemaining;
+    CharMovementComp->Safe_DashExitMode = (EMovementMode)Saved_DashExitMode;
+    CharMovementComp->Safe_LeapTargetLoc = Saved_LeapTargetLoc;
+    CharMovementComp->Safe_LeapTimeRemaining = Saved_LeapTimeRemaining;
 }
 
 bool UZeroBaseCharacterMovementComp::FSavedMove_Zero::IsImportantMove(const FSavedMovePtr& LastAckedMove) const
@@ -79,7 +106,6 @@ bool UZeroBaseCharacterMovementComp::FSavedMove_Zero::IsImportantMove(const FSav
     FSavedMove_Zero* LastAckedZeroMove = static_cast<FSavedMove_Zero*>(LastAckedMove.Get());
     if (LastAckedZeroMove)
     {
-       // Protect Jump and Dash from packet loss!
        if (bPressedJump && !LastAckedMove->bPressedJump) return true;
        if (Saved_bWantsToDash && !LastAckedZeroMove->Saved_bWantsToDash) return true;
     }
@@ -142,6 +168,9 @@ void UZeroBaseCharacterMovementComp::UpdateFromCompressedFlags(uint8 Flags)
     Super::UpdateFromCompressedFlags(Flags);
     Safe_bWantsToSprint = (Flags & FSavedMove_Zero::FLAG_Sprint) != 0;
     Safe_bWantsToDash = (Flags & FSavedMove_Zero::FLAG_Dash) != 0;
+    
+    Safe_bPrevPressedJump = (Flags & FSavedMove_Zero::FLAG_PrevJump) != 0;
+    Safe_bPrevWantsToCrouch = (Flags & FSavedMove_Zero::FLAG_PrevCrouch) != 0;
 }
 
 void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity)
@@ -153,7 +182,6 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
        MaxWalkSpeed = Safe_bWantsToSprint ? Sprint_MaxSpeed : Walk_MaxSpeed;
     }
     
-    // Store previous frame data for the next tick
     Safe_bPrevWantsToCrouch = bWantsToCrouch;
     Safe_bPrevPressedJump = CharacterOwner->bPressedJump;
     
@@ -172,7 +200,7 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
              FVector ServerLoc = GServerCharacterLoc[PlayerIndex];
              if (!ServerLoc.IsZero())
              {
-                DrawDebugCapsule(GetWorld(), ServerLoc, CapHH(), CapR(), FQuat::Identity, FColor::Blue, false, -1.0f, 0, 2.0f);
+                 DrawDebugCapsule(GetWorld(), ServerLoc, CapHH(), CapR(), FQuat::Identity, FColor::Blue, false, -1.0f, 0, 2.0f);
              }
           }
        }
@@ -182,7 +210,6 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
 
 void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
 {
-    // Zipline Hold Timer
     if (CharacterOwner->bPressedJump)
     {
         Safe_ZeroJumpHoldTime += DeltaSeconds;
@@ -201,7 +228,6 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
         }
     }
     
-    // Jump Action Routing (Only executes on the first frame it's pressed)
     if(CharacterOwner->bPressedJump && !Safe_bPrevPressedJump)
     {
        if(TryMantle())
@@ -215,7 +241,6 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
        }
     }
     
-    // Dash Routing
     bool bAuthProxy = IsServer() && !CharacterOwner->IsLocallyControlled();
     if(Safe_bWantsToDash && CanDash())
     {
@@ -227,7 +252,6 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
        }
     }
     
-    // Slide Routing (With Server Leniency)
     if(MovementMode == MOVE_Walking && bWantsToCrouch && Safe_bPrevWantsToCrouch)
     {
        float RequiredSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
@@ -240,13 +264,11 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
        }
     }
     
-    // Cancel slide on un-crouch
     if(IsCustomMovementMode(CMOVE_Slide) && !bWantsToCrouch)
     {
        SetMovementMode(MOVE_Walking);
     }
     
-    // Natively handles bPressedJump checking exactly once per frame
     Super::UpdateCharacterStateBeforeMovement(DeltaSeconds);
 }
 
@@ -254,13 +276,27 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateAfterMovement(float Del
 {
     Super::UpdateCharacterStateAfterMovement(DeltaSeconds);
     
-    if (GetRootMotionSourceByID(TransitionRMS_ID) && GetRootMotionSourceByID(TransitionRMS_ID)->Status.HasFlag(ERootMotionSourceStatusFlags::Finished))
+    if (TransitionRMS_ID > 0) 
     {
-       Velocity = FVector::ZeroVector;
-       SetMovementMode(MOVE_Walking);
-       RemoveRootMotionSourceByID(TransitionRMS_ID);
-       Safe_bTransitionFinished = true;
+       TSharedPtr<FRootMotionSource> RMS = GetRootMotionSourceByID(TransitionRMS_ID);
+       if (RMS && RMS->Status.HasFlag(ERootMotionSourceStatusFlags::Finished))
+       {
+          TSharedPtr<FRootMotionSource_MoveToForce> MoveToForceRMS = StaticCastSharedPtr<FRootMotionSource_MoveToForce>(RMS);
+          if (MoveToForceRMS.IsValid())
+          {
+             FHitResult SnapHit;
+             SafeMoveUpdatedComponent(MoveToForceRMS->TargetLocation - UpdatedComponent->GetComponentLocation(), UpdatedComponent->GetComponentQuat(), false, SnapHit);
+          }
+
+          Velocity = FVector::ZeroVector;
+          SetMovementMode(MOVE_Walking);
+          RemoveRootMotionSourceByID(TransitionRMS_ID);
+           
+          TransitionRMS_ID = 0; 
+          Safe_bTransitionFinished = true;
+       }
     }
+    
     Safe_bHadAnimRootMotion = HasAnimRootMotion();
 }
 
@@ -272,6 +308,8 @@ void UZeroBaseCharacterMovementComp::PhysCustom(float deltaTime, int32 Iteration
     case CMOVE_Slide: PhysSlide(deltaTime, Iterations); break;
     case CMOVE_Zipline: PhysZipline(deltaTime, Iterations); break;
     case CMOVE_Melee: PhysMelee(deltaTime, Iterations); break;
+    case CMOVE_DirectionalDash: PhysDirectionalDash(deltaTime, Iterations); break;
+    case CMOVE_TargetedLeap: PhysTargetedLeap(deltaTime, Iterations); break;
     default: UE_LOG(LogTemp, Fatal, TEXT("InvalidMovement MOde"));
     }
 }
@@ -283,6 +321,8 @@ void UZeroBaseCharacterMovementComp::OnMovementModeChanged(EMovementMode Previou
     if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Slide) ExitSlide();
     if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Zipline) ExitZipline();
     if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_Melee) ZLOG("EndMelee");
+    
+    if (PreviousMovementMode == MOVE_Custom && PreviousCustomMode == CMOVE_DirectionalDash) ExitDirectionalDash();
 
     if (IsCustomMovementMode(CMOVE_Slide)) EnterSlide();
     if (IsCustomMovementMode(CMOVE_Zipline)) EnterZipline();
@@ -306,6 +346,175 @@ bool UZeroBaseCharacterMovementComp::CanCrouchInCurrentState() const
 }
 #pragma endregion 
 
+#pragma region Directional Dash & Targeted Leap
+
+// --- DEDICATED PHYSICS RPCS ---
+void UZeroBaseCharacterMovementComp::StartDirectionalDash(const FVector& Direction, float Speed, float Duration, EMovementMode ExitMode)
+{
+    Safe_DashDir = Direction.GetSafeNormal();
+    Safe_DashSpeed = Speed;
+    Safe_DashTimeRemaining = Duration;
+    Safe_DashExitMode = ExitMode;
+
+    if (CharacterOwner->IsLocallyControlled() && !IsServer())
+    {
+        Server_StartDirectionalDash(Direction, Speed, Duration, ExitMode);
+    }
+    
+    SetMovementMode(MOVE_Custom, CMOVE_DirectionalDash);
+    if (OnDirectionalDashStarted.IsBound()) OnDirectionalDashStarted.Broadcast();
+}
+
+void UZeroBaseCharacterMovementComp::Server_StartDirectionalDash_Implementation(FVector Direction, float Speed, float Duration, EMovementMode ExitMode)
+{
+    StartDirectionalDash(Direction, Speed, Duration, ExitMode);
+}
+
+void UZeroBaseCharacterMovementComp::StartTargetedLeap(const FVector& TargetLocation, float Duration)
+{
+    Safe_LeapTargetLoc = TargetLocation;
+    Safe_LeapTimeRemaining = Duration;
+
+    if (CharacterOwner->IsLocallyControlled() && !IsServer())
+    {
+        Server_StartTargetedLeap(TargetLocation, Duration);
+    }
+    
+    SetMovementMode(MOVE_Custom, CMOVE_TargetedLeap);
+    if (OnTargetedLeapStarted.IsBound()) OnTargetedLeapStarted.Broadcast();
+}
+
+void UZeroBaseCharacterMovementComp::Server_StartTargetedLeap_Implementation(FVector TargetLocation, float Duration)
+{
+    StartTargetedLeap(TargetLocation, Duration);
+}
+
+void UZeroBaseCharacterMovementComp::PhysDirectionalDash(float DeltaTime, int32 Iterations)
+{
+    if (DeltaTime < MIN_TICK_TIME) return;
+
+    // Sub-Frame Overshoot Fix
+    float MoveDeltaTime = (Safe_DashTimeRemaining < DeltaTime) ? Safe_DashTimeRemaining : DeltaTime;
+
+    Velocity = Safe_DashDir * Safe_DashSpeed;
+    
+    FHitResult Hit;
+    SafeMoveUpdatedComponent(Velocity * MoveDeltaTime, UpdatedComponent->GetComponentQuat(), true, Hit);
+    
+    if (Hit.IsValidBlockingHit())
+    {
+        if (Hit.ImpactNormal.Z >= 0.5f)
+        {
+            SlideAlongSurface(Velocity * MoveDeltaTime, (1.f - Hit.Time), Hit.Normal, Hit, true);
+        }
+        else 
+        {
+            Safe_DashTimeRemaining = 0.0f;
+            Velocity = FVector::ZeroVector;
+            Acceleration = FVector::ZeroVector;
+            
+            SetMovementMode(Safe_DashExitMode);
+            StartNewPhysics(DeltaTime, Iterations);
+            
+            if (OnDirectionalDashFinished.IsBound())
+            {
+                OnDirectionalDashFinished.Broadcast();
+                OnDirectionalDashFinished.Clear(); 
+            }
+            return; 
+        }
+    }
+
+    Safe_DashTimeRemaining -= DeltaTime;
+
+    // Clean Finish
+    if (Safe_DashTimeRemaining <= 0.0f)
+    {
+        Velocity = FVector::ZeroVector;
+        Acceleration = FVector::ZeroVector; 
+        
+        SetMovementMode(Safe_DashExitMode);
+        
+        float LeftoverTime = DeltaTime - MoveDeltaTime;
+        if (LeftoverTime > 0.0f)
+        {
+            StartNewPhysics(LeftoverTime, Iterations);
+        }
+        
+        if (OnDirectionalDashFinished.IsBound())
+        {
+            OnDirectionalDashFinished.Broadcast();
+            OnDirectionalDashFinished.Clear(); 
+        }
+    }
+}
+
+void UZeroBaseCharacterMovementComp::PhysTargetedLeap(float DeltaTime, int32 Iterations)
+{
+    if (DeltaTime < MIN_TICK_TIME) return;
+
+    Safe_LeapTimeRemaining -= DeltaTime;
+
+    if (Safe_LeapTimeRemaining <= 0.0f)
+    {
+       FVector RemainingDelta = Safe_LeapTargetLoc - UpdatedComponent->GetComponentLocation();
+       FHitResult SnapHit;
+        
+       SafeMoveUpdatedComponent(RemainingDelta, UpdatedComponent->GetComponentQuat(), false, SnapHit);
+
+       Velocity = FVector::ZeroVector;
+       Acceleration = FVector::ZeroVector; 
+        
+       SetMovementMode(MOVE_Falling); 
+       StartNewPhysics(DeltaTime, Iterations); 
+        
+       if (OnTargetedLeapFinished.IsBound())
+       {
+          OnTargetedLeapFinished.Broadcast();
+          OnTargetedLeapFinished.Clear(); 
+       }
+       return;
+    }
+
+    FVector StartLoc = UpdatedComponent->GetComponentLocation();
+    Velocity = (Safe_LeapTargetLoc - StartLoc) / Safe_LeapTimeRemaining;
+    
+    FHitResult Hit;
+    SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentQuat(), true, Hit);
+
+    if (Hit.IsValidBlockingHit())
+    {
+       if (Hit.ImpactNormal.Z >= 0.5f)
+       {
+          SlideAlongSurface(Velocity * DeltaTime, (1.f - Hit.Time), Hit.Normal, Hit, true);
+       }
+       else 
+       {
+          Safe_LeapTimeRemaining = 0.0f;
+          Velocity = FVector::ZeroVector;
+          Acceleration = FVector::ZeroVector; 
+            
+          SetMovementMode(MOVE_Falling);
+          StartNewPhysics(DeltaTime, Iterations);
+            
+          if (OnTargetedLeapFinished.IsBound())
+          {
+             OnTargetedLeapFinished.Broadcast();
+             OnTargetedLeapFinished.Clear(); 
+          }
+       }
+    }
+}
+
+void UZeroBaseCharacterMovementComp::ExitDirectionalDash()
+{
+    Velocity.X = 0.0f;
+    Velocity.Y = 0.0f;
+    Acceleration = FVector::ZeroVector;
+    Safe_DashTimeRemaining = 0.0f;
+}
+#pragma endregion
+
 #pragma region Slide
 void UZeroBaseCharacterMovementComp::EnterSlide()
 {
@@ -315,8 +524,11 @@ void UZeroBaseCharacterMovementComp::EnterSlide()
 void UZeroBaseCharacterMovementComp::ExitSlide()
 {
     FQuat NewRot = FRotationMatrix::MakeFromXZ(UpdatedComponent->GetForwardVector().GetSafeNormal2D(), FVector::UpVector).ToQuat();
+    float ZOffset = CapHH() - CapR(); 
     FHitResult Hit;
-    SafeMoveUpdatedComponent(FVector::ZeroVector, NewRot, true, Hit);
+    
+    SafeMoveUpdatedComponent(FVector(0, 0, ZOffset), NewRot, true, Hit);
+    bJustTeleported = true;
 }
 
 void UZeroBaseCharacterMovementComp::PhysSlide(float DeltaTime, int32 Iterations)
@@ -324,8 +536,7 @@ void UZeroBaseCharacterMovementComp::PhysSlide(float DeltaTime, int32 Iterations
     if(DeltaTime < MIN_TICK_TIME) return;
 
     RestorePreAdditiveRootMotionVelocity();
-    
-    // Server Leniency checks
+
     float ExitSpeed = CharacterOwner->IsLocallyControlled() ? SlideMinSpeed : (SlideMinSpeed - 50.f);
 
     FHitResult SurfaceHit;
@@ -440,6 +651,11 @@ void UZeroBaseCharacterMovementComp::OnRep_WallBounce()
 bool UZeroBaseCharacterMovementComp::TryMantle()
 {
     if (!(IsMovementMode(MOVE_Walking) && !IsCrouching()) && !IsMovementMode(MOVE_Falling)) return false;
+    
+    if (Acceleration.IsNearlyZero() || (Acceleration.GetSafeNormal2D() | UpdatedComponent->GetForwardVector().GetSafeNormal2D()) < 0.5f) 
+    {
+       return false;
+    }
 
     FVector BaseLoc = UpdatedComponent->GetComponentLocation() + FVector::DownVector * CapHH();
     FVector Fwd = UpdatedComponent->GetForwardVector().GetSafeNormal2D();
@@ -451,11 +667,13 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
 
     FHitResult FrontHit;
     
-    // Server Leniency added to reach
+
     float CheckDistance = FMath::Clamp(Velocity | Fwd, CapR() + 30.f, MantleMaxDistance);
-    if (!CharacterOwner->IsLocallyControlled())
+    
+
+    if (IsServer() && !CharacterOwner->IsLocallyControlled())
     {
-       CheckDistance += 20.0f; 
+       CheckDistance += 100.0f; 
     }
     
     FVector FrontStart = BaseLoc + FVector::UpVector * (MaxStepHeight - 1);
@@ -521,20 +739,41 @@ bool UZeroBaseCharacterMovementComp::TryMantle()
 bool UZeroBaseCharacterMovementComp::TryWallBounce()
 {
     if (!IsMovementMode(MOVE_Falling)) return false;
+
+    FHitResult GroundHit;
+    FVector StartLoc = UpdatedComponent->GetComponentLocation();
+    FVector EndLoc = StartLoc + FVector::DownVector * (CapHH() + 30.0f); 
     
-    FHitResult WallHit;
-    
-    // Server gets a wider capsule to absorb jitter
-    float SweepMultiplier = CharacterOwner->IsLocallyControlled() ? 1.25f : 1.5f;
-    FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR() * SweepMultiplier, CapHH() / 2);
-    
-    FVector TraceLocation = UpdatedComponent->GetComponentLocation();
-    FQuat RotationX = FQuat::Identity;
-    
-    if(GetWorld()->SweepSingleByChannel(WallHit, TraceLocation, TraceLocation, RotationX, ECC_WorldStatic, CapShape, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
+    if (GetWorld()->LineTraceSingleByChannel(GroundHit, StartLoc, EndLoc, ECC_WorldStatic, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
     {
-       FVector WallLaunchDir = WallHit.ImpactNormal.GetSafeNormal() + FVector::UpVector;
-       Velocity = WallLaunchDir * WallBounceImpluse;
+        return false;
+    }
+
+    FHitResult WallHit;
+    FCollisionShape CapShape = FCollisionShape::MakeCapsule(CapR() * 1.25f, CapHH() / 2);
+    
+    FVector TraceStart = UpdatedComponent->GetComponentLocation();
+    FVector TraceEnd = TraceStart;
+
+    if (IsServer() && !CharacterOwner->IsLocallyControlled())
+    {
+        FVector PredictDir = Velocity.GetSafeNormal2D();
+        if (PredictDir.IsNearlyZero()) PredictDir = UpdatedComponent->GetForwardVector().GetSafeNormal2D();
+        TraceEnd += PredictDir * 80.0f; 
+    }
+
+    if(GetWorld()->SweepSingleByChannel(WallHit, TraceStart, TraceEnd, FQuat::Identity, ECC_WorldStatic, CapShape, ZeroCharacter_Owner->GetIgnoreCharacterParams()))
+    {
+       if (FMath::Abs(WallHit.ImpactNormal.Z) > 0.3f) return false;
+
+       FVector CurrentVelocityXY = Velocity;
+       CurrentVelocityXY.Z = 0.0f;
+       
+       FVector ParallelVelocity = FVector::VectorPlaneProject(CurrentVelocityXY, WallHit.ImpactNormal);
+       FVector WallLaunchDir = (WallHit.ImpactNormal.GetSafeNormal() + FVector::UpVector).GetSafeNormal();
+       
+       Velocity = ParallelVelocity + (WallLaunchDir * WallBounceImpluse);
+       
        if (WallBounceDelegate.IsBound()) WallBounceDelegate.Broadcast();
        SetMovementMode(MOVE_Falling);
        return true;
@@ -546,15 +785,13 @@ bool UZeroBaseCharacterMovementComp::TryWallBounce()
 #pragma region Zipline
 bool UZeroBaseCharacterMovementComp::TryZipLine()
 {
-	
+    
     if(IsCustomMovementMode(CMOVE_Zipline)) return false;
     if(Safe_ZeroJumpHoldTime < ZiplineMinKeyPressTime) return false;
     
     FCollisionShape ZipCap = FCollisionShape::MakeSphere(ZiplineCheckSphereRadius);
     
-    // Server Sync Fix: Using BaseAimRotation instead of Camera Component
     FVector SyncedAimDir = CharacterOwner->GetBaseAimRotation().Vector();
-    
     FVector TraceLocation = UpdatedComponent->GetComponentLocation() + (SyncedAimDir * ZiplineCheckSphereRadius);
     FVector TraceEndLocation = UpdatedComponent->GetComponentLocation() + (SyncedAimDir * ZiplineCheckMaxDistance);
     
@@ -590,12 +827,12 @@ void UZeroBaseCharacterMovementComp::PhysZipline(float DeltaTime, int32 Iteratio
     if(DeltaTime < MIN_TICK_TIME) return;
 
     RestorePreAdditiveRootMotionVelocity();
-	if(!ZiplineSplineComp) 
-	{
-		FHitResult ProxyHit;
-		SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentQuat(), false, ProxyHit);
-		return;
-	}
+    if(!ZiplineSplineComp) 
+    {
+       FHitResult ProxyHit;
+       SafeMoveUpdatedComponent(Velocity * DeltaTime, UpdatedComponent->GetComponentQuat(), false, ProxyHit);
+       return;
+    }
     
     if(Safe_bWantsToDash || bWantsToCrouch)
     {
@@ -687,9 +924,8 @@ void UZeroBaseCharacterMovementComp::PhysMelee(float DeltaTime, int32 Iterations
 
     FVector OldLocation = UpdatedComponent->GetComponentLocation();
     
-    // Server Sync Fix: Native aim rotation
     FVector MeleeDir = CharacterOwner->GetBaseAimRotation().Vector();
-    MeleeDir.Z = 0.f; // Keep the dash horizontal
+    MeleeDir.Z = 0.f; 
     MeleeDir.Normalize();
 
     FVector MoveDelta = MeleeDir * (1000.f * DeltaTime); 
@@ -781,7 +1017,6 @@ class FNetworkPredictionData_Client* UZeroBaseCharacterMovementComp::GetPredicti
        UZeroBaseCharacterMovementComp* MutableThis = const_cast<UZeroBaseCharacterMovementComp*>(this);
        MutableThis->ClientPredictionData = new FNetworkPredictionData_Client_Zero(*this);
        
-       // Expand smoothing distances to hide lag spikes on simulated proxies
        MutableThis->ClientPredictionData->MaxSmoothNetUpdateDist = 256.f * 2;
        MutableThis->ClientPredictionData->NoSmoothNetUpdateDist = 384.f * 2;
     }
