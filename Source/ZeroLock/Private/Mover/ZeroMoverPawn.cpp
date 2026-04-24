@@ -1,13 +1,14 @@
 // Copyright Preetham Mukundan (C) 2026
 
-
 #include "Mover/ZeroMoverPawn.h"
+#include "Mover/ZeroMovementData.h" // <-- ADD THIS: Includes FZeroMovementInputs
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "DefaultMovementSet/LayeredMoves/MultiJumpLayeredMove.h"
 #include "ZeroLock/ZeroLock.h"
 
 AZeroMoverPawn::AZeroMoverPawn()
@@ -28,16 +29,17 @@ AZeroMoverPawn::AZeroMoverPawn()
     
     MoverComponent = CreateDefaultSubobject<UCharacterMoverComponent>(TEXT("MoverComponent"));
     MoverComponent->SetIsReplicated(true);
+ 
+    
     
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(RootComponent);
-    SpringArmComponent->TargetArmLength = 400.0f; // Typical 3rd person distance
-    SpringArmComponent->bUsePawnControlRotation = true; // Rotate arm based on controller pitch/yaw
+    SpringArmComponent->TargetArmLength = 400.0f; 
+    SpringArmComponent->bUsePawnControlRotation = true; 
 
-    // 5. Camera
     CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
     CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
-    CameraComponent->bUsePawnControlRotation = false; // Camera itself doesn't rotate, the arm does
+    CameraComponent->bUsePawnControlRotation = false; 
 }
 
 void AZeroMoverPawn::BeginPlay()
@@ -50,25 +52,15 @@ void AZeroMoverPawn::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
     if (GEngine && MoverComponent)
     {
-        // Get the active mode name (e.g., "Walking", "Falling", or your custom "SlideMode")
         FName CurrentMode = MoverComponent->GetMovementModeName();
-        
-        // Print it to the screen every frame (0.0f duration means it refreshes instantly)
-        GEngine->AddOnScreenDebugMessage(
-            1, // Use a consistent key so it overwrites instead of spamming the screen
-            0.0f, 
-            FColor::Cyan, 
-            FString::Printf(TEXT("Current Mode: %s"), *CurrentMode.ToString())
-        );
+        GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Cyan, FString::Printf(TEXT("Current Mode: %s"), *CurrentMode.ToString()));
     }
 }
-
 
 void AZeroMoverPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    // 1. Map the Context via the Local Player Subsystem
     if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
     {
         if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -77,18 +69,18 @@ void AZeroMoverPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         }
     }
 
-    // 2. Bind the Actions
     if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
         if (MoveAction)
         {
-            // We use Triggered so the value updates continuously while held, and Completed to zero it out
             EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnMove);
             EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AZeroMoverPawn::OnMove);
-             EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnLook);
             
             EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnJumpPressed);
             EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed,this,&AZeroMoverPawn::OnJumpReleased);
+            
+            EnhancedInputComponent->BindAction(CrouchAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnCrouchPressed);
+            EnhancedInputComponent->BindAction(CrouchAction,ETriggerEvent::Completed,this,&AZeroMoverPawn::OnCrouchReleased);
         }
 
         if (LookAction)
@@ -102,16 +94,17 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
 {
     // 1. Get a mutable reference directly from the collection (creates it if it doesn't exist)
     FCharacterDefaultInputs& DefaultInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FCharacterDefaultInputs>();
+    
     if (!DefaultInputs.bIsJumpJustPressed && bLocalJumpPressed)
     {
         DefaultInputs.bIsJumpJustPressed = true;
     }
     else
     {
-        DefaultInputs.bIsJumpJustPressed=false;
+        DefaultInputs.bIsJumpJustPressed = false;
     }
     DefaultInputs.bIsJumpPressed = bLocalJumpPressed;
-    
+   
     // 2. Translate 2D WASD input into a world-space 3D direction based on camera facing
     FVector ControlVector = FVector::ZeroVector;
     if (Controller && !CachedMoveInput.IsZero())
@@ -126,7 +119,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
         ControlVector.Normalize();
     }
 
-    // 3. Assign the intent using the new setter and enum
+    // 3. Assign the intent for Epic's Default Walk Mode
     DefaultInputs.SetMoveInput(EMoveInputType::DirectionalIntent, ControlVector); 
 
     // 4. Set Control Rotation and Orientation Intent
@@ -139,27 +132,74 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     {
         DefaultInputs.OrientationIntent = GetActorForwardVector();
     }
+    
+    if (MoverComponent && MoverComponent->GetMovementModeName() == TEXT("Sliding"))
+    {
+        bLocalSlideIntentValid = false;
+    }
+
+    FName CurrentMode = MoverComponent->GetMovementModeName();
+
+    if (CurrentMode == DefaultModeNames::Walking || CurrentMode == TEXT("Sliding") || CurrentMode == TEXT("WallJumping"))
+    {
+        LocalAirJumpsUsed = 0;
+    }
+
+    // 3. Detect a clean "Just Pressed" event locally
+    bool bCustomJump = (bLocalJumpPressed && !bWasJumpPressedLastFrame);
+    bWasJumpPressedLastFrame = bLocalJumpPressed;
+
+    // 4. Validate the Air Jump Intent
+    bool bValidAirJump = false;
+    if (bCustomJump && CurrentMode == DefaultModeNames::Falling && LocalAirJumpsUsed < SlideSettings->MaxAirJumps)
+    {
+        bValidAirJump = true;
+        LocalAirJumpsUsed++;
+    }
+    // ---------------------------------------------------------------------------------
+    // 5. INJECT ZERO LOCK CUSTOM INPUTS
+    // We add our custom input struct alongside Epic's default one. 
+    // Our ZeroSlideTransition and ZeroSlideMode will look for THIS specific struct.
+    // ---------------------------------------------------------------------------------
+    FZeroMovementInputs& ZeroInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FZeroMovementInputs>();
+    ZeroInputs.MoveInput = ControlVector;
+    ZeroInputs.bWantsToCrouch = bCachedWantsToCrouch;
+    ZeroInputs.bSlideIntentValid = bLocalSlideIntentValid;
+    ZeroInputs.bCustomJumpJustPressed = bCustomJump;
+    ZeroInputs.bWantsToAirJump = bValidAirJump;
 }
 
 void AZeroMoverPawn::OnMove(const FInputActionValue& Value)
 {
-    // CACHE the intent. Do not apply movement here.
     CachedMoveInput = Value.Get<FVector2D>();
 }
 
 void AZeroMoverPawn::OnLook(const FInputActionValue& Value)
 {
     FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-    // This safely modifies the controller rotation. 
-    // The Mover plugin will read the Controller rotation for Orientation Intent.
     AddControllerYawInput(LookAxisVector.X);
     AddControllerPitchInput(LookAxisVector.Y);
 }
 
 void AZeroMoverPawn::OnJumpPressed()
 {
+    // Keep the local flag for the base ground jump
     bLocalJumpPressed = true;
+/*
+    if (!MoverComponent) return;
+
+    FName CurrentMode = MoverComponent->GetMovementModeName();
+
+        bCachedWantsToCrouch = false;
+
+        TSharedPtr<FLayeredMove_MultiJump> DoubleJumpMove = MakeShared<FLayeredMove_MultiJump>();
+        DoubleJumpMove->UpwardsSpeed = SlideSettings ? SlideSettings->AirJumpForce : 600.0f;
+        DoubleJumpMove->MaximumInAirJumps = SlideSettings ? SlideSettings->MaxAirJumps : 1;
+        DoubleJumpMove->MixMode = EMoveMixMode::OverrideVelocity;
+
+        
+        MoverComponent->QueueLayeredMove(DoubleJumpMove);*/
+    
 }
 
 void AZeroMoverPawn::OnJumpReleased()
@@ -167,3 +207,15 @@ void AZeroMoverPawn::OnJumpReleased()
     bLocalJumpPressed = false;
 }
 
+void AZeroMoverPawn::OnCrouchPressed()
+{
+    bCachedWantsToCrouch = true;
+    MoverComponent->Crouch();
+}
+
+void AZeroMoverPawn::OnCrouchReleased()
+{
+    bCachedWantsToCrouch = false;
+    bLocalSlideIntentValid = true;
+    MoverComponent->UnCrouch();
+}

@@ -7,6 +7,7 @@
 #include "DefaultMovementSet/CharacterMoverComponent.h"
 #include "ZeroMoverPawn.generated.h"
 
+class UZeroMovementSettings;
 class UCameraComponent;
 class USpringArmComponent;
 struct FInputActionValue;
@@ -56,6 +57,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
 	UInputAction* JumpAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
+	UInputAction* CrouchAction;
 
 	
 	void OnMove(const FInputActionValue& Value);
@@ -64,9 +68,25 @@ protected:
 	//jump
 	void OnJumpPressed();
 	void OnJumpReleased();
+	
+	
+	//crouch
+	void OnCrouchPressed();
+	void OnCrouchReleased();
 
+public:
+	// We put the settings directly on the Pawn!
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement Settings")
+	TObjectPtr<UZeroMovementSettings> SlideSettings;
 private:
 	bool bLocalJumpPressed = false;
+	
+	bool bCachedWantsToCrouch =false;
+	
+	bool bLocalSlideIntentValid = true;
+	
+	int32 LocalAirJumpsUsed = 0;
+	bool bWasJumpPressedLastFrame = false;
 
 private:
 	// --- Cached Input State for the Mover Queue ---
