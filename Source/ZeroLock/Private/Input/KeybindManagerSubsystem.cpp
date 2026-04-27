@@ -16,15 +16,14 @@ void UKeybindManagerSubsystem::InitializeKeybinds(UInputMappingContext* BaseIMC)
     UEnhancedInputLocalPlayerSubsystem* EISubsystem = GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
     if (!EISubsystem)
     {
-        ZLOG_COLOR_TIME("FAILED: EISubsystem is NULL! (Called too early?)", FColor::Red, 10.0f);
+        //ZLOG_COLOR_TIME("FAILED: EISubsystem is NULL! (Called too early?)", FColor::Red, 10.0f);
     }
     else if (!EISubsystem->GetUserSettings())
     {
-        ZLOG_COLOR_TIME("FAILED: UserSettings is NULL! (Check Project Settings)", FColor::Orange, 10.0f);
+     //   ZLOG_COLOR_TIME("FAILED: UserSettings is NULL! (Check Project Settings)", FColor::Orange, 10.0f);
     }
     else
     {
-        ZLOG_COLOR_TIME("SUCCESS: SubsystemContext set", FColor::Emerald, 10.0f);
         EISubsystem->GetUserSettings()->RegisterInputMappingContext(BaseIMC);
     }
 
@@ -116,6 +115,4 @@ void UKeybindManagerSubsystem::RemapKey(FName MappingName, FKey NewKey)
 
 
     EISubsystem->RequestRebuildControlMappings(FModifyContextOptions(), EInputMappingRebuildType::RebuildWithFlush);
-
-   // RefreshKeybindData();
 }
