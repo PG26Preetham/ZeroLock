@@ -23,7 +23,7 @@ USettingsManagerViewModel* USettingsManagerSubsystem::GetSettingsVM()
 	{
 		SettingsManagerVM = NewObject<USettingsManagerViewModel>(this);
 	
-		UDataTable* LoadedTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/ZERO/UI/Settings/Handlers/DT_SettingsRowTable.DT_SettingsRowTable"));
+		UDataTable* LoadedTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/ZERO/UI/Settings/Handlers/DT_MasterSettings.DT_MasterSettings"));
 	
 
 		if (LoadedTable && SettingsManagerVM)

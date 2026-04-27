@@ -1,0 +1,40 @@
+// Copyright Preetham Mukundan (C) 2026
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "CommonActivatableWidget.h"
+#include "ZL_MainSettingsMenu.generated.h"
+
+class UScrollBox;
+class UCommonActivatableWidgetSwitcher;
+class USubMenuManagerViewModel;
+class UZL_SettingsSubMenu;
+class UZL_BTN_SubMenu;
+/**
+ * 
+ */
+UCLASS()
+class ZEROLOCK_API UZL_MainSettingsMenu : public UCommonActivatableWidget
+{
+	GENERATED_BODY()
+	
+	
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "UI Setup")
+	TSubclassOf<UZL_BTN_SubMenu> SubMenuBtnClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI Setup")
+	TSubclassOf<UZL_SettingsSubMenu> SubMenuWidgetClass;
+	
+	UFUNCTION(BlueprintCallable, Category = "UI Logic")
+	void GenerateTabsFromMap(const TMap<FName, USubMenuManagerViewModel*>& ViewModelMap);
+
+protected:
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UScrollBox* SubMenuBTNContainer;
+	
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+	UCommonActivatableWidgetSwitcher* SubMenuSwitcher;
+	
+};
