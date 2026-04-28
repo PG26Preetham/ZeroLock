@@ -32,9 +32,8 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UScrollBox* SubMenuBTNContainer;
-	
+	class UCommonWidgetCarousel* SubMenuCarousel;
+
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
-	UCommonActivatableWidgetSwitcher* SubMenuSwitcher;
-	
+	class UZL_NamedCarouselNavBar* SubMenuNavBar;
 };

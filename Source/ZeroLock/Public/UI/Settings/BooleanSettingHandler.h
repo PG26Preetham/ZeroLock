@@ -17,4 +17,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Logic")
 	void OnApplyToggle(bool bNewState);
 	
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Settings Logic")
+	bool GetCurrentValue();
+	
 };

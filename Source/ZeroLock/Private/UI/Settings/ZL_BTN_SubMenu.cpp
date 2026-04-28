@@ -6,11 +6,19 @@
 #include "CommonActivatableWidget.h"
 #include "CommonActivatableWidgetSwitcher.h"
 #include "CommonTextBlock.h"
+#include "CommonWidgetCarousel.h"
+#include "CommonWidgetCarouselNavBar.h"
+#include "UI/Settings/ZL_SettingsSubMenu.h"
 
 
+void UZL_BTN_SubMenu::NativeOnInitialized()
+{
+	Super::NativeOnInitialized();
+	
+}
 
 void UZL_BTN_SubMenu::InitializeTab(FName TabName, UCommonActivatableWidget* WidtoSwit,
-	UCommonActivatableWidgetSwitcher* LinkedSwitcher)
+                                    UCommonActivatableWidgetSwitcher* LinkedSwitcher)
 {
 	TargetSwitcher = LinkedSwitcher;
 	WidgetToSwitchTO = WidtoSwit;
@@ -27,5 +35,13 @@ void UZL_BTN_SubMenu::NativeOnClicked()
 	if (TargetSwitcher && WidgetToSwitchTO)
 	{
 		TargetSwitcher->SetActiveWidget(WidgetToSwitchTO);
+	}
+}
+
+void UZL_BTN_SubMenu::SetBTNNAme(FName TabName)
+{
+	if (BTNText)
+	{
+		BTNText->SetText(FText::FromName(TabName));
 	}
 }

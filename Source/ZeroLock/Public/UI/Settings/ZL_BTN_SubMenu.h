@@ -19,10 +19,12 @@ class ZEROLOCK_API UZL_BTN_SubMenu : public UCommonButtonBase
 	
 	
 public:
+	virtual void NativeOnInitialized() override;
 	void InitializeTab(FName TabName, UCommonActivatableWidget* WidtoSwit, UCommonActivatableWidgetSwitcher* LinkedSwitcher);
 	
 	virtual void NativeOnClicked() override;
 
+	void SetBTNNAme(FName TabName);
 
 	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
 	UCommonTextBlock* BTNText;

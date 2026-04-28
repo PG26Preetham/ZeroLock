@@ -6,6 +6,8 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_SettingsSubMenu.generated.h"
 
+enum class ESettingInteractionType : uint8;
+class UToggleBaseRow;
 class USubMenuManagerViewModel;
 class USettingsBaseRow;
 class USliderBaseRow;
@@ -32,8 +34,16 @@ public:
 	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
 	TSubclassOf<USliderBaseRow> SliderSubClass;
 	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
+	TSubclassOf<UToggleBaseRow> ToggleSubClass;
+	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
 	TSubclassOf<USettingsBaseRow> BaseRowClass;
 	
 	UPROPERTY()
 	USubMenuManagerViewModel* MyVM;
+	
+	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
+	FName SubMenuName;
+	
+	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
+	TMap<ESettingInteractionType,TSubclassOf<USettingsBaseRow>> SettingSubClassList;
 };
