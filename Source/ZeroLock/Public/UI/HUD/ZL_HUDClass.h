@@ -31,6 +31,9 @@ class ZEROLOCK_API AZL_HUDClass : public AHUD
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UCommonActivatableWidget> PlayerInGameHUD;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UCommonActivatableWidget> SettingsMenu;
 
 protected:
 

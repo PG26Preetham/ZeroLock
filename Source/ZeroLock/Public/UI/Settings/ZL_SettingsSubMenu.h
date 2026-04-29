@@ -42,7 +42,7 @@ public:
 	UPROPERTY()
 	USubMenuManagerViewModel* MyVM;
 	
-	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category ="Subclasses")
 	FName SubMenuName;
 	
 	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")

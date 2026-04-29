@@ -28,4 +28,7 @@ public:
 	
 	UPROPERTY(EditAnywhere)
 	UScalarSettingHandler* SettingsHandler;
+	
+	virtual void OnLeftClicked() override;
+	virtual void OnRightClicked() override;
 };

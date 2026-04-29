@@ -6,6 +6,7 @@
 #include "UI/Settings/SettingHandlerBase.h"
 #include "UI/Settings/MVVM/BooleanSettingViewModel.h"
 #include "UI/Settings/MVVM/ScalarSettingViewModel.h"
+#include "UI/Settings/MVVM/SelectorSettingsViewModel.h"
 
 void USubMenuManagerViewModel::BuildSettingsFromDataTable(UDataTable* MasterTable)
 {
@@ -27,6 +28,9 @@ void USubMenuManagerViewModel::BuildSettingsFromDataTable(UDataTable* MasterTabl
 			break;
 		case ESettingInteractionType::Toggle:
 			NewVM = NewObject<UBooleanSettingViewModel>(this);
+			break;
+		case ESettingInteractionType::Discrete:
+			NewVM = NewObject<USelectorSettingsViewModel>(this);
 			break;
 		default:
 			break;

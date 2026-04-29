@@ -39,3 +39,15 @@ void USliderBaseRow::SetupComponents(USettingBaseViewModel* InViewModel)
 		}
 	}
 }
+
+void USliderBaseRow::OnLeftClicked()
+{
+	float newValue = FMath::Clamp(Slider->GetValue() - Slider->GetStepSize(), Slider->GetMinValue(), Slider->GetMaxValue());
+	Slider->SetValue(newValue);
+}
+
+void USliderBaseRow::OnRightClicked()
+{
+	float newValue = FMath::Clamp(Slider->GetValue() + Slider->GetStepSize(), Slider->GetMinValue(), Slider->GetMaxValue());
+	Slider->SetValue(newValue);
+}

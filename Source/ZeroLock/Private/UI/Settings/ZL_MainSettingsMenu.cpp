@@ -10,6 +10,7 @@
 #include "UI/Settings/ZL_BTN_SubMenu.h"
 #include "UI/Settings/ZL_NamedCarouselNavBar.h"
 #include "UI/Settings/ZL_SettingsSubMenu.h"
+#include "ZeroLock/ZeroLock.h"
 
 void UZL_MainSettingsMenu::GenerateTabsFromMap(const TMap<FName, USubMenuManagerViewModel*>& ViewModelMap)
 {
@@ -23,7 +24,7 @@ void UZL_MainSettingsMenu::GenerateTabsFromMap(const TMap<FName, USubMenuManager
 	{
 		FName TabName = Pair.Key;
 		USubMenuManagerViewModel* ChildVM = Pair.Value;
-		
+		ZLOG(TabName.ToString());
 		//SubMenuNavBar->SetLinkedCarousel(SubMenuCarousel);
 		UZL_SettingsSubMenu* NewContentWidget = CreateWidget<UZL_SettingsSubMenu>(this, SubMenuWidgetClass);
 		if (NewContentWidget)

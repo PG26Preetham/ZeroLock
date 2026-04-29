@@ -40,10 +40,12 @@ FNavigationReply USettingsBaseRow::NativeOnNavigation(const FGeometry& MyGeometr
 	
 	if (NavDir == EUINavigation::Right)
 	{
+		OnRightClicked();
 		return FNavigationReply::Stop(); 
 	}
 	if (NavDir == EUINavigation::Left)
 	{
+		OnLeftClicked();
 		return FNavigationReply::Stop(); 
 	}
 	if (NavDir == EUINavigation::Up || NavDir == EUINavigation::Down)

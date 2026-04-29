@@ -18,10 +18,6 @@ void UZL_SettingsSubMenu::CF_List_To_ScrollBox(TArray<USettingBaseViewModel*> Ar
 	if (SettingsListView)
 	{
 		SettingsListView->SetListItems(ArrayToWorkWith);
-		if (ArrayToWorkWith.Num() > 0)
-		{
-			SettingsListView->SetSelectedIndex(0);
-		}
 	}
 	
 }
