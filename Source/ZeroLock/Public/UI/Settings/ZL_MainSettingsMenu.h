@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_MainSettingsMenu.generated.h"
 
+class UInputAction;
 class UScrollBox;
 class UCommonActivatableWidgetSwitcher;
 class USubMenuManagerViewModel;

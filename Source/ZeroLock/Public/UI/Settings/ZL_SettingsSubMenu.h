@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_SettingsSubMenu.generated.h"
 
+class UZL_SettingsListView;
 enum class ESettingInteractionType : uint8;
 class UToggleBaseRow;
 class USubMenuManagerViewModel;
@@ -29,7 +30,7 @@ public:
 	void SetupVM(USubMenuManagerViewModel* VM);
 	
 	UPROPERTY(BlueprintReadWrite,EditAnywhere,meta=(BindWidget))
-	UScrollBox* ScrollBox;
+	UZL_SettingsListView* SettingsListView;
 	
 	UPROPERTY(EditDefaultsOnly,Category ="Subclasses")
 	TSubclassOf<USliderBaseRow> SliderSubClass;

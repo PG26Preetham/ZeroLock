@@ -33,3 +33,8 @@ void UToggleBaseRow::SetupComponents(USettingBaseViewModel* InViewModel)
 		}
 	}
 }
+
+void UToggleBaseRow::NativeOnClicked()
+{
+	CheckBox->SetIsChecked(!(CheckBox->IsChecked()));
+}
