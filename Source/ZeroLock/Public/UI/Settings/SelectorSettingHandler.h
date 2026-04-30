@@ -34,4 +34,7 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Slections")
 	TArray<FString> AllSelectionNames;
+	
+	UFUNCTION(BlueprintCallable, Category = "Settings Logic")
+	TArray<FText> GetSelectedNames();
 };

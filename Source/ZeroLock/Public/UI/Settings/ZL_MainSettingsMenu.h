@@ -6,6 +6,7 @@
 #include "CommonActivatableWidget.h"
 #include "ZL_MainSettingsMenu.generated.h"
 
+class UZL_KeyBindingScreen;
 class UInputAction;
 class UScrollBox;
 class UCommonActivatableWidgetSwitcher;
@@ -27,6 +28,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI Setup")
 	TSubclassOf<UZL_SettingsSubMenu> SubMenuWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI Setup")
+	TSubclassOf<UZL_KeyBindingScreen> KeyBindingScreen;
 	
 	UFUNCTION(BlueprintCallable, Category = "UI Logic")
 	void GenerateTabsFromMap(const TMap<FName, USubMenuManagerViewModel*>& ViewModelMap);

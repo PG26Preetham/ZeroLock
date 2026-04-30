@@ -10,6 +10,7 @@
 #include "UI/Settings/ZL_BTN_SubMenu.h"
 #include "UI/Settings/ZL_NamedCarouselNavBar.h"
 #include "UI/Settings/ZL_SettingsSubMenu.h"
+#include "UI/MVVM/Input/ZL_KeyBindingScreen.h"
 #include "ZeroLock/ZeroLock.h"
 
 void UZL_MainSettingsMenu::GenerateTabsFromMap(const TMap<FName, USubMenuManagerViewModel*>& ViewModelMap)
@@ -34,6 +35,15 @@ void UZL_MainSettingsMenu::GenerateTabsFromMap(const TMap<FName, USubMenuManager
 			SubMenuCarousel->AddChild(NewContentWidget);
 		}
 		
+	}
+	if (KeyBindingScreen)
+	{
+		UZL_KeyBindingScreen* KeyScreen = CreateWidget<UZL_KeyBindingScreen>(this, KeyBindingScreen);
+		if (KeyScreen)
+		{
+			KeyScreen->SubMenuName = FName("KeyBinding");
+			SubMenuCarousel->AddChild(KeyScreen);
+		}
 	}
 	
 	SubMenuNavBar->SetLinkedCarousel(SubMenuCarousel);

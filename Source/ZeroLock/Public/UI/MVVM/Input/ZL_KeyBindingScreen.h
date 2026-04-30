@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "CommonActivatableWidget.h"
+#include "UI/Settings/ZL_SettingsSubMenu.h"
 #include "ZL_KeyBindingScreen.generated.h"
 
 class UDynamicEntryBox;
@@ -12,7 +13,7 @@ class UZL_VM_KeyBindingRow;
  * 
  */
 UCLASS()
-class ZEROLOCK_API UZL_KeyBindingScreen : public UCommonActivatableWidget
+class ZEROLOCK_API UZL_KeyBindingScreen : public UZL_SettingsSubMenu
 {
 	GENERATED_BODY()
 	
