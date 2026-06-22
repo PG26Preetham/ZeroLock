@@ -29,4 +29,6 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Montage")
 	TObjectPtr<UAnimMontage> KnockBackMontage;
+	
+	
 };

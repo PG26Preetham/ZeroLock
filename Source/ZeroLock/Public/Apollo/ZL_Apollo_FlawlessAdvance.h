@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
+#include "Curves/CurveVector.h"
 #include "GAS/BaseGameplayAbility.h"
 #include "ZL_Apollo_FlawlessAdvance.generated.h"
 
@@ -41,6 +43,12 @@ public:
 	
 	class UZL_WaitDelay_Task* WaitTimeTask ;
 	class UAbilityTask_PlayMontageAndWait* AnimMontageTask ;
+	
+	class UAbilityTask_ApplyRootMotionMoveToForce* ActiveChargeMovementTask;
+	class UAbilityTask_ApplyRootMotionMoveToForce* LungeRootMotionTask;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Lunge|Movement")
+	UCurveVector* InitChargePathOffsetCurve;
 
 	UFUNCTION()
 	void OnRecastPressed(float TimeWaited);

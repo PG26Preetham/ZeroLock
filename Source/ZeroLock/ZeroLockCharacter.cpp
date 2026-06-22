@@ -21,6 +21,7 @@
 #include "GAS/BaseCharAttributeSet.h"
 #include "GAS/BaseGameplayAbility.h"
 #include "GAS/ZL_GameplayTags.h"
+#include "Input/KeybindManagerSubsystem.h"
 #include "Items/Zero_Item_Inventory_Component.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -99,7 +100,7 @@ AZeroLockCharacter::AZeroLockCharacter(const FObjectInitializer& ObjectInitializ
 	//GAS Components
 	AbilitySystemComp = CreateDefaultSubobject<UBaseCharAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	AbilitySystemComp->SetIsReplicated(true);
-	AbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Full);
+	AbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 	AttributeSet = CreateDefaultSubobject<UBaseCharAttributeSet>(TEXT("AttributeSet"));
 
 	ItemInventoryComp = CreateDefaultSubobject<UZero_Item_Inventory_Component>(TEXT("ItemInventory"));
@@ -329,6 +330,7 @@ void AZeroLockCharacter::GiveAbilities()
 		GrantAbilityOfClassX(UltimateAbility,EGASAbilityInputID::Ultimate,true);
 		GrantAbilityOfClassX(ReloadAbility,EGASAbilityInputID::Reload);
 		GrantAbilityOfClassX(HeavyMeleeAbility,EGASAbilityInputID::Melee);
+		GrantAbilityOfClassX(LightMeleeAbility,EGASAbilityInputID::None);
 		GrantAbilityOfClassX(ParryAbility,EGASAbilityInputID::Parry);
 
 		
@@ -793,6 +795,13 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
+		if (ULocalPlayer* LocalPlayer = PlayerController->GetLocalPlayer())
+		{
+			if (UKeybindManagerSubsystem* KeybindSubsystem = LocalPlayer->GetSubsystem<UKeybindManagerSubsystem>())
+			{
+				KeybindSubsystem->InitializeKeybinds(DefaultMappingContext);
+			}
+		}
 	}
 	
 	// Set up action bindings
@@ -832,8 +841,10 @@ void AZeroLockCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		
 		EnhancedInputComponent->BindAction(EI_Reload,ETriggerEvent::Started,this,&AZeroLockCharacter::Reload);
 
-		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Started,this,&AZeroLockCharacter::MeleePressed);
-		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Completed,this,&AZeroLockCharacter::MeleeReleased);
+		//EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Started,this,&AZeroLockCharacter::MeleePressed);
+		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Canceled,this,&AZeroLockCharacter::MeleeReleased);
+		EnhancedInputComponent->BindAction(EI_Melee,ETriggerEvent::Triggered,this,&AZeroLockCharacter::MeleePressed);
+		
 		
 		EnhancedInputComponent->BindAction(EI_Parry,ETriggerEvent::Started,this,&AZeroLockCharacter::ParryPressed);
 
@@ -1075,13 +1086,14 @@ void AZeroLockCharacter::CrouchReleased()
 
 void AZeroLockCharacter::MeleePressed()
 {
-	
-	GetAbilitySystemComponent()->AbilityLocalInputPressed(static_cast<int32>(EGASAbilityInputID::Melee));
+	ZLOG("HeavyMelee");
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(HeavyMeleeAbility);
 }
 
 void AZeroLockCharacter::MeleeReleased()
 {
-	GetAbilitySystemComponent()->AbilityLocalInputReleased(static_cast<int32>(EGASAbilityInputID::Melee));	
+	ZLOG("LightMelee");
+	GetAbilitySystemComponent()->TryActivateAbilityByClass(LightMeleeAbility);	
 }
 
 void AZeroLockCharacter::ParryPressed()

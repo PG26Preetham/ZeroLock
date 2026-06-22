@@ -30,18 +30,28 @@ void UZL_BasePlayAnimation_AndDo::ActivateAbility(const FGameplayAbilitySpecHand
                                                   const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                                   const FGameplayEventData* TriggerEventData)
 {
+	
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
 	if (!EventTagToWait.IsValid() || !MontageToPlay)
 	{
-		EndAbility(Handle,ActorInfo,ActivationInfo,true,true);
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
 	}
+    
 	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
 		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
 	}
-	PlayMontageTask = UGAST_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this,FName("MontagetoPlay"),MontageToPlay,EventTagToWait);
-	PlayMontageTask->OnCancelled.AddDynamic(this,&UZL_BasePlayAnimation_AndDo::OnCanelled);
-	PlayMontageTask->OnCompleted.AddDynamic(this,&UZL_BasePlayAnimation_AndDo::OnCompleted);
-	PlayMontageTask->EventReceived.AddDynamic(this,&UZL_BasePlayAnimation_AndDo::OnReceived);
+    
+	PlayMontageTask = UGAST_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this, FName("MontagetoPlay"), MontageToPlay, EventTagToWait);
+	PlayMontageTask->OnCancelled.AddDynamic(this, &UZL_BasePlayAnimation_AndDo::OnCanelled);
+	PlayMontageTask->OnCompleted.AddDynamic(this, &UZL_BasePlayAnimation_AndDo::OnCompleted);
+	PlayMontageTask->EventReceived.AddDynamic(this, &UZL_BasePlayAnimation_AndDo::OnReceived);
 	PlayMontageTask->ReadyForActivation();
 }
 
