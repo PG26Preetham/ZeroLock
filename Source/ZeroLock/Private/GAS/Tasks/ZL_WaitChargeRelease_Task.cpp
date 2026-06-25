@@ -24,34 +24,42 @@ UZL_WaitChargeRelease_Task* UZL_WaitChargeRelease_Task::WaitChargeRelease(UGamep
 
 void UZL_WaitChargeRelease_Task::Activate()
 {
-	ElapsedTime= 0;
-	OnInit.Broadcast(MaxChargeTime,PerfectWindowMin,PerfectWindowMax);
+	ElapsedTime = 0;
+	OnInit.Broadcast(MaxChargeTime, PerfectWindowMin, PerfectWindowMax);
 	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
+    
 	if (ASC && Ability)
 	{
 		if (ChargeMontage)
 		{
-			float Duration = ASC->PlayMontage(Ability,Ability->GetCurrentActivationInfo(),ChargeMontage,1);
-			
+			ASC->PlayMontage(Ability, Ability->GetCurrentActivationInfo(), ChargeMontage, 1);
 		}
-		
+       
 		if (bTestInitialState && IsLocallyControlled())
 		{
-			FGameplayAbilitySpec *Spec = Ability->GetCurrentAbilitySpec();
+			FGameplayAbilitySpec* Spec = Ability->GetCurrentAbilitySpec();
 			if (Spec && !Spec->InputPressed)
 			{
-				OnInputReleased();
+				LocalInputReleased();
 				return;
 			}
 		}
 
-		ReleaseDelegateHandle = ASC->AbilityReplicatedEventDelegate(EAbilityGenericReplicatedEvent::InputReleased, GetAbilitySpecHandle(), GetActivationPredictionKey()).AddUObject(this, &UZL_WaitChargeRelease_Task::OnInputReleased);
-		if (IsForRemoteClient())
+		if (IsLocallyControlled())
 		{
-			if (!ASC->CallReplicatedEventDelegateIfSet(EAbilityGenericReplicatedEvent::InputReleased, GetAbilitySpecHandle(), GetActivationPredictionKey()))
-			{
-				SetWaitingOnRemotePlayerData();
-			}
+			ReleaseDelegateHandle = ASC->AbilityReplicatedEventDelegate(
+				EAbilityGenericReplicatedEvent::InputReleased, 
+				GetAbilitySpecHandle(), 
+				GetActivationPredictionKey()
+			).AddUObject(this, &UZL_WaitChargeRelease_Task::LocalInputReleased);
+		}
+        
+		if (IsForRemoteClient()) 
+		{
+			TargetDataDelegateHandle = ASC->AbilityTargetDataSetDelegate(
+				GetAbilitySpecHandle(), 
+				GetActivationPredictionKey()
+			).AddUObject(this, &UZL_WaitChargeRelease_Task::OnTargetDataReplicatedCallback);
 		}
 	}
 }
@@ -65,10 +73,23 @@ void UZL_WaitChargeRelease_Task::TickTask(float DeltaTime)
 	bool bInPerfectWindow = (ElapsedTime >= PerfectWindowMin && ElapsedTime <= PerfectWindowMax);
 
 	OnProgressUpdate.Broadcast(Progress, bInPerfectWindow, ElapsedTime);
-	
-	if (ElapsedTime >= MaxChargeTime)
+    
+	float EffectiveMaxCharge = MaxChargeTime;
+	if (IsForRemoteClient())
 	{
-		OnInputReleased();
+		EffectiveMaxCharge += 1.5f; 
+	}
+
+	if (ElapsedTime >= EffectiveMaxCharge)
+	{
+		if (IsLocallyControlled())
+		{
+			LocalInputReleased();
+		}
+		else
+		{
+			TriggerRelease(MaxChargeTime);
+		}
 	}
 }
 
@@ -76,6 +97,8 @@ void UZL_WaitChargeRelease_Task::OnDestroy(bool bInOwnerFinished)
 {
 	if (AbilitySystemComponent.IsValid())
 	{
+		AbilitySystemComponent->AbilityReplicatedEventDelegate(EAbilityGenericReplicatedEvent::InputReleased, GetAbilitySpecHandle(), GetActivationPredictionKey()).Remove(ReleaseDelegateHandle);
+		AbilitySystemComponent->AbilityTargetDataSetDelegate(GetAbilitySpecHandle(), GetActivationPredictionKey()).Remove(TargetDataDelegateHandle);
 		AbilitySystemComponent->CurrentMontageStop(-1);
 	}
 	Super::OnDestroy(bInOwnerFinished);
@@ -115,5 +138,65 @@ void UZL_WaitChargeRelease_Task::OnInputReleased()
 		OnReleased.Broadcast(ElapsedTime, bWasPerfect);
 	}
     
+	EndTask();
+}
+
+void UZL_WaitChargeRelease_Task::LocalInputReleased()
+{
+	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
+	if (!ASC) return;
+
+	ASC->AbilityReplicatedEventDelegate(EAbilityGenericReplicatedEvent::InputReleased, GetAbilitySpecHandle(), GetActivationPredictionKey()).Remove(ReleaseDelegateHandle);
+
+	FScopedPredictionWindow ScopedPrediction(ASC, true);
+
+
+	FGameplayAbilityTargetData_LocationInfo* LocationData = new FGameplayAbilityTargetData_LocationInfo();
+	LocationData->TargetLocation.LiteralTransform = FTransform(FVector(ElapsedTime, 0.f, 0.f));
+    
+	FGameplayAbilityTargetDataHandle DataHandle;
+	DataHandle.Add(LocationData);
+
+
+	ASC->CallServerSetReplicatedTargetData(
+		GetAbilitySpecHandle(), 
+		GetActivationPredictionKey(), 
+		DataHandle, 
+		FGameplayTag(), 
+		ASC->ScopedPredictionKey
+	);
+
+	TriggerRelease(ElapsedTime);
+}
+
+void UZL_WaitChargeRelease_Task::OnTargetDataReplicatedCallback(const FGameplayAbilityTargetDataHandle& Data,
+	FGameplayTag ActivationTag)
+{
+	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
+	if (ASC)
+	{
+		ASC->ConsumeClientReplicatedTargetData(GetAbilitySpecHandle(), GetActivationPredictionKey());
+	}
+    
+	// Unpack the client's float
+	if (Data.Data.Num() > 0)
+	{
+		if (const FGameplayAbilityTargetData_LocationInfo* LocationInfo = static_cast<const FGameplayAbilityTargetData_LocationInfo*>(Data.Data[0].Get()))
+		{
+			float ClientReportedTime = LocationInfo->TargetLocation.LiteralTransform.GetLocation().X;
+			TriggerRelease(ClientReportedTime);
+		}
+	}
+}
+
+void UZL_WaitChargeRelease_Task::TriggerRelease(float TimeCalculated)
+{
+	bool bWasPerfect = (TimeCalculated >= PerfectWindowMin && TimeCalculated <= PerfectWindowMax);
+    
+	if (ShouldBroadcastAbilityTaskDelegates())
+	{
+		OnEnd.Broadcast(bWasPerfect);
+		OnReleased.Broadcast(TimeCalculated, bWasPerfect);
+	}
 	EndTask();
 }

@@ -48,4 +48,10 @@ protected:
 	float PerfectWindowMax;
 	float ElapsedTime = 0.f;
 	bool bTestInitialState;
+	
+	FDelegateHandle TargetDataDelegateHandle;
+
+	void LocalInputReleased();
+	void OnTargetDataReplicatedCallback(const FGameplayAbilityTargetDataHandle& Data, FGameplayTag ActivationTag);
+	void TriggerRelease(float TimeCalculated);
 };

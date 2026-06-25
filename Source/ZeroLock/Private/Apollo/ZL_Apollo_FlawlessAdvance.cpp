@@ -19,6 +19,8 @@
 
 UZL_Apollo_FlawlessAdvance::UZL_Apollo_FlawlessAdvance()
 {
+	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
 
@@ -27,6 +29,11 @@ void UZL_Apollo_FlawlessAdvance::ActivateAbility(const FGameplayAbilitySpecHandl
                                                  const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
                                                  const FGameplayEventData* TriggerEventData)
 {
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 	CurrentLungeCount = 0;
 	StartChargePhase();
 }
@@ -35,7 +42,7 @@ void UZL_Apollo_FlawlessAdvance::EndAbility(const FGameplayAbilitySpecHandle Han
 	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
 	bool bReplicateEndAbility, bool bWasCancelled)
 {
-	CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
+	//CommitAbility(GetCurrentAbilitySpecHandle(),GetCurrentActorInfo(),GetCurrentActivationInfo());
 	
 	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
@@ -143,6 +150,7 @@ void UZL_Apollo_FlawlessAdvance::OnRelease(float TimeHeld)
 
 void UZL_Apollo_FlawlessAdvance::OnChargeReleased(float TotalTime, bool bWasPerfect)
 {
+	FScopedPredictionWindow PredictionWindow(GetAbilitySystemComponentFromActorInfo(), true);
 	ZLOG("Released");
 	ExecuteLunge(bWasPerfect);
 }
@@ -156,7 +164,8 @@ void UZL_Apollo_FlawlessAdvance::ExecuteLunge(bool bIsPerfect)
 	AZeroLockCharacter* Character = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
 	if (!Character) return;
 	
-	FVector LookDir = Character->GetFollowCamera()->GetForwardVector();
+	//FVector LookDir = Character->GetFollowCamera()->GetForwardVector();
+	FVector LookDir = Character->GetBaseAimRotation().Vector();
 	//FVector LookDir = Character->GetBaseAimRotation().Vector();
 	float FinalVelocity = bIsPerfect ? LungeBurstVelocity.GetValueAtLevel(GetAbilityLevel()) * 1.5f : LungeBurstVelocity.GetValueAtLevel(GetAbilityLevel());
 	float CalculatedDistance = (FinalVelocity *0.2f) + ( 500);
