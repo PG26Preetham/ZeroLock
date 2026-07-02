@@ -14,4 +14,7 @@ class ZEROLOCK_API UZeroDashMode : public UBaseMovementMode
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void SimulationTick_Implementation(const FSimulationTickParams& Params, FMoverTickEndData& OutputState) override;
+	
 };

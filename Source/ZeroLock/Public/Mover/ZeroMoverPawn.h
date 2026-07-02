@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ZeroMovementData.h"
 #include "GameFramework/Pawn.h"
 #include "DefaultMovementSet/CharacterMoverComponent.h"
 #include "ZeroMoverPawn.generated.h"
@@ -22,12 +23,32 @@ class ZEROLOCK_API AZeroMoverPawn :public APawn, public IMoverInputProducerInter
 
 public:
 	AZeroMoverPawn();
+	UFUNCTION()
+	void OnMoverStanceChanged(EStanceMode OldStance, EStanceMode NewStance);
+	UFUNCTION()
+	void OnMovementModeChanged(const FName& PreviousMovementModeName, const FName& NewMovementModeName);
+	UFUNCTION()
+	void OnPreSimulationTick(const FMoverTimeStep& TimeStep, const FMoverInputCmdContext& InputCmd);
+	
+	
+	UPROPERTY(Transient)
+	FCharacterDefaultInputs DefaultInputData;
+	
+	UPROPERTY(Transient)
+	FZeroMovementInputs ZeroInputsData;
+	
+	
+	
+	//Dash
+	void HandleDashInputs();
+	
 	virtual void BeginPlay()override;
 	virtual void Tick(float DeltaTime)override;
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult) override;
-
+	
+	
 	// --- Core Components ---
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zero Mover|Components")
 	UCapsuleComponent* CapsuleComponent;
@@ -60,6 +81,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
 	UInputAction* CrouchAction;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
+	UInputAction* DashAction;
 
 	
 	void OnMove(const FInputActionValue& Value);
@@ -87,6 +111,16 @@ private:
 	
 	int32 LocalAirJumpsUsed = 0;
 	bool bWasJumpPressedLastFrame = false;
+	
+protected:
+	// Enhanced Input Callback
+	void OnDashPressed();
+	
+	void TriggerDash(float DashSpeed, float DurationSeconds);
+
+private:
+	// Temporary hardware trigger latch
+	bool bWantsToDashLatch = false;
 
 private:
 	// --- Cached Input State for the Mover Queue ---

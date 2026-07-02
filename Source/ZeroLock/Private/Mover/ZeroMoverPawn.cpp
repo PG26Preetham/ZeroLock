@@ -1,12 +1,13 @@
 // Copyright Preetham Mukundan (C) 2026
 
 #include "Mover/ZeroMoverPawn.h"
-#include "Mover/ZeroMovementData.h" // <-- ADD THIS: Includes FZeroMovementInputs
+#include "Mover/ZeroMovementData.h" 
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "DefaultMovementSet/LayeredMoves/BasicLayeredMoves.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "DefaultMovementSet/LayeredMoves/MultiJumpLayeredMove.h"
 #include "ZeroLock/ZeroLock.h"
@@ -15,7 +16,7 @@ AZeroMoverPawn::AZeroMoverPawn()
 {
     PrimaryActorTick.bCanEverTick = true;
     bReplicates = true;
-
+    SetReplicatingMovement(false);
     CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
     CapsuleComponent->InitCapsuleSize(34.0f, 88.0f);
     CapsuleComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
@@ -30,8 +31,6 @@ AZeroMoverPawn::AZeroMoverPawn()
     MoverComponent = CreateDefaultSubobject<UCharacterMoverComponent>(TEXT("MoverComponent"));
     MoverComponent->SetIsReplicated(true);
  
-    
-    
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(RootComponent);
     SpringArmComponent->TargetArmLength = 400.0f; 
@@ -42,9 +41,46 @@ AZeroMoverPawn::AZeroMoverPawn()
     CameraComponent->bUsePawnControlRotation = false; 
 }
 
+void AZeroMoverPawn::OnMoverStanceChanged(EStanceMode OldStance, EStanceMode NewStance)
+{
+    
+}
+
+void AZeroMoverPawn::OnMovementModeChanged(const FName& PreviousMovementModeName, const FName& NewMovementModeName)
+{
+    
+}
+
+void AZeroMoverPawn::OnPreSimulationTick(const FMoverTimeStep& TimeStep, const FMoverInputCmdContext& InputCmd)
+{
+    if (const FCharacterDefaultInputs* FoundDefaults = InputCmd.InputCollection.FindDataByType<FCharacterDefaultInputs>())
+    {
+        DefaultInputData = *FoundDefaults;
+    }
+
+    if (const FZeroMovementInputs* FoundZeroInputs = InputCmd.InputCollection.FindDataByType<FZeroMovementInputs>())
+    {
+        ZeroInputsData = *FoundZeroInputs;
+    }
+    
+    HandleDashInputs();
+}
+
+void AZeroMoverPawn::HandleDashInputs()
+{
+    if (ZeroInputsData.bWantsToDash)
+    {
+        TriggerDash(1500.0f, 0.2f);
+    }
+}
+
 void AZeroMoverPawn::BeginPlay()
 {
     Super::BeginPlay();
+    
+    MoverComponent->OnStanceChanged.AddUniqueDynamic(this,&AZeroMoverPawn::OnMoverStanceChanged);
+    MoverComponent->OnMovementModeChanged.AddUniqueDynamic(this,&AZeroMoverPawn::OnMovementModeChanged);
+    MoverComponent->OnPreSimulationTick.AddUniqueDynamic(this,&AZeroMoverPawn::OnPreSimulationTick);
 }
 
 void AZeroMoverPawn::Tick(float DeltaTime)
@@ -71,28 +107,23 @@ void AZeroMoverPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
     if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
     {
-        if (MoveAction)
-        {
-            EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnMove);
-            EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AZeroMoverPawn::OnMove);
-            
-            EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnJumpPressed);
-            EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed,this,&AZeroMoverPawn::OnJumpReleased);
-            
-            EnhancedInputComponent->BindAction(CrouchAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnCrouchPressed);
-            EnhancedInputComponent->BindAction(CrouchAction,ETriggerEvent::Completed,this,&AZeroMoverPawn::OnCrouchReleased);
-        }
-
-        if (LookAction)
-        {
-            EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnLook);
-        }
+        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnMove);
+        EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AZeroMoverPawn::OnMove);
+        
+        EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnJumpPressed);
+        EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed,this,&AZeroMoverPawn::OnJumpReleased);
+        
+        EnhancedInputComponent->BindAction(CrouchAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnCrouchPressed);
+        EnhancedInputComponent->BindAction(CrouchAction,ETriggerEvent::Completed,this,&AZeroMoverPawn::OnCrouchReleased);
+        
+        EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Started,this,&AZeroMoverPawn::OnDashPressed);
+   
+        EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnLook);
     }
 }
 
 void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult)
 {
-    // 1. Get a mutable reference directly from the collection (creates it if it doesn't exist)
     FCharacterDefaultInputs& DefaultInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FCharacterDefaultInputs>();
     
     if (!DefaultInputs.bIsJumpJustPressed && bLocalJumpPressed)
@@ -105,7 +136,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     }
     DefaultInputs.bIsJumpPressed = bLocalJumpPressed;
    
-    // 2. Translate 2D WASD input into a world-space 3D direction based on camera facing
+
     FVector ControlVector = FVector::ZeroVector;
     if (Controller && !CachedMoveInput.IsZero())
     {
@@ -119,14 +150,15 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
         ControlVector.Normalize();
     }
 
-    // 3. Assign the intent for Epic's Default Walk Mode
+
     DefaultInputs.SetMoveInput(EMoveInputType::DirectionalIntent, ControlVector); 
 
-    // 4. Set Control Rotation and Orientation Intent
+
     if (Controller)
     {
         DefaultInputs.ControlRotation = Controller->GetControlRotation();
-        DefaultInputs.OrientationIntent = DefaultInputs.ControlRotation.Vector();
+
+        DefaultInputs.OrientationIntent = DefaultInputs.ControlRotation.Vector().GetSafeNormal();
     }
     else
     {
@@ -144,29 +176,31 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     {
         LocalAirJumpsUsed = 0;
     }
-
-    // 3. Detect a clean "Just Pressed" event locally
+    
     bool bCustomJump = (bLocalJumpPressed && !bWasJumpPressedLastFrame);
     bWasJumpPressedLastFrame = bLocalJumpPressed;
-
-    // 4. Validate the Air Jump Intent
+    
     bool bValidAirJump = false;
     if (bCustomJump && CurrentMode == DefaultModeNames::Falling && LocalAirJumpsUsed < SlideSettings->MaxAirJumps)
     {
         bValidAirJump = true;
         LocalAirJumpsUsed++;
     }
-    // ---------------------------------------------------------------------------------
-    // 5. INJECT ZERO LOCK CUSTOM INPUTS
-    // We add our custom input struct alongside Epic's default one. 
-    // Our ZeroSlideTransition and ZeroSlideMode will look for THIS specific struct.
-    // ---------------------------------------------------------------------------------
+    
     FZeroMovementInputs& ZeroInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FZeroMovementInputs>();
-    ZeroInputs.MoveInput = ControlVector;
+    
+    //ZeroInputs.MoveInput = ControlVector;
     ZeroInputs.bWantsToCrouch = bCachedWantsToCrouch;
     ZeroInputs.bSlideIntentValid = bLocalSlideIntentValid;
     ZeroInputs.bCustomJumpJustPressed = bCustomJump;
     ZeroInputs.bWantsToAirJump = bValidAirJump;
+    ZeroInputs.bWantsToDash = bWantsToDashLatch;
+    if (Controller)
+    {
+        ZeroInputs.LookDir = Controller->GetControlRotation();
+    }
+    
+    bWantsToDashLatch = false;
 }
 
 void AZeroMoverPawn::OnMove(const FInputActionValue& Value)
@@ -183,23 +217,7 @@ void AZeroMoverPawn::OnLook(const FInputActionValue& Value)
 
 void AZeroMoverPawn::OnJumpPressed()
 {
-    // Keep the local flag for the base ground jump
     bLocalJumpPressed = true;
-/*
-    if (!MoverComponent) return;
-
-    FName CurrentMode = MoverComponent->GetMovementModeName();
-
-        bCachedWantsToCrouch = false;
-
-        TSharedPtr<FLayeredMove_MultiJump> DoubleJumpMove = MakeShared<FLayeredMove_MultiJump>();
-        DoubleJumpMove->UpwardsSpeed = SlideSettings ? SlideSettings->AirJumpForce : 600.0f;
-        DoubleJumpMove->MaximumInAirJumps = SlideSettings ? SlideSettings->MaxAirJumps : 1;
-        DoubleJumpMove->MixMode = EMoveMixMode::OverrideVelocity;
-
-        
-        MoverComponent->QueueLayeredMove(DoubleJumpMove);*/
-    
 }
 
 void AZeroMoverPawn::OnJumpReleased()
@@ -218,4 +236,32 @@ void AZeroMoverPawn::OnCrouchReleased()
     bCachedWantsToCrouch = false;
     bLocalSlideIntentValid = true;
     MoverComponent->UnCrouch();
+}
+
+void AZeroMoverPawn::OnDashPressed()
+{
+    bWantsToDashLatch = true;
+}
+
+void AZeroMoverPawn::TriggerDash(float DashSpeed, float DurationSeconds)
+{
+    if (!MoverComponent) return;
+
+    TSharedPtr<FLayeredMove_LinearVelocity> DashMove = MakeShared<FLayeredMove_LinearVelocity>();
+    
+    FVector MoveIntent = DefaultInputData.GetMoveInput();
+
+   
+    FVector DashDirection = MoveIntent.IsNearlyZero() ? ZeroInputsData.LookDir.Vector().GetSafeNormal2D() : MoveIntent.GetSafeNormal();
+    
+    if (DashDirection.IsNearlyZero())
+    {
+        DashDirection = GetActorForwardVector();
+    }
+
+    DashMove->Velocity = DashDirection * DashSpeed;
+    DashMove->DurationMs = DurationSeconds * 1000.0f;
+    DashMove->MixMode = EMoveMixMode::OverrideVelocity;
+
+    MoverComponent->QueueLayeredMove(DashMove);
 }

@@ -14,4 +14,6 @@ class ZEROLOCK_API UZeroDashTransition : public UBaseMovementModeTransition
 {
 	GENERATED_BODY()
 	
+public:
+	virtual FTransitionEvalResult Evaluate_Implementation(const FSimulationTickParams& Params) const override;
 };
