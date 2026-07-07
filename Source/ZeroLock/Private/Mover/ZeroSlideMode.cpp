@@ -1,92 +1,125 @@
 ﻿// Copyright Preetham Mukundan (C) 2026
 
-
 #include "Mover/ZeroSlideMode.h"
 #include "MoveLibrary/MovementUtils.h"
 #include "MoverComponent.h"
-#include "Components/CapsuleComponent.h"
+#include "Engine/World.h"
 #include "Mover/ZeroMovementData.h"
-#include "Mover/ZeroMoverPawn.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(ZeroSlideMode)
 
-bool UZeroSlideMode::GetSlideSurface(const FSimulationTickParams& Params, FHitResult& OutHit) const
+UZeroSlideMode::UZeroSlideMode(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-	// 1. Ensure the component is valid
-	if (!Params.MovingComps.UpdatedComponent.IsValid()) return false;
+	GameplayTags.AddTag(Mover_IsOnGround);
+	SlideInitialSpeedBoost = 500.0f;
+	SlideGravityForce = 1200.0f;
+	SlideSteeringAuthority = 2500.0f; 
+	SlideFriction = 0.5f; 
+	SlideMinSpeed = 150.0f;
+	SlideJumpImpulse = 650.0f;
+}
 
-	// 2. Cast the generic UpdatedComponent to a CapsuleComponent
-	UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(Params.MovingComps.UpdatedComponent.Get());
-	if (!Capsule) return false; // Safety abort if the root isn't a capsule
-
-	// 3. Perform the math
-	FVector Start = Params.MovingComps.UpdatedComponent->GetComponentLocation();
-	float CapHH = Capsule->GetScaledCapsuleHalfHeight();
-	FVector End = Start + (CapHH * 2.0f * FVector::DownVector);
-
-	FCollisionQueryParams TraceParams;
-	TraceParams.AddIgnoredActor(Params.MovingComps.UpdatedComponent->GetOwner());
-
-	return Params.MovingComps.UpdatedComponent->GetWorld()->LineTraceSingleByProfile(
-		OutHit, Start, End, TEXT("BlockAllDynamic"), TraceParams
-	);
+void UZeroSlideMode::GenerateMove_Implementation(const FMoverSimContext& SimContext, const FMoverTickStartData& StartState, const FMoverTimeStep& TimeStep, FProposedMove& OutProposedMove) const
+{
+	const FMoverDefaultSyncState* StartingSyncState = StartState.SyncState.SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
+	
+	OutProposedMove.bHasDirIntent = true;
+	if (StartingSyncState)
+	{
+		OutProposedMove.LinearVelocity = StartingSyncState->GetVelocity_WorldSpace();
+	}
+	else
+	{
+		OutProposedMove.LinearVelocity = FVector::ZeroVector;
+	}
+	
+	OutProposedMove.AngularVelocityDegrees = FVector::ZeroVector;
 }
 
 void UZeroSlideMode::SimulationTick_Implementation(const FSimulationTickParams& Params, FMoverTickEndData& OutputState)
 {
-const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
+	const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 
 	const FZeroMovementInputs* Inputs = Params.StartState.InputCmd.InputCollection.FindDataByType<FZeroMovementInputs>();
+	const FCharacterDefaultInputs* DefaultInputs = Params.StartState.InputCmd.InputCollection.FindDataByType<FCharacterDefaultInputs>();
 	const FMoverDefaultSyncState* StartingSyncState = Params.StartState.SyncState.SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
 
-	const UZeroMovementSettings* Settings = nullptr;
-	if (AZeroMoverPawn* Pawn = Cast<AZeroMoverPawn>(GetMoverComponent()->GetOwner()))
-	{
-		Settings = Pawn->SlideSettings;
-	}
-
-	if (!Settings || !StartingSyncState)
+	if (!StartingSyncState || !Params.MovingComps.UpdatedComponent.IsValid())
 	{
 		OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
 		return;
 	}
 
+	USceneComponent* UpdatedComponent = Params.MovingComps.UpdatedComponent.Get();
+	
+	if (DefaultInputs && DefaultInputs->bIsJumpJustPressed)
+	{
+		OutputState.MovementEndState.NextModeName = DefaultModeNames::Falling;
+		FMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FMoverDefaultSyncState>();
+		
+		FVector JumpVelocity = StartingSyncState->GetVelocity_WorldSpace();
+		JumpVelocity.Z = SlideJumpImpulse;
+
+		OutputSyncState.SetTransforms_WorldSpace(UpdatedComponent->GetComponentLocation(), UpdatedComponent->GetComponentRotation(), JumpVelocity, FVector::ZeroVector, nullptr);
+		UpdatedComponent->ComponentVelocity = JumpVelocity;
+		return;
+	}
+
 	OutputState.SyncState.MovementMode = Params.StartState.SyncState.MovementMode;
 	FMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FMoverDefaultSyncState>();
-
-	FVector OldLocation = Params.MovingComps.UpdatedComponent->GetComponentLocation();
+	
 	FVector CurrentVelocity = StartingSyncState->GetVelocity_WorldSpace();
-
-
-	if (Params.StartState.SyncState.MovementMode != TEXT("Sliding"))
+	
+	if (Params.StartState.SyncState.MovementMode != "Sliding")
 	{
-		CurrentVelocity += CurrentVelocity.GetSafeNormal2D() * Settings->SlideInitialSpeedBoost;
+		FVector BoostDir = CurrentVelocity.GetSafeNormal2D();
+		if (BoostDir.IsNearlyZero() && Inputs)
+		{
+			BoostDir = Inputs->LookDir.Vector().GetSafeNormal2D();
+		}
+		
+		CurrentVelocity += BoostDir * SlideInitialSpeedBoost;
 	}
 
-	CurrentVelocity += FVector::DownVector * Settings->SlideGravityForce * DeltaSeconds;
 
-	FVector SteeringAcceleration = FVector::ZeroVector;
+	FRotator TargetOrient = UpdatedComponent->GetComponentRotation();
+	if (Inputs)
+	{
+		TargetOrient = Inputs->LookDir.Vector().ToOrientationRotator();
+	}
+	TargetOrient.Pitch = 0.0f;
+	TargetOrient.Roll = 0.0f;
+	FQuat NewRot = TargetOrient.Quaternion();
+	
+	FVector CumulativeForces = FVector::DownVector * SlideGravityForce;
+
 	if (Inputs && !Inputs->MoveInput.IsNearlyZero())
 	{
-		FVector RightVec = Params.MovingComps.UpdatedComponent->GetRightVector();
-		
-		if (FMath::Abs(FVector::DotProduct(Inputs->MoveInput.GetSafeNormal(), RightVec)) > 0.5f)
-		{
-			SteeringAcceleration = Inputs->MoveInput.ProjectOnTo(RightVec) * 2048.0f;
-		}
+		FVector RightVec = FRotationMatrix(TargetOrient).GetUnitAxis(EAxis::Y);
+		float SteeringDot = FVector::DotProduct(Inputs->MoveInput.GetSafeNormal2D(), RightVec);
+		CumulativeForces += RightVec * (SteeringDot * SlideSteeringAuthority);
+	}
+	
+	if (Inputs && CurrentVelocity.Size2D() > 10.0f)
+	{
+		FVector LookDir2D = Inputs->LookDir.Vector().GetSafeNormal2D();
+		float Speed2D = CurrentVelocity.Size2D();
+		FVector BlendedDir = FMath::VInterpTo(CurrentVelocity.GetSafeNormal2D(), LookDir2D, DeltaSeconds, 3.0f);
+		CurrentVelocity = BlendedDir.GetSafeNormal2D() * Speed2D + FVector(0, 0, CurrentVelocity.Z);
 	}
 
+	CurrentVelocity += CumulativeForces * DeltaSeconds;
+
+	
 	float Speed = CurrentVelocity.Size2D();
 	if (Speed > 0.0f)
 	{
-		float Drop = Speed * Settings->SlideFriction * DeltaSeconds;
-		float NewSpeed = FMath::Max(Speed - Drop, 0.0f);
+		float FrictionDrop = SlideFriction * 500.0f * DeltaSeconds; 
+		float NewSpeed = FMath::Max(Speed - FrictionDrop, 0.0f);
 		CurrentVelocity = CurrentVelocity.GetSafeNormal2D() * NewSpeed + FVector(0, 0, CurrentVelocity.Z);
 	}
-	CurrentVelocity += SteeringAcceleration * DeltaSeconds;
 
-
-	FVector VelPlaneDir = CurrentVelocity.GetSafeNormal2D();
-	FQuat NewRot = FRotationMatrix::MakeFromXZ(VelPlaneDir, FVector::UpVector).ToQuat();
 
 	FVector MoveDelta = CurrentVelocity * DeltaSeconds;
 	FHitResult Hit(1.f);
@@ -100,34 +133,31 @@ const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 		FVector RemainingDelta = MoveDelta * (1.f - Hit.Time);
 		FVector SlideDelta = FVector::VectorPlaneProject(RemainingDelta, Hit.Normal);
 		
-		FQuat SlopeRot = FRotationMatrix::MakeFromXZ(SlideDelta.GetSafeNormal2D(), Hit.Normal).ToQuat();
 		FHitResult SlideHit(1.f);
-		UMovementUtils::TrySafeMoveUpdatedComponent(Params.MovingComps, SlideDelta, SlopeRot, true, SlideHit, ETeleportType::None, MoveRecord);
+		UMovementUtils::TrySafeMoveUpdatedComponent(Params.MovingComps, SlideDelta, NewRot, true, SlideHit, ETeleportType::None, MoveRecord);
+		CurrentVelocity = FVector::VectorPlaneProject(CurrentVelocity, Hit.Normal);
 	}
 
 
-	FVector FinalVelocity = (Params.MovingComps.UpdatedComponent->GetComponentLocation() - OldLocation) / DeltaSeconds;
-
-
-	if (Hit.bBlockingHit && Hit.Normal.Z > 0.7f)
+	if (Hit.bBlockingHit && Hit.Normal.Z > 0.01f && Hit.Normal.Z < 0.99f)
 	{
+		FVector SlopeDownwardDir = FVector::VectorPlaneProject(FVector::DownVector, Hit.Normal).GetSafeNormal();
 
-		FinalVelocity = FinalVelocity.GetSafeNormal() * CurrentVelocity.Size();
+		if (FVector::DotProduct(CurrentVelocity, SlopeDownwardDir) > 0.0f)
+		{
+			CurrentVelocity += SlopeDownwardDir * (SlideGravityForce * 1.5f) * DeltaSeconds;
+		}
 	}
 
 
-	bool bWantsToCrouch = Inputs && Inputs->bWantsToCrouch;
-	
-	
-	if (!bWantsToCrouch || FinalVelocity.SizeSquared2D() < FMath::Square(Settings->SlideMinSpeed))
+	const bool bWantsToCrouch = Inputs && Inputs->bWantsToCrouch;
+	if (!bWantsToCrouch || CurrentVelocity.SizeSquared2D() < FMath::Square(SlideMinSpeed))
 	{
 		OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
 	}
 
-	OutputSyncState.SetTransforms_WorldSpace(
-		Params.MovingComps.UpdatedComponent->GetComponentLocation(),
-		Params.MovingComps.UpdatedComponent->GetComponentRotation(),
-		FinalVelocity, 
-		nullptr
+	OutputSyncState.SetTransforms_WorldSpace(UpdatedComponent->GetComponentLocation(),UpdatedComponent->GetComponentRotation(),CurrentVelocity, FVector::ZeroVector, nullptr
 	);
+	
+	UpdatedComponent->ComponentVelocity = CurrentVelocity;
 }

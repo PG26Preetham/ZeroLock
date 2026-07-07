@@ -1,0 +1,51 @@
+// Copyright Preetham Mukundan (C) 2026
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "DefaultMovementSet/CharacterMoverComponent.h"
+#include "ZeroMoverComponent.generated.h"
+
+struct FZeroMovementInputs;
+/**
+ * 
+ */
+UCLASS()
+class ZEROLOCK_API UZeroMoverComponent : public UCharacterMoverComponent
+{
+	GENERATED_BODY()
+	
+public:
+	UZeroMoverComponent();
+	
+	virtual void OnMoverPreSimulationTick(const FMoverTimeStep& TimeStep, const FMoverInputCmdContext& InputCmd) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	int32 MaxAirJumps = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	float DashSpeed = 1500.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	float DashDuration = 0.2f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	float WallJumpOffForce = 800.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	float WallJumpVerticalForce = 600.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	float WallBounceTracePadding = 35.0f;
+
+protected:
+	bool HandleWallBounceCheck(const FZeroMovementInputs& ZeroInputs,const FName& CurrentMode);
+
+	void HandleDashInputs(const FCharacterDefaultInputs& DefaultInputs, const FZeroMovementInputs& ZeroInputs);
+	void HandleAirJumpTracking(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs);
+
+	void HandleCrouching(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs);
+private:
+	int32 LocalAirJumpsUsed = 0;
+	
+};

@@ -12,7 +12,10 @@ void UZeroWallJumpMode::SimulationTick_Implementation(const FSimulationTickParam
 {
 	const FMoverDefaultSyncState* StartingSyncState = Params.StartState.SyncState.SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
 	const UZeroMovementSettings* Settings = nullptr;
-	if (AZeroMoverPawn* Pawn = Cast<AZeroMoverPawn>(GetMoverComponent()->GetOwner())) { Settings = Pawn->SlideSettings; }
+	if (AZeroMoverPawn* Pawn = Cast<AZeroMoverPawn>(GetMoverComponent()->GetOwner()))
+	{
+		//Settings = Pawn->SlideSettings;
+	}
 
 	if (!Settings || !StartingSyncState)
 	{

@@ -14,7 +14,7 @@ const FZeroMovementInputs* Inputs = Params.StartState.InputCmd.InputCollection.F
     const UZeroMovementSettings* Settings = nullptr;
     if (AZeroMoverPawn* Pawn = Cast<AZeroMoverPawn>(GetMoverComponent()->GetOwner())) 
     { 
-        Settings = Pawn->SlideSettings; 
+        //Settings = Pawn->SlideSettings; 
     }
 
     if (!Settings || !StartingSyncState)

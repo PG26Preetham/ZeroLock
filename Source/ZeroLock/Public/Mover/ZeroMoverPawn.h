@@ -3,126 +3,92 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ZeroMovementData.h"
 #include "GameFramework/Pawn.h"
+#include "InputActionValue.h"
+#include "MoverSimulationTypes.h"
 #include "DefaultMovementSet/CharacterMoverComponent.h"
+#include "MoverTypes.h"
 #include "ZeroMoverPawn.generated.h"
 
-class UZeroMovementSettings;
-class UCameraComponent;
-class USpringArmComponent;
-struct FInputActionValue;
-class UInputAction;
-class UInputMappingContext;
+class UZeroMoverComponent;
 class UCapsuleComponent;
+class USpringArmComponent;
+class UCameraComponent;
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
-class ZEROLOCK_API AZeroMoverPawn :public APawn, public IMoverInputProducerInterface
+class ZEROLOCK_API AZeroMoverPawn : public APawn, public IMoverInputProducerInterface
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AZeroMoverPawn();
-	UFUNCTION()
-	void OnMoverStanceChanged(EStanceMode OldStance, EStanceMode NewStance);
-	UFUNCTION()
-	void OnMovementModeChanged(const FName& PreviousMovementModeName, const FName& NewMovementModeName);
-	UFUNCTION()
-	void OnPreSimulationTick(const FMoverTimeStep& TimeStep, const FMoverInputCmdContext& InputCmd);
-	
-	
-	UPROPERTY(Transient)
-	FCharacterDefaultInputs DefaultInputData;
-	
-	UPROPERTY(Transient)
-	FZeroMovementInputs ZeroInputsData;
-	
-	
-	
-	//Dash
-	void HandleDashInputs();
-	
-	virtual void BeginPlay()override;
-	virtual void Tick(float DeltaTime)override;
+    AZeroMoverPawn();
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult) override;
-	
-	
-	// --- Core Components ---
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zero Mover|Components")
-	UCapsuleComponent* CapsuleComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zero Mover|Components")
-	USkeletalMeshComponent* MeshComponent;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zero Mover|Camera")
-	USpringArmComponent* SpringArmComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zero Mover|Camera")
-	UCameraComponent* CameraComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Zero Mover|Components")
-	UCharacterMoverComponent* MoverComponent;
-
+    UZeroMoverComponent* GetZeroMoverComponent() { return  MoverComponent; };
 protected:
-	// --- Enhanced Input Assets ---
-	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
-	UInputMappingContext* DefaultMappingContext;
+    virtual void BeginPlay() override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
-	UInputAction* MoveAction;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
-	UInputAction* LookAction;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
-	UInputAction* JumpAction;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
-	UInputAction* CrouchAction;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Zero Mover|Input")
-	UInputAction* DashAction;
+    virtual void ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult) override;
 
-	
-	void OnMove(const FInputActionValue& Value);
-	void OnLook(const FInputActionValue& Value);
-	
-	//jump
-	void OnJumpPressed();
-	void OnJumpReleased();
-	
-	
-	//crouch
-	void OnCrouchPressed();
-	void OnCrouchReleased();
 
-public:
-	// We put the settings directly on the Pawn!
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement Settings")
-	TObjectPtr<UZeroMovementSettings> SlideSettings;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCapsuleComponent> CapsuleComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<USkeletalMeshComponent> MeshComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UZeroMoverComponent> MoverComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<USpringArmComponent> SpringArmComponent;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    TObjectPtr<UCameraComponent> CameraComponent;
+
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputMappingContext> DefaultMappingContext;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> MoveAction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> LookAction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> JumpAction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> CrouchAction;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> DashAction;
+
+    UFUNCTION()
+    void OnMoverStanceChanged(EStanceMode OldStance, EStanceMode NewStance);
+
+    UFUNCTION()
+    void OnMovementModeChanged(const FName& PreviousMovementModeName, const FName& NewMovementModeName);
+
+
+    void OnMove(const FInputActionValue& Value);
+    void OnLook(const FInputActionValue& Value);
+    void OnJumpPressed();
+    void OnJumpReleased();
+    void OnCrouchPressed();
+    void OnCrouchReleased();
+    void OnDashPressed();
+
 private:
-	bool bLocalJumpPressed = false;
-	
-	bool bCachedWantsToCrouch =false;
-	
-	bool bLocalSlideIntentValid = true;
-	
-	int32 LocalAirJumpsUsed = 0;
-	bool bWasJumpPressedLastFrame = false;
-	
-protected:
-	// Enhanced Input Callback
-	void OnDashPressed();
-	
-	void TriggerDash(float DashSpeed, float DurationSeconds);
 
-private:
-	// Temporary hardware trigger latch
-	bool bWantsToDashLatch = false;
-
-private:
-	// --- Cached Input State for the Mover Queue ---
-	FVector2D CachedMoveInput;
+    FVector2D CachedMoveInput = FVector2D::ZeroVector;
+    bool bLocalJumpPressed = false;
+    bool bWasJumpPressedLastFrame = false;
+    bool bCachedWantsToCrouch = false;
+    bool bLocalSlideIntentValid = false;
+    bool bWantsToDashLatch = false;
 };
