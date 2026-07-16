@@ -132,6 +132,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     
     ZeroInputs.bWantsToCrouch = bCachedWantsToCrouch;
     ZeroInputs.bSlideIntentValid = bLocalSlideIntentValid;
+    ZeroInputs.bJumpHold = bLocalJumpPressed;
     ZeroInputs.bCustomJumpJustPressed = bCustomJump;
     ZeroInputs.bWantsToDash = bWantsToDashLatch;
     ZeroInputs.bWantsToMelee = bWantsToHeavyMelee;

@@ -12,10 +12,7 @@ FTransitionEvalResult UZeroAirJumpTransition::Evaluate_Implementation(const FSim
 	const FZeroMovementInputs* Inputs = Params.StartState.InputCmd.InputCollection.FindDataByType<FZeroMovementInputs>();
 
 	if (!Inputs) return EvalResult;
-	if (Params.StartState.SyncState.MovementMode == DefaultModeNames::Falling && Inputs->bWantsToAirJump)
-	{
-		EvalResult.NextMode = TEXT("AirJumping");
-	}
+	
 	else if (Params.StartState.SyncState.MovementMode == DefaultModeNames::Walking && Inputs->bCustomJumpJustPressed)
 	{
 		EvalResult.NextMode = TEXT("AirJumping");

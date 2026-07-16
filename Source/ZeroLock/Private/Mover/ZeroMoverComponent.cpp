@@ -3,12 +3,19 @@
 
 #include "Mover/ZeroMoverComponent.h"
 
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "DefaultMovementSet/LayeredMoves/BasicLayeredMoves.h"
 #include "DefaultMovementSet/LayeredMoves/MultiJumpLayeredMove.h"
 #include "DefaultMovementSet/Settings/StanceSettings.h"
+#include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "GameFramework/Character.h"
 #include "Mover/ZeroMovementData.h" 
+#include "Mover/ZeroMoverPawn.h"
+#include "ZeroLock/ZeroLock.h"
 
 UZeroMoverComponent::UZeroMoverComponent()
 {
@@ -26,9 +33,9 @@ void UZeroMoverComponent::OnMoverPreSimulationTick(const FMoverTimeStep& TimeSte
 
     FName CurrentMode = GetMovementModeName();
     
-    if (FoundZeroInputs->bCustomJumpJustPressed)
+    if (FoundZeroInputs->bJumpHold)
     {
-        if (TryMantle(*FoundZeroInputs))
+        if (TryMantle(*FoundDefaults,*FoundZeroInputs))
         {
             return;
         }
@@ -53,9 +60,39 @@ void UZeroMoverComponent::InitializeComponent()
     }
 }
 
+void UZeroMoverComponent::PlayDirectionalDashMontage(const FVector& DashDirection)
+{
+    AZeroMoverPawn* OwnerCharacter = Cast<AZeroMoverPawn>(GetOwner());
+    if (!OwnerCharacter)
+    {
+        return;
+    }
+
+    UAnimMontage* MontageToPlay = nullptr;
+    FVector Forward = OwnerCharacter->GetActorForwardVector();
+    FVector Right = OwnerCharacter->GetActorRightVector();
+
+    float ForwardDot = FVector::DotProduct(DashDirection, Forward);
+    float RightDot = FVector::DotProduct(DashDirection, Right);
+
+    if (FMath::Abs(ForwardDot) >= FMath::Abs(RightDot))
+    {
+        MontageToPlay = (ForwardDot > 0.0f) ? DashForwardMontage : DashBackwardMontage;
+    }
+    else
+    {
+        MontageToPlay = (RightDot > 0.0f) ? DashRightMontage : DashLeftMontage;
+    }
+    
+    if (MontageToPlay)
+    {
+        OwnerCharacter->GetSkeletalMeshComponent()->GetAnimInstance()->Montage_Play(MontageToPlay);
+    }
+}
+
 void UZeroMoverComponent::HandleAirJumpTracking(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs)
 {
-    if (CurrentMode == DefaultModeNames::Walking || CurrentMode == TEXT("Sliding") || CurrentMode == TEXT("WallJumping"))
+    if (CurrentMode == DefaultModeNames::Walking || CurrentMode == TEXT("Sliding") )
     {
         LocalAirJumpsUsed = 0;
     }
@@ -90,6 +127,9 @@ void UZeroMoverComponent::HandleCrouching(const FName& CurrentMode, const FZeroM
         UnCrouch();
     }
 }
+
+
+
 
 
 bool UZeroMoverComponent::HandleWallBounceCheck(const FZeroMovementInputs& ZeroInputs, const FName& CurrentMode)
@@ -155,6 +195,7 @@ void UZeroMoverComponent::HandleDashInputs(const FCharacterDefaultInputs& Defaul
         DashDirection = GetOwner()->GetActorForwardVector();
     }
 
+    PlayDirectionalDashMontage(DashDirection);
     DashMove->Velocity = DashDirection * DashSpeed;
     DashMove->DurationMs = DashDuration * 1000.0f;
     DashMove->MixMode = EMoveMixMode::OverrideVelocity;
@@ -162,8 +203,18 @@ void UZeroMoverComponent::HandleDashInputs(const FCharacterDefaultInputs& Defaul
     QueueLayeredMove(DashMove);
 }
 
-bool UZeroMoverComponent::TryMantle(const FZeroMovementInputs& ZeroInputs)
+bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs, const FZeroMovementInputs& ZeroInputs)
 {
+    FVector MoveIntent = DefaultInputs.GetMoveInput();
+
+    if (MoveIntent.IsNearlyZero())
+    {
+        return false;
+    }
+    if (FVector::DotProduct(MoveIntent.GetSafeNormal(), GetOwner()->GetActorForwardVector()) < 0.5f)
+    {
+        return false;
+    }
     UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetUpdatedComponent());
     if (!Capsule) return false;
 

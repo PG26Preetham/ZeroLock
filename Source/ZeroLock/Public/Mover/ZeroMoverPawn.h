@@ -8,6 +8,7 @@
 #include "MoverSimulationTypes.h"
 #include "DefaultMovementSet/CharacterMoverComponent.h"
 #include "MoverTypes.h"
+#include "Misc/MapErrors.h"
 #include "ZeroMoverPawn.generated.h"
 
 class UZeroMoverComponent;
@@ -26,6 +27,7 @@ public:
     AZeroMoverPawn();
 
     UZeroMoverComponent* GetZeroMoverComponent() { return  MoverComponent; };
+    USkeletalMeshComponent* GetSkeletalMeshComponent() { return  MeshComponent; };
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

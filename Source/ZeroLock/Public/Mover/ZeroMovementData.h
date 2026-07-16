@@ -30,7 +30,7 @@ struct FZeroMovementInputs : public FMoverDataStructBase
 	bool bWantsToZipline = false;
     
     UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
-    bool bWantsToAirJump = false;
+    bool bJumpHold = false;
     
     UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
     bool bWantsToDash = false;
@@ -51,7 +51,7 @@ struct FZeroMovementInputs : public FMoverDataStructBase
        Ar << bWantsToCrouch;
        Ar << bSlideIntentValid; 
        Ar << bCustomJumpJustPressed; 
-       Ar << bWantsToAirJump;
+       Ar << bJumpHold;
        Ar << bWantsToDash;
        Ar << bWantsToMelee;
     	Ar << bWantsToZipline;

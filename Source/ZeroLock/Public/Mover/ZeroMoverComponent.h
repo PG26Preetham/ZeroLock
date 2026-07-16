@@ -61,11 +61,27 @@ protected:
 	bool HandleWallBounceCheck(const FZeroMovementInputs& ZeroInputs,const FName& CurrentMode);
 
 	void HandleDashInputs(const FCharacterDefaultInputs& DefaultInputs, const FZeroMovementInputs& ZeroInputs);
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Dash|Animations")
+	UAnimMontage* DashForwardMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Dash|Animations")
+	UAnimMontage* DashBackwardMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Dash|Animations")
+	UAnimMontage* DashLeftMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Dash|Animations")
+	UAnimMontage* DashRightMontage;
+	
+	void PlayDirectionalDashMontage(const FVector& DashDirection);
+	
+	
 	void HandleAirJumpTracking(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs);
 
 	void HandleCrouching(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs);
 		
-	bool TryMantle(const FZeroMovementInputs& ZeroInputs);
+	bool TryMantle(const FCharacterDefaultInputs& DefaultInputs, const FZeroMovementInputs& ZeroInputs);
 private:
 	int32 LocalAirJumpsUsed = 0;
 	
