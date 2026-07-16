@@ -40,7 +40,7 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<USkeletalMeshComponent> MeshComponent;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    UPROPERTY(VisibleAnywhere, BlueprintReadwrite, Category = "Components")
     TObjectPtr<UZeroMoverComponent> MoverComponent;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -67,6 +67,9 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     TObjectPtr<UInputAction> DashAction;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> MeleeAction;
 
     UFUNCTION()
     void OnMoverStanceChanged(EStanceMode OldStance, EStanceMode NewStance);
@@ -82,6 +85,7 @@ protected:
     void OnCrouchPressed();
     void OnCrouchReleased();
     void OnDashPressed();
+    void OnHeavyMeleePressed();
 
 private:
 
@@ -91,4 +95,5 @@ private:
     bool bCachedWantsToCrouch = false;
     bool bLocalSlideIntentValid = false;
     bool bWantsToDashLatch = false;
+    bool bWantsToHeavyMelee = false;
 };

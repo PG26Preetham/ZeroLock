@@ -25,12 +25,18 @@ struct FZeroMovementInputs : public FMoverDataStructBase
     
     UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
     bool bCustomJumpJustPressed = false;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
+	bool bWantsToZipline = false;
     
     UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
     bool bWantsToAirJump = false;
     
     UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
     bool bWantsToDash = false;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
+	bool bWantsToMelee = false;
 
     virtual UScriptStruct* GetScriptStruct() const override { return FZeroMovementInputs::StaticStruct(); }
     virtual FMoverDataStructBase* Clone() const override { return new FZeroMovementInputs(*this); }
@@ -47,6 +53,8 @@ struct FZeroMovementInputs : public FMoverDataStructBase
        Ar << bCustomJumpJustPressed; 
        Ar << bWantsToAirJump;
        Ar << bWantsToDash;
+       Ar << bWantsToMelee;
+    	Ar << bWantsToZipline;
 
        bOutSuccess = true;
        return true;

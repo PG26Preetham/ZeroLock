@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "DefaultMovementSet/Settings/StanceSettings.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Mover/ZeroMoverComponent.h"
 
@@ -28,6 +29,7 @@ AZeroMoverPawn::AZeroMoverPawn()
     // Instantiating our newly renamed Custom Zero Mover Component
     MoverComponent = CreateDefaultSubobject<UZeroMoverComponent>(TEXT("MoverComponent"));
     MoverComponent->SetIsReplicated(true);
+  
  
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComponent"));
     SpringArmComponent->SetupAttachment(RootComponent);
@@ -76,6 +78,10 @@ void AZeroMoverPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AZeroMoverPawn::OnCrouchReleased);
         
         EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AZeroMoverPawn::OnDashPressed);
+        
+        EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Started, this, &AZeroMoverPawn::OnHeavyMeleePressed);
+        
+        
         EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnLook);
     }
 }
@@ -128,6 +134,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     ZeroInputs.bSlideIntentValid = bLocalSlideIntentValid;
     ZeroInputs.bCustomJumpJustPressed = bCustomJump;
     ZeroInputs.bWantsToDash = bWantsToDashLatch;
+    ZeroInputs.bWantsToMelee = bWantsToHeavyMelee;
     
     if (Controller)
     {
@@ -136,6 +143,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     
     // Consume local dash latch after pushing it to the framework
     bWantsToDashLatch = false;
+    bWantsToHeavyMelee = false;
 }
 
 void AZeroMoverPawn::OnMove(const FInputActionValue& Value)
@@ -160,6 +168,11 @@ void AZeroMoverPawn::OnJumpReleased()
 void AZeroMoverPawn::OnDashPressed()
 {
     bWantsToDashLatch = true;
+}
+
+void AZeroMoverPawn::OnHeavyMeleePressed()
+{
+    bWantsToHeavyMelee = true;
 }
 
 void AZeroMoverPawn::OnCrouchPressed()

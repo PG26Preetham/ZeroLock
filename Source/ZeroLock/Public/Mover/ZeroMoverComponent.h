@@ -19,9 +19,12 @@ public:
 	UZeroMoverComponent();
 	
 	virtual void OnMoverPreSimulationTick(const FMoverTimeStep& TimeStep, const FMoverInputCmdContext& InputCmd) override;
-
+	virtual void InitializeComponent() override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
 	int32 MaxAirJumps = 2;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
+	int32 VerticalJumpForce = 400;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
 	float DashSpeed = 1500.0f;
@@ -38,6 +41,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Settings")
 	float WallBounceTracePadding = 35.0f;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Mantle")
+	float MantleReachHeight = 50.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Mantle")
+	float MantleMaxDistance = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Mantle")
+	float MantleMinWallSteepnessAngle = 75.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Mantle")
+	float MantleMaxSurfaceAngle = 45.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mover|Mantle")
+	float MantleMaxAlignmentAngle = 45.0f;
+
 protected:
 	bool HandleWallBounceCheck(const FZeroMovementInputs& ZeroInputs,const FName& CurrentMode);
 
@@ -45,6 +64,8 @@ protected:
 	void HandleAirJumpTracking(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs);
 
 	void HandleCrouching(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs);
+		
+	bool TryMantle(const FZeroMovementInputs& ZeroInputs);
 private:
 	int32 LocalAirJumpsUsed = 0;
 	
