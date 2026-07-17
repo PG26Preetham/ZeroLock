@@ -110,15 +110,17 @@ void UZeroMeleeMode::SimulationTick_Implementation(const FSimulationTickParams& 
         {
             MeleeHitDelegate.Broadcast();
         }
+        FinalVelocity =FVector::ZeroVector;
         OutputState.MovementEndState.NextModeName = DefaultModeNames::Falling;
     }
     else if (OutputMeleeState.ElapsedTimeMs >= (MaxDuration * 1000.0f))
     {
+        FinalVelocity =FVector::ZeroVector;
         OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
     }
     else if (FinalVelocity.IsNearlyZero(5.0f))
     {
-
+        FinalVelocity =FVector::ZeroVector;
         OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
     }
 
