@@ -36,7 +36,7 @@ const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
 
     USceneComponent* UpdatedComponent = Params.MovingComps.UpdatedComponent.Get();
    
-    if (DefaultInputs && DefaultInputs->bIsJumpJustPressed)
+  /*  if (DefaultInputs && DefaultInputs->bIsJumpJustPressed)
     {
        OutputState.MovementEndState.NextModeName = DefaultModeNames::Falling;
        FMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FMoverDefaultSyncState>();
@@ -47,7 +47,7 @@ const float DeltaSeconds = Params.TimeStep.StepMs * 0.001f;
        OutputSyncState.SetTransforms_WorldSpace(UpdatedComponent->GetComponentLocation(), UpdatedComponent->GetComponentRotation(), JumpVelocity, FVector::ZeroVector, nullptr);
        UpdatedComponent->ComponentVelocity = JumpVelocity;
        return;
-    }
+    }*/
 
     OutputState.SyncState.MovementMode = Params.StartState.SyncState.MovementMode;
     FMoverDefaultSyncState& OutputSyncState = OutputState.SyncState.SyncStateCollection.FindOrAddMutableDataByType<FMoverDefaultSyncState>();

@@ -2,7 +2,7 @@
 
 
 #include "Mover/ZeroMoverComponent.h"
-
+#include "NiagaraFunctionLibrary.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "Components/CapsuleComponent.h"
@@ -15,7 +15,6 @@
 #include "GameFramework/Character.h"
 #include "Mover/ZeroMovementData.h" 
 #include "Mover/ZeroMoverPawn.h"
-#include "ZeroLock/ZeroLock.h"
 
 UZeroMoverComponent::UZeroMoverComponent()
 {
@@ -103,12 +102,25 @@ void UZeroMoverComponent::HandleAirJumpTracking(const FName& CurrentMode, const 
     
     if (ZeroInputs.bCustomJumpJustPressed &&  LocalAirJumpsUsed < MaxAirJumps)
     {
+       
         TSharedPtr<FLayeredMove_MultiJump> JumpMove = MakeShared<FLayeredMove_MultiJump>();
         JumpMove->UpwardsSpeed = VerticalJumpForce;
+        if (CurrentMode == DefaultModeNames::Falling )
+        {
+            JumpMove->UpwardsSpeed = VerticalJumpForce*1.5;
+            if (VFX_AirJump)
+            {
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),VFX_AirJump,UpdatedComponent->GetComponentLocation(),FRotator(0.0f,0.0f,0.0f));
+            }
+        }
         JumpMove->MaximumInAirJumps = MaxAirJumps;
         JumpMove->MixMode = EMoveMixMode::OverrideVelocity;
         QueueLayeredMove(JumpMove);
         LocalAirJumpsUsed++;
+        if (IsCrouching())
+        {
+            UnCrouch();
+        }
     }
 }
 
@@ -167,7 +179,12 @@ bool UZeroMoverComponent::HandleWallBounceCheck(const FZeroMovementInputs& ZeroI
         LaunchVelocity += WallNormal * WallJumpOffForce;
         LaunchVelocity.Z = WallJumpVerticalForce;
 
-
+        if (VFX_WallBounce)
+        {
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),VFX_WallBounce,Hit.Location,Hit.Normal.Rotation());
+        }
+        
+        
         TSharedPtr<FLayeredMove_LinearVelocity> WallBounceMove = MakeShared<FLayeredMove_LinearVelocity>();
         WallBounceMove->Velocity = LaunchVelocity;
         WallBounceMove->DurationMs = 0.15f * 1000.0f; 

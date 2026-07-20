@@ -6,6 +6,7 @@
 #include "DefaultMovementSet/CharacterMoverComponent.h"
 #include "ZeroMoverComponent.generated.h"
 
+class UNiagaraSystem;
 struct FZeroMovementInputs;
 /**
  * 
@@ -84,5 +85,12 @@ protected:
 	bool TryMantle(const FCharacterDefaultInputs& DefaultInputs, const FZeroMovementInputs& ZeroInputs);
 private:
 	int32 LocalAirJumpsUsed = 0;
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "WallBounce|VFX")
+	UNiagaraSystem* VFX_WallBounce;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "AirJump|VFX")
+	UNiagaraSystem* VFX_AirJump;
 	
 };

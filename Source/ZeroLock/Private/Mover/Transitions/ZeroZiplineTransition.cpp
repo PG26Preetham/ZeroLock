@@ -26,7 +26,7 @@ FTransitionEvalResult UZeroZiplineTransition::Evaluate_Implementation(const FSim
 
 	if (const FZeroMovementInputs* ZeroInputs = Params.StartState.InputCmd.InputCollection.FindDataByType<FZeroMovementInputs>())
 	{
-		if (ZeroInputs->bWantsToMelee) 
+		if (ZeroInputs->bWantsToZipline) 
 		{
 			FVector CamLocation = OwnerActor->GetActorLocation();
 			FVector CamForward = ZeroInputs->LookDir.Vector();

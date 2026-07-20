@@ -72,6 +72,9 @@ protected:
     
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     TObjectPtr<UInputAction> MeleeAction;
+    
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+    TObjectPtr<UInputAction> ZiplineAction;
 
     UFUNCTION()
     void OnMoverStanceChanged(EStanceMode OldStance, EStanceMode NewStance);
@@ -88,6 +91,7 @@ protected:
     void OnCrouchReleased();
     void OnDashPressed();
     void OnHeavyMeleePressed();
+    void OnZiplinePressed();
 
 private:
 
@@ -98,4 +102,5 @@ private:
     bool bLocalSlideIntentValid = false;
     bool bWantsToDashLatch = false;
     bool bWantsToHeavyMelee = false;
+    bool bWantsToZipline = false;
 };

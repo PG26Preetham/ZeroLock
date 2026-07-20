@@ -79,7 +79,8 @@ void AZeroMoverPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         
         EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Started, this, &AZeroMoverPawn::OnDashPressed);
         
-        EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Started, this, &AZeroMoverPawn::OnHeavyMeleePressed);
+        EnhancedInputComponent->BindAction(MeleeAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnHeavyMeleePressed);
+        EnhancedInputComponent->BindAction(ZiplineAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnZiplinePressed);
         
         
         EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AZeroMoverPawn::OnLook);
@@ -136,6 +137,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     ZeroInputs.bCustomJumpJustPressed = bCustomJump;
     ZeroInputs.bWantsToDash = bWantsToDashLatch;
     ZeroInputs.bWantsToMelee = bWantsToHeavyMelee;
+    ZeroInputs.bWantsToZipline = bWantsToZipline;
     
     if (Controller)
     {
@@ -145,6 +147,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     // Consume local dash latch after pushing it to the framework
     bWantsToDashLatch = false;
     bWantsToHeavyMelee = false;
+    bWantsToZipline = false;
 }
 
 void AZeroMoverPawn::OnMove(const FInputActionValue& Value)
@@ -174,6 +177,11 @@ void AZeroMoverPawn::OnDashPressed()
 void AZeroMoverPawn::OnHeavyMeleePressed()
 {
     bWantsToHeavyMelee = true;
+}
+
+void AZeroMoverPawn::OnZiplinePressed()
+{
+    bWantsToZipline = true;
 }
 
 void AZeroMoverPawn::OnCrouchPressed()
