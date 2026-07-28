@@ -50,7 +50,7 @@ void UZL_Lash_Grapple::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 					LaunchDiraction.Z = 0.75;
 					FVector LaunchVelocity = LaunchDiraction * GrappleLaunchStrength;
 					LaunchVelocity.Z+= HeightBoostInGrapple;
-					Hero->LaunchCharacter(LaunchVelocity,true,true);
+			//		Hero->LaunchCharacter(LaunchVelocity,true,true);
 					if (OnGrappleEffect)
 					{
 						Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(Hero->GetMyAbilitySystemComp(),OnGrappleEffect,mylevel);

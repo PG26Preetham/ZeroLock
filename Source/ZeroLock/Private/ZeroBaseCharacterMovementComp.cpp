@@ -56,7 +56,7 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::SetMoveFor(ACharacter* C, 
     Saved_bWantsToSprint = CharMovementComp->Safe_bWantsToSprint;
     Saved_bPrevWantsToCrouch = CharMovementComp->Safe_bPrevWantsToCrouch;
     Saved_bWantsToDash = CharMovementComp->Safe_bWantsToDash;
-    Saved_bPressedZeroJump = CharMovementComp->ZeroCharacter_Owner->bPressedZeroJump;
+    //Saved_bPressedZeroJump = CharMovementComp->ZeroCharacter_Owner->bPressedZeroJump;
     Saved_bHadAnimRootMotion = CharMovementComp->Safe_bHadAnimRootMotion;
     Saved_bTransitionFinished = CharMovementComp->Safe_bTransitionFinished;
 }
@@ -69,7 +69,7 @@ void UZeroBaseCharacterMovementComp::FSavedMove_Zero::PrepMoveFor(ACharacter* C)
     CharMovementComp->Safe_bWantsToSprint = Saved_bWantsToSprint;
     CharMovementComp->Safe_bPrevWantsToCrouch = Saved_bPrevWantsToCrouch;
     CharMovementComp->Safe_bWantsToDash = Saved_bWantsToDash;
-    CharMovementComp->ZeroCharacter_Owner->bPressedZeroJump = Saved_bPressedZeroJump;
+    //CharMovementComp->ZeroCharacter_Owner->bPressedZeroJump = Saved_bPressedZeroJump;
     CharMovementComp->Safe_bHadAnimRootMotion = Saved_bHadAnimRootMotion;
     CharMovementComp->Safe_bTransitionFinished = Saved_bTransitionFinished;
 }
@@ -180,7 +180,7 @@ void UZeroBaseCharacterMovementComp::OnMovementUpdated(float DeltaSeconds, const
 }
 
 void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float DeltaSeconds)
-{
+{/*
     if(ZeroCharacter_Owner->ZeroJumpHoldTIme > ZiplineMinKeyPressTime && ZeroCharacter_Owner->bStillJumpKeyDown)
     {
         if(TryZipLine())
@@ -245,7 +245,7 @@ void UZeroBaseCharacterMovementComp::UpdateCharacterStateBeforeMovement(float De
     if(IsCustomMovementMode(CMOVE_Slide) && !bWantsToCrouch)
     {
        SetMovementMode(MOVE_Walking);
-    }
+    }*/
     Super::UpdateCharacterStateBeforeMovement(DeltaSeconds);
 }
 

@@ -22,7 +22,8 @@ void FZeroZipliningState::ToString(FAnsiStringBuilderBase& Out) const
 bool FZeroZipliningState::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
 	Super::NetSerialize(Ar, Map, bOutSuccess);
-	Ar << ZiplineActor;
+	Map->SerializeObject(Ar, AZero_ZiplineActor::StaticClass(), (UObject*&)ZiplineActor);
+    
 	uint8 LocalMovingToEnd = bMovingToEnd;
 	Ar.SerializeBits(&LocalMovingToEnd, 1);
     
@@ -87,7 +88,12 @@ void UZeroZiplineMode::SimulationTick_Implementation(const FSimulationTickParams
         	
             if (GetWorld()->SweepSingleByObjectType(ZipHit, TraceStart, TraceEnd, ZeroInputs->LookDir.Quaternion(), ECC_Vehicle, FCollisionShape::MakeSphere(1000.f), TraceParams))
             {
-            	DrawDebugSphere(GetWorld(), ZipHit.ImpactPoint, 50.f, 16, FColor::Red, false, 5.0f);
+                // 1. Guard your cosmetics and debugs against rollbacks
+                if (!Params.TimeStep.bIsResimulating)
+                {
+                    DrawDebugSphere(GetWorld(), ZipHit.ImpactPoint, 50.f, 16, FColor::Red, false, 5.0f);
+                }
+                
                 if (AZero_ZiplineActor* ZP = Cast<AZero_ZiplineActor>(ZipHit.GetActor()))
                 {
                     OutZipState.ZiplineActor = ZP;
@@ -113,7 +119,6 @@ void UZeroZiplineMode::SimulationTick_Implementation(const FSimulationTickParams
         OutZipState = *StartZipState;
     }
 
-
     USplineComponent* SplineComp = OutZipState.ZiplineActor->FindComponentByClass<USplineComponent>();
     if (!SplineComp)
     {
@@ -126,7 +131,6 @@ void UZeroZiplineMode::SimulationTick_Implementation(const FSimulationTickParams
     
     float SplineLength = SplineComp->GetSplineLength();
     float DistanceAlongSpline = SplineComp->GetDistanceAlongSplineAtLocation(CurrentLoc, ESplineCoordinateSpace::World);
-    
 
     if ((OutZipState.bMovingToEnd && DistanceAlongSpline >= SplineLength) || (!OutZipState.bMovingToEnd && DistanceAlongSpline <= 0.0f))
     {
@@ -134,6 +138,7 @@ void UZeroZiplineMode::SimulationTick_Implementation(const FSimulationTickParams
         OutputState.MovementEndState.RemainingMs = Params.TimeStep.StepMs;
         return;
     }
+
 	if (ZeroInputs->bCustomJumpJustPressed || ZeroInputs->bWantsToCrouch)
 	{
 		OutputState.MovementEndState.NextModeName = DefaultModeNames::Falling;
@@ -145,12 +150,12 @@ void UZeroZiplineMode::SimulationTick_Implementation(const FSimulationTickParams
     float NextDistance = DistanceAlongSpline + (MoveDirection * ZiplineSpeed * DeltaSeconds);
     FVector TargetLocation = SplineComp->GetLocationAtDistanceAlongSpline(NextDistance, ESplineCoordinateSpace::World);
     
-    FVector AdjustedDelta = (TargetLocation - CurrentLoc).GetSafeNormal() * DeltaSeconds * ZiplineSpeed;
+
+    FVector AdjustedDelta = TargetLocation - CurrentLoc;
 
     FVector SplineForward = SplineComp->GetDirectionAtDistanceAlongSpline(DistanceAlongSpline, ESplineCoordinateSpace::World).GetSafeNormal();
     SplineForward.Z = 0.0f;
     
-	
     if (!OutZipState.bMovingToEnd)
     {
         SplineForward *= -1.0f;
@@ -162,6 +167,9 @@ void UZeroZiplineMode::SimulationTick_Implementation(const FSimulationTickParams
     FHitResult Hit(1.0f);
 
     UMovementUtils::TrySafeMoveUpdatedComponent(Params.MovingComps, AdjustedDelta, NewRotation, true, Hit, ETeleportType::None, MoveRecord);
+
+
+    OutputState.SyncState.MovementMode = TEXT("Ziplining");
 
     FVector FinalVelocity = MoveRecord.GetRelevantVelocity();
     OutputSyncState.SetTransforms_WorldSpace(UpdatedComponent->GetComponentLocation(), UpdatedComponent->GetComponentRotation(), FinalVelocity, FVector::ZeroVector);

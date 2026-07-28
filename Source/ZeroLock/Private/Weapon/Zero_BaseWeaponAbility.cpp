@@ -53,14 +53,14 @@ void UZero_BaseWeaponAbility::Fire()
 				proj->SetOwner(Hero);
 				proj->OwnerCharacter = Hero;
 			}
-			if (UZeroBaseCharacterMovementComp* MC = Cast<UZeroBaseCharacterMovementComp>(Hero->GetCharacterMovement()))
-			{
-				if (MC->IsCustomMovementMode(ECustomMovementMode::CMOVE_Slide))
-				{
-					EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
-					return;
-				}
-			}
+			//if (UZeroBaseCharacterMovementComp* MC = Cast<UZeroBaseCharacterMovementComp>(Hero->GetCharacterMovement()))
+			//{
+			//	if (MC->IsCustomMovementMode(ECustomMovementMode::CMOVE_Slide))
+			//	{
+			//		EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
+			//		return;
+			//	}
+			//}
 			CommitAbilityCost(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo);
 			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 		}

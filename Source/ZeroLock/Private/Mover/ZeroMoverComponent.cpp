@@ -41,7 +41,7 @@ void UZeroMoverComponent::OnMoverPreSimulationTick(const FMoverTimeStep& TimeSte
     }
     HandleCrouching(CurrentMode,*FoundZeroInputs);
     HandleAirJumpTracking(CurrentMode, *FoundZeroInputs);
-
+   
 
     if (FoundZeroInputs->bWantsToDash)
     {
@@ -91,32 +91,40 @@ void UZeroMoverComponent::PlayDirectionalDashMontage(const FVector& DashDirectio
 
 void UZeroMoverComponent::HandleAirJumpTracking(const FName& CurrentMode, const FZeroMovementInputs& ZeroInputs)
 {
-    if (CurrentMode == DefaultModeNames::Walking || CurrentMode == TEXT("Sliding") )
+    if (CurrentMode == DefaultModeNames::Walking || CurrentMode == TEXT("Sliding"))
     {
         LocalAirJumpsUsed = 0;
     }
-    if (HandleWallBounceCheck(ZeroInputs,CurrentMode))
+
+    if (HandleWallBounceCheck(ZeroInputs, CurrentMode))
     {
         return;
     }
     
-    if (ZeroInputs.bCustomJumpJustPressed &&  LocalAirJumpsUsed < MaxAirJumps)
+    if (ZeroInputs.bCustomJumpJustPressed && LocalAirJumpsUsed < MaxAirJumps)
     {
-       
         TSharedPtr<FLayeredMove_MultiJump> JumpMove = MakeShared<FLayeredMove_MultiJump>();
         JumpMove->UpwardsSpeed = VerticalJumpForce;
-        if (CurrentMode == DefaultModeNames::Falling )
+
+        if (CurrentMode == DefaultModeNames::Falling)
         {
-            JumpMove->UpwardsSpeed = VerticalJumpForce*1.5;
-            if (VFX_AirJump)
+            JumpMove->UpwardsSpeed = VerticalJumpForce * 1.5f;
+
+            // Only spawn cosmetic effects on local clients during non-resimulated steps
+            if (VFX_AirJump && GetWorld()->IsNetMode(NM_DedicatedServer) == false)
             {
-                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),VFX_AirJump,UpdatedComponent->GetComponentLocation(),FRotator(0.0f,0.0f,0.0f));
+                if (!GetLastTimeStep().bIsResimulating)
+                {
+                    UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_AirJump, UpdatedComponent->GetComponentLocation(), FRotator::ZeroRotator);
+                }
             }
         }
+
         JumpMove->MaximumInAirJumps = MaxAirJumps;
         JumpMove->MixMode = EMoveMixMode::OverrideVelocity;
         QueueLayeredMove(JumpMove);
         LocalAirJumpsUsed++;
+
         if (IsCrouching())
         {
             UnCrouch();
@@ -167,7 +175,9 @@ bool UZeroMoverComponent::HandleWallBounceCheck(const FZeroMovementInputs& ZeroI
     
     if (bHitWall && FMath::Abs(Hit.Normal.Z) < 0.3f)
     {
-        FVector CurrentVelocity = GetVelocity();
+        const FMoverDefaultSyncState* SyncState = GetSyncState().SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
+        FVector CurrentVelocity = SyncState ? SyncState->GetVelocity_WorldSpace() : FVector::ZeroVector;
+     
         FVector WallNormal = Hit.Normal;
         
         if (FVector::DotProduct(CurrentVelocity, WallNormal) < 0.0f)
@@ -179,16 +189,17 @@ bool UZeroMoverComponent::HandleWallBounceCheck(const FZeroMovementInputs& ZeroI
         LaunchVelocity += WallNormal * WallJumpOffForce;
         LaunchVelocity.Z = WallJumpVerticalForce;
 
-        if (VFX_WallBounce)
+        if (VFX_WallBounce && GetWorld()->IsNetMode(NM_DedicatedServer) == false)
         {
-            UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(),VFX_WallBounce,Hit.Location,Hit.Normal.Rotation());
+            if (!GetLastTimeStep().bIsResimulating)
+            {
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), VFX_WallBounce, Hit.Location, Hit.Normal.Rotation());
+            }
         }
-        
         
         TSharedPtr<FLayeredMove_LinearVelocity> WallBounceMove = MakeShared<FLayeredMove_LinearVelocity>();
         WallBounceMove->Velocity = LaunchVelocity;
         WallBounceMove->DurationMs = 0.15f * 1000.0f; 
-        
         WallBounceMove->MixMode = EMoveMixMode::OverrideVelocity; 
 
         QueueLayeredMove(WallBounceMove);
@@ -212,7 +223,14 @@ void UZeroMoverComponent::HandleDashInputs(const FCharacterDefaultInputs& Defaul
         DashDirection = GetOwner()->GetActorForwardVector();
     }
 
-    PlayDirectionalDashMontage(DashDirection);
+    if (GetWorld()->IsNetMode(NM_DedicatedServer) == false)
+    {
+        if (!GetLastTimeStep().bIsResimulating)
+        {
+            PlayDirectionalDashMontage(DashDirection);
+        }
+    }
+
     DashMove->Velocity = DashDirection * DashSpeed;
     DashMove->DurationMs = DashDuration * 1000.0f;
     DashMove->MixMode = EMoveMixMode::OverrideVelocity;
@@ -222,21 +240,17 @@ void UZeroMoverComponent::HandleDashInputs(const FCharacterDefaultInputs& Defaul
 
 bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs, const FZeroMovementInputs& ZeroInputs)
 {
-    FVector MoveIntent = DefaultInputs.GetMoveInput();
+  FVector MoveIntent = DefaultInputs.GetMoveInput();
 
-    if (MoveIntent.IsNearlyZero())
+    if (MoveIntent.IsNearlyZero() || FVector::DotProduct(MoveIntent.GetSafeNormal(), GetOwner()->GetActorForwardVector()) < 0.5f)
     {
         return false;
     }
-    if (FVector::DotProduct(MoveIntent.GetSafeNormal(), GetOwner()->GetActorForwardVector()) < 0.5f)
-    {
-        return false;
-    }
+    
     UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(GetUpdatedComponent());
     if (!Capsule) return false;
 
     FName CurrentMode = GetMovementModeName();
-    
     if (CurrentMode != DefaultModeNames::Walking && CurrentMode != DefaultModeNames::Falling) 
         return false;
     
@@ -246,7 +260,6 @@ bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs
 
     FVector BaseLoc = Capsule->GetComponentLocation() + FVector::DownVector * CapHH;
     FVector Fwd = Capsule->GetForwardVector().GetSafeNormal2D();
-    
 
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(GetOwner());
@@ -256,15 +269,11 @@ bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs
     float CosMMSA = FMath::Cos(FMath::DegreesToRadians(MantleMaxSurfaceAngle));
     float CosMMAA = FMath::Cos(FMath::DegreesToRadians(MantleMaxAlignmentAngle));
 
-
     FHitResult FrontHit;
-    float CheckDistance = FMath::Clamp(FVector::DotProduct(GetVelocity(), Fwd), CapR + 30.f, MantleMaxDistance);
-    
-    if (!GetOwner()->HasLocalNetOwner())
-    {
-       CheckDistance += 20.0f; 
-    }
-    
+    const FMoverDefaultSyncState* SyncState = GetSyncState().SyncStateCollection.FindDataByType<FMoverDefaultSyncState>();
+    FVector CurrentVelocity = SyncState ? SyncState->GetVelocity_WorldSpace() : FVector::ZeroVector;
+    float CheckDistance = FMath::Clamp(FVector::DotProduct(CurrentVelocity, Fwd), CapR + 30.f, MantleMaxDistance);
+
     FVector FrontStart = BaseLoc + FVector::UpVector * (MaxStepHeight - 1.f);
     
     for (int i = 0; i < 6; i++)
@@ -280,13 +289,11 @@ bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs
     if (FMath::Abs(CosWallSteepnessAngle) > CosMMWSA || FVector::DotProduct(Fwd, -FrontHit.Normal) < CosMMAA) 
         return false;
 
-
     TArray<FHitResult> HeightHits;
     FHitResult SurfaceHit;
     FVector WallUp = FVector::VectorPlaneProject(FVector::UpVector, FrontHit.Normal).GetSafeNormal();
     float WallCos = FVector::DotProduct(FVector::UpVector, FrontHit.Normal);
     float WallSin = FMath::Sqrt(1.f - (WallCos * WallCos));
-    
 
     if (FMath::IsNearlyZero(WallSin)) WallSin = 0.001f; 
     
@@ -310,7 +317,6 @@ bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs
     float Height = FVector::DotProduct((SurfaceHit.Location - BaseLoc), FVector::UpVector);
     if (Height > MaxHeight) return false;
 
-
     float SurfaceCos = FVector::DotProduct(FVector::UpVector, SurfaceHit.Normal);
     float SurfaceSin = FMath::Sqrt(1.f - (SurfaceCos * SurfaceCos));
     FVector ClearCapLoc = SurfaceHit.Location + Fwd * CapR + FVector::UpVector * (CapHH + 1.f + CapR * 2.f * SurfaceSin);
@@ -330,7 +336,6 @@ bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs
     MantleMove->TargetLocation = TransitionTarget;
     MantleMove->DurationMs = CalculateDuration * 1000.0f;
     MantleMove->MixMode = EMoveMixMode::OverrideVelocity;
-
     MantleMove->bRestrictSpeedToExpected = true; 
 
     QueueLayeredMove(MantleMove);

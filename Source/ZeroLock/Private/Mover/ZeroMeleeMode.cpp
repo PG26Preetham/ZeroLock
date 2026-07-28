@@ -106,11 +106,16 @@ void UZeroMeleeMode::SimulationTick_Implementation(const FSimulationTickParams& 
 
     if (bHitEnemy)
     {
-        if (MeleeHitDelegate.IsBound())
+       
+        if (!Params.TimeStep.bIsResimulating)
         {
-            MeleeHitDelegate.Broadcast();
+            if (MeleeHitDelegate.IsBound())
+            {
+                MeleeHitDelegate.Broadcast();
+            }
         }
-        FinalVelocity =FVector::ZeroVector;
+        
+        FinalVelocity = FVector::ZeroVector;
         OutputState.MovementEndState.NextModeName = DefaultModeNames::Falling;
     }
     else if (OutputMeleeState.ElapsedTimeMs >= (MaxDuration * 1000.0f))
@@ -118,12 +123,7 @@ void UZeroMeleeMode::SimulationTick_Implementation(const FSimulationTickParams& 
         FinalVelocity =FVector::ZeroVector;
         OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
     }
-    else if (FinalVelocity.IsNearlyZero(5.0f))
-    {
-        FinalVelocity =FVector::ZeroVector;
-        OutputState.MovementEndState.NextModeName = DefaultModeNames::Walking;
-    }
-
+    
 
     OutputSyncState.SetTransforms_WorldSpace(UpdatedComponent->GetComponentLocation(),NewRot.Rotator(),FinalVelocity,FVector::ZeroVector,nullptr);
 

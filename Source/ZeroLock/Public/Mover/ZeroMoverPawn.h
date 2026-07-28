@@ -26,15 +26,19 @@ class ZEROLOCK_API AZeroMoverPawn : public APawn, public IMoverInputProducerInte
 public:
     AZeroMoverPawn();
 
-    UZeroMoverComponent* GetZeroMoverComponent() { return  MoverComponent; };
-    USkeletalMeshComponent* GetSkeletalMeshComponent() { return  MeshComponent; };
+    UZeroMoverComponent* GetZeroMoverComponent() const { return MoverComponent; }
+    USkeletalMeshComponent* GetSkeletalMeshComponent() const { return MeshComponent; }
+    
+    // --- Helper Functions to mimic ACharacter API ---
+    FORCEINLINE USkeletalMeshComponent* GetMesh() const { return MeshComponent; }
+    FORCEINLINE UCapsuleComponent* GetCapsuleComponent() const { return CapsuleComponent; }
+    FORCEINLINE UCameraComponent* GetFollowCamera() const { return CameraComponent; }
+    FORCEINLINE USpringArmComponent* GetCameraBoom() const { return SpringArmComponent; }
+
 protected:
     virtual void BeginPlay() override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-
     virtual void ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult) override;
-
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCapsuleComponent> CapsuleComponent;
@@ -50,7 +54,6 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
     TObjectPtr<UCameraComponent> CameraComponent;
-
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
     TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -81,7 +84,6 @@ protected:
 
     UFUNCTION()
     void OnMovementModeChanged(const FName& PreviousMovementModeName, const FName& NewMovementModeName);
-
 
     void OnMove(const FInputActionValue& Value);
     void OnLook(const FInputActionValue& Value);

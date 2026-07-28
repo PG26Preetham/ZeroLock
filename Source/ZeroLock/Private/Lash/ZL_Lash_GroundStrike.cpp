@@ -174,7 +174,7 @@ void UZL_Lash_GroundStrike::OnVictimCaught(UPrimitiveComponent* OverlappedComp, 
                 DragForce->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::SetVelocity;
                 DragForce->FinishVelocityParams.SetVelocity = FVector::ZeroVector;
 
-                Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
+               // Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
             }
         }
     }
@@ -214,7 +214,7 @@ void UZL_Lash_GroundStrike::OnMovementFinished()
 					Hero->GetMyAbilitySystemComp()->ApplySpiritDamage(villan->GetMyAbilitySystemComp(),DamageCalc);
 					if (mylevel>=2)
 					{
-						villan->LaunchCharacter(FVector(0,0,100),true,true);
+				//		villan->LaunchCharacter(FVector(0,0,100),true,true);
 						if (KnockUpEffect)
 						{
 							Hero->GetMyAbilitySystemComp()->ApplyGameplayEffect(villan->GetMyAbilitySystemComp(),KnockUpEffect,mylevel);

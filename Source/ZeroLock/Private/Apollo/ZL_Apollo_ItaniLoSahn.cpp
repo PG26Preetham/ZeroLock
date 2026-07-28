@@ -28,8 +28,8 @@ void UZL_Apollo_ItaniLoSahn::ActivateAbility(const FGameplayAbilitySpecHandle Ha
     AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     if (Hero)
     {
-        Hero->GetCharacterMovement()->StopMovementImmediately();
-        Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+       // Hero->GetCharacterMovement()->StopMovementImmediately();
+       // Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
         HeightSave= Hero->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
         RadiusSave= Hero->GetCapsuleComponent()->GetScaledCapsuleRadius();
     }
@@ -191,7 +191,7 @@ void UZL_Apollo_ItaniLoSahn::EndAbility(const FGameplayAbilitySpecHandle Handle,
     AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
     if (Hero)
     {
-        Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+        //Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
         Hero->GetCameraBoom()->bEnableCameraLag = false;
         Hero->GetCameraBoom()->CameraLagSpeed = 10.0f;
         Hero->GetCapsuleComponent()->SetCapsuleHalfHeight(HeightSave);

@@ -6,7 +6,9 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "DefaultMovementSet/Settings/StanceSettings.h"
+#include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Mover/ZeroMoverComponent.h"
 
@@ -89,11 +91,11 @@ void AZeroMoverPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmdContext& InputCmdResult)
 {
-    // 1. Package Framework Default Inputs
-    FCharacterDefaultInputs& DefaultInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FCharacterDefaultInputs>();
+   FCharacterDefaultInputs& DefaultInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FCharacterDefaultInputs>();
     
-    DefaultInputs.bIsJumpJustPressed = (!DefaultInputs.bIsJumpJustPressed && bLocalJumpPressed) ? true : false;
+    DefaultInputs.bIsJumpJustPressed = (!bWasJumpPressedLastFrame && bLocalJumpPressed);
     DefaultInputs.bIsJumpPressed = bLocalJumpPressed;
+    bWasJumpPressedLastFrame = bLocalJumpPressed;
 
     FVector ControlVector = FVector::ZeroVector;
     if (Controller && !CachedMoveInput.IsZero())
@@ -119,22 +121,13 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     {
         DefaultInputs.OrientationIntent = GetActorForwardVector();
     }
-    
-    if (MoverComponent && MoverComponent->GetMovementModeName() == TEXT("Sliding"))
-    {
-        bLocalSlideIntentValid = false;
-    }
 
-    bool bCustomJump = (bLocalJumpPressed && !bWasJumpPressedLastFrame);
-    bWasJumpPressedLastFrame = bLocalJumpPressed;
-    
-    // 2. Package Custom Zero Game Inputs
     FZeroMovementInputs& ZeroInputs = InputCmdResult.InputCollection.FindOrAddMutableDataByType<FZeroMovementInputs>();
     
     ZeroInputs.bWantsToCrouch = bCachedWantsToCrouch;
     ZeroInputs.bSlideIntentValid = bLocalSlideIntentValid;
     ZeroInputs.bJumpHold = bLocalJumpPressed;
-    ZeroInputs.bCustomJumpJustPressed = bCustomJump;
+    ZeroInputs.bCustomJumpJustPressed = DefaultInputs.bIsJumpJustPressed;
     ZeroInputs.bWantsToDash = bWantsToDashLatch;
     ZeroInputs.bWantsToMelee = bWantsToHeavyMelee;
     ZeroInputs.bWantsToZipline = bWantsToZipline;
@@ -144,7 +137,7 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
         ZeroInputs.LookDir = Controller->GetControlRotation();
     }
     
-    // Consume local dash latch after pushing it to the framework
+    // Clear latches after recording them into the command frame
     bWantsToDashLatch = false;
     bWantsToHeavyMelee = false;
     bWantsToZipline = false;

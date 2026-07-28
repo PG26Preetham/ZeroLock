@@ -46,10 +46,7 @@ void UZL_Apollo_FlawlessAdvance::EndAbility(const FGameplayAbilitySpecHandle Han
 		AnimMontageTask->EndTask();
 	}
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	if (Hero && Hero->GetCharacterMovement())
-	{
-		Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-	}
+	
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
@@ -78,12 +75,7 @@ void UZL_Apollo_FlawlessAdvance::OnInitialMoveComplete()
 void UZL_Apollo_FlawlessAdvance::StartChargePhase()
 {
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	if (Hero && Hero->GetCharacterMovement())
-	{
-		InitialMovementMode = Hero->GetCharacterMovement()->MovementMode;
-		Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		Hero->GetCharacterMovement()->StopMovementImmediately();
-	}
+	
 	if (UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo())
 	{
 		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
@@ -116,7 +108,7 @@ FVector UZL_Apollo_FlawlessAdvance::GetExactInputDirection() const
 	APlayerController* PlayerController = Cast<APlayerController>(Hero->GetController());
 	if (!PlayerController) return FVector::ZeroVector;
 	
-	FVector2D MovementVecotor = Hero->GetMoveVector();
+	FVector2D MovementVecotor = FVector2D::ZeroVector;
 	
 	const FRotator Rotation = PlayerController->GetControlRotation();
 	const FRotator YawRotation(0, Rotation.Yaw, 0);
@@ -209,10 +201,10 @@ void UZL_Apollo_FlawlessAdvance::OnLungeFinished()
 		AnimMontageTask->EndTask();
 	}
 	AZeroLockCharacter* Hero = Cast<AZeroLockCharacter>(GetAvatarActorFromActorInfo());
-	if (Hero && Hero->GetCharacterMovement())
-	{
-		Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-	}
+	//if (Hero && Hero->GetCharacterMovement())
+	//{
+		//Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+	//}
 	if (CurrentLungeCount < MaxLunges)
 	{ 
 		UAbilityTask_WaitInputPress* WaitPress = UAbilityTask_WaitInputPress::WaitInputPress(this, false);

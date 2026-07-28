@@ -24,7 +24,13 @@ FTransitionEvalResult UZeroSlideTransition::Evaluate_Implementation(const FSimul
 		if (Inputs && SyncState)
 		{
 			const bool bWantsToCrouch = Inputs->bWantsToCrouch;
-			const bool bIsMovingFastEnough = SyncState->GetVelocity_WorldSpace().SizeSquared2D() >= FMath::Square(MinSpeedToSlide);
+			
+			// Check if we were falling last tick to create a generous "landing buffer"
+			const bool bJustLanded = (Params.StartState.SyncState.MovementMode == DefaultModeNames::Falling);
+			const float CurrentSpeedSq = SyncState->GetVelocity_WorldSpace().SizeSquared2D();
+
+			// If they just landed from a jump/dash, bypass the strict minimum speed check
+			const bool bIsMovingFastEnough = bJustLanded || (CurrentSpeedSq >= FMath::Square(MinSpeedToSlide));
 
 			if (bWantsToCrouch && bIsMovingFastEnough)
 			{

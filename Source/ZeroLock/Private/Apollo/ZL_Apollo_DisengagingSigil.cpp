@@ -62,7 +62,7 @@ void UZL_Apollo_DisengagingSigil::OnAnimationPointTrigger()
     FVector LaunchVelocity = ForwardCM * (-1 * KnockbackStrength);
     
     Hero->GetMovementComponent()->StopMovementImmediately();
-    Hero->LaunchCharacter(LaunchVelocity, true, true);
+   // Hero->LaunchCharacter(LaunchVelocity, true, true);
 
 
     if (KnockBackMontage)

@@ -14,6 +14,7 @@
 #include "GAS/Tasks/ZL_WaitDelay_Task.h"
 #include "ZeroLock/ZeroLockCharacter.h"
 #include "Engine/OverlapResult.h"
+#include "GameFramework/RootMotionSource.h"
 
 UZL_Apollo_Riposte::UZL_Apollo_Riposte()
 {

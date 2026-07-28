@@ -41,8 +41,8 @@ void UZL_Lash_DeathSlam::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	{
 		ASC->AddLooseGameplayTag(FGameplayTag::RequestGameplayTag(FName("ZeroLock.Abilities.MovementLock")));
 	}
-	Hero->GetCharacterMovement()->BrakingDecelerationFlying =1000;
-	Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+	//Hero->GetCharacterMovement()->BrakingDecelerationFlying =1000;
+	//Hero->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 
 	//UAbilityTask_WaitDelay* InitWait = UAbilityTask_WaitDelay::WaitDelay(this,3.0f);
 //	InitWait->OnFinish.AddDynamic(this,&UZL_Lash_DeathSlam::TargetTimeOut);
@@ -139,7 +139,7 @@ void UZL_Lash_DeathSlam::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	
 	if (Hero)
 	{
-		Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		//Hero->GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 	}
 	if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 	{
@@ -194,7 +194,7 @@ void UZL_Lash_DeathSlam::TargetPullFinish()
 					DragForce->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::SetVelocity;
 					DragForce->FinishVelocityParams.SetVelocity = FVector::ZeroVector;
 
-					Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
+				//	Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
 				}
 			}
 			
@@ -253,7 +253,7 @@ void UZL_Lash_DeathSlam::AbilityConfirmedAction(const FGameplayAbilityTargetData
 					DragForce->FinishVelocityParams.Mode = ERootMotionFinishVelocityMode::SetVelocity;
 					DragForce->FinishVelocityParams.SetVelocity = FVector::ZeroVector;
 
-					Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
+				//	Victim->GetCharacterMovement()->ApplyRootMotionSource(DragForce);
 				}
 			}
 			
