@@ -47,6 +47,16 @@ void UZeroMoverComponent::OnMoverPreSimulationTick(const FMoverTimeStep& TimeSte
     {
         HandleDashInputs(*FoundDefaults, *FoundZeroInputs);
     }
+    
+    if (FoundZeroInputs->bHasAbilityMove)
+    {
+        TSharedPtr<FLayeredMove_LinearVelocity> AbilityMove = MakeShared<FLayeredMove_LinearVelocity>();
+        AbilityMove->Velocity = FoundZeroInputs->AbilityVelocity;
+        AbilityMove->DurationMs = FoundZeroInputs->AbilityMoveDuration * 1000.0f;
+        AbilityMove->MixMode = EMoveMixMode::OverrideVelocity;
+        
+        QueueLayeredMove(AbilityMove);
+    }
 }
 
 void UZeroMoverComponent::InitializeComponent()
@@ -341,4 +351,11 @@ bool UZeroMoverComponent::TryMantle(const FCharacterDefaultInputs& DefaultInputs
     QueueLayeredMove(MantleMove);
     
     return true;
+}
+
+void UZeroMoverComponent::RequestSafeAbilityMove(FVector Velocity, float Duration)
+{
+    bLatchedAbilityMove = true;
+    LatchedAbilityVelocity = Velocity;
+    LatchedAbilityDuration = Duration;
 }

@@ -86,6 +86,16 @@ protected:
 private:
 	int32 LocalAirJumpsUsed = 0;
 	
+public:
+	
+	UFUNCTION(BlueprintCallable, Category = "ZeroLock|Movement")
+	void RequestSafeAbilityMove(FVector Velocity, float Duration);
+
+
+	bool bLatchedAbilityMove = false;
+	FVector LatchedAbilityVelocity = FVector::ZeroVector;
+	float LatchedAbilityDuration = 0.0f;
+	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "WallBounce|VFX")
 	UNiagaraSystem* VFX_WallBounce;

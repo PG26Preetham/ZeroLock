@@ -94,6 +94,13 @@ protected:
     void OnDashPressed();
     void OnHeavyMeleePressed();
     void OnZiplinePressed();
+    
+public:
+    UFUNCTION(BlueprintCallable, Category = "Aiming")
+    FRotator GetSyncedAimRotation() const;
+    
+    UFUNCTION(BlueprintCallable, Category = "Inputs")
+    FVector2D GetSyncedInput() const;
 
 private:
 

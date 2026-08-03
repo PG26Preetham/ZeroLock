@@ -37,6 +37,15 @@ struct FZeroMovementInputs : public FMoverDataStructBase
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Zero|Inputs")
 	bool bWantsToMelee = false;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
+	bool bHasAbilityMove = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
+	FVector AbilityVelocity = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
+	float AbilityMoveDuration = 0.0f;
 
     virtual UScriptStruct* GetScriptStruct() const override { return FZeroMovementInputs::StaticStruct(); }
     virtual FMoverDataStructBase* Clone() const override { return new FZeroMovementInputs(*this); }
@@ -55,6 +64,10 @@ struct FZeroMovementInputs : public FMoverDataStructBase
        Ar << bWantsToDash;
        Ar << bWantsToMelee;
     	Ar << bWantsToZipline;
+    	
+    	Ar<< bHasAbilityMove;
+    	Ar << AbilityMoveDuration;
+    	Ar << AbilityVelocity;
 
        bOutSuccess = true;
        return true;

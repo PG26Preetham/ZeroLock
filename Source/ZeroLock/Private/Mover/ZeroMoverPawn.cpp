@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
+#include "Chaos/ChaosPerfTest.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "DefaultMovementSet/Settings/StanceSettings.h"
@@ -132,12 +133,24 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     ZeroInputs.bWantsToMelee = bWantsToHeavyMelee;
     ZeroInputs.bWantsToZipline = bWantsToZipline;
     
+    
+    
     if (Controller)
     {
         ZeroInputs.LookDir = Controller->GetControlRotation();
     }
+    if (MoverComponent && MoverComponent->bLatchedAbilityMove)
+    {
+        ZeroInputs.bHasAbilityMove = true;
+        ZeroInputs.AbilityVelocity = MoverComponent->LatchedAbilityVelocity;
+        ZeroInputs.AbilityMoveDuration = MoverComponent->LatchedAbilityDuration;
+        MoverComponent->bLatchedAbilityMove = false;
+    }
+    else
+    {
+        ZeroInputs.bHasAbilityMove = false;
+    }
     
-    // Clear latches after recording them into the command frame
     bWantsToDashLatch = false;
     bWantsToHeavyMelee = false;
     bWantsToZipline = false;
@@ -175,6 +188,32 @@ void AZeroMoverPawn::OnHeavyMeleePressed()
 void AZeroMoverPawn::OnZiplinePressed()
 {
     bWantsToZipline = true;
+}
+
+FRotator AZeroMoverPawn::GetSyncedAimRotation() const
+{
+    if (IsLocallyControlled() && GetController())
+    {
+        return GetController()->GetControlRotation();
+    }
+    
+    if (HasAuthority() && MoverComponent)
+    {
+        const FMoverSyncState& SyncState = MoverComponent->GetSyncState();
+        
+        if (const FZeroMovementInputs* ZeroInputs = SyncState.SyncStateCollection.FindDataByType<FZeroMovementInputs>())
+        {
+            return ZeroInputs->LookDir;
+        }
+    }
+    
+    return GetActorRotation();
+}
+
+FVector2D AZeroMoverPawn::GetSyncedInput() const
+{
+    
+    return CachedMoveInput;
 }
 
 void AZeroMoverPawn::OnCrouchPressed()

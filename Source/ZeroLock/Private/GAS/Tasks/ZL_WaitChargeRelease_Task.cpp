@@ -5,11 +5,11 @@
 
 #include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
-
+#include "Mover/ZeroMoverComponent.h"
 
 
 UZL_WaitChargeRelease_Task* UZL_WaitChargeRelease_Task::WaitChargeRelease(UGameplayAbility* OwningAbility,
-	UAnimMontage* InChargeMontage, float MaxDuration, float PerfectMin, float PerfectMax)
+                                                                          UAnimMontage* InChargeMontage, float MaxDuration, float PerfectMin, float PerfectMax)
 {
 	UZL_WaitChargeRelease_Task* MyObj = NewAbilityTask<UZL_WaitChargeRelease_Task>(OwningAbility);
 	MyObj->MaxChargeTime = MaxDuration;
@@ -24,6 +24,13 @@ UZL_WaitChargeRelease_Task* UZL_WaitChargeRelease_Task::WaitChargeRelease(UGamep
 
 void UZL_WaitChargeRelease_Task::Activate()
 {
+	if (AActor* Avatar = GetAvatarActor())
+	{
+		if (UZeroMoverComponent* MoverComp = Avatar->FindComponentByClass<UZeroMoverComponent>())
+		{
+			MoverComp->QueueNextMode("Locked",true);
+		}
+	}
 	ElapsedTime= 0;
 	OnInit.Broadcast(MaxChargeTime,PerfectWindowMin,PerfectWindowMax);
 	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
@@ -77,6 +84,13 @@ void UZL_WaitChargeRelease_Task::OnDestroy(bool bInOwnerFinished)
 	if (AbilitySystemComponent.IsValid())
 	{
 		AbilitySystemComponent->CurrentMontageStop(-1);
+	}
+	if (AActor* Avatar = GetAvatarActor())
+	{
+		if (UZeroMoverComponent* MoverComp = Avatar->FindComponentByClass<UZeroMoverComponent>())
+		{
+			MoverComp->QueueNextMode("Falling",true);
+		}
 	}
 	Super::OnDestroy(bInOwnerFinished);
 }
