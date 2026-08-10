@@ -212,8 +212,40 @@ FRotator AZeroMoverPawn::GetSyncedAimRotation() const
 
 FVector2D AZeroMoverPawn::GetSyncedInput() const
 {
-    
     return CachedMoveInput;
+}
+
+FVector AZeroMoverPawn::GetInputWorldDir() const
+{
+  
+    UZeroMoverComponent* MoverComp = GetZeroMoverComponent();
+    if (!MoverComp)
+    {
+        return FVector::ZeroVector;
+    }
+
+    if (IsLocallyControlled())
+    {
+        FRotator ControlRot = GetControlRotation();
+        FRotator YawRotation(0.0f, ControlRot.Yaw, 0.0f);
+
+        FVector LocalInput(GetSyncedInput().Y, GetSyncedInput().X, 0.0f);
+        FVector WorldDirection = ControlRot.RotateVector(LocalInput);
+		
+        return WorldDirection.GetSafeNormal();
+    }
+ 
+    if (HasAuthority())
+    {
+        const FMoverSyncState& SyncState = MoverComp->GetSyncState();
+        if (const FCharacterDefaultInputs* DefaultInputs = SyncState.SyncStateCollection.FindDataByType<FCharacterDefaultInputs>())
+        {
+            FVector SyncedMoveDir = DefaultInputs->GetMoveInput();
+            return SyncedMoveDir;
+        }
+    }
+
+    return FVector::ZeroVector;
 }
 
 void AZeroMoverPawn::OnCrouchPressed()

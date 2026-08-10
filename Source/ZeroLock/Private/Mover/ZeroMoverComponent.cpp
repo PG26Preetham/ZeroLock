@@ -50,6 +50,10 @@ void UZeroMoverComponent::OnMoverPreSimulationTick(const FMoverTimeStep& TimeSte
     
     if (FoundZeroInputs->bHasAbilityMove)
     {
+        if (CurrentMode == DefaultModeNames::Walking)
+        {
+            QueueNextMode(DefaultModeNames::Falling);
+        }
         TSharedPtr<FLayeredMove_LinearVelocity> AbilityMove = MakeShared<FLayeredMove_LinearVelocity>();
         AbilityMove->Velocity = FoundZeroInputs->AbilityVelocity;
         AbilityMove->DurationMs = FoundZeroInputs->AbilityMoveDuration * 1000.0f;

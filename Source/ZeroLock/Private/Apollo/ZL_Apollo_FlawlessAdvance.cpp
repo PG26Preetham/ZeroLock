@@ -4,13 +4,8 @@
 #include "Apollo/ZL_Apollo_FlawlessAdvance.h"
 
 #include "AbilitySystemComponent.h"
-#include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
-#include "Abilities/Tasks/AbilityTask_ApplyRootMotionMoveToForce.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "Abilities/Tasks/AbilityTask_WaitDelay.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
-#include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
-#include "Camera/CameraComponent.h"
 #include "Engine/Engine.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/BaseCharAbilitySystemComponent.h"
@@ -94,7 +89,7 @@ void UZL_Apollo_FlawlessAdvance::StartChargePhase()
 	AnimMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, FName("AnimMontageAndWait"), ChargeMontage);
 	AnimMontageTask->ReadyForActivation();
     
-	FVector MoveDir = GetExactInputDirection();
+	FVector MoveDir = Hero->GetInputWorldDir();
 	FVector StartLoc = Hero->GetActorLocation();
 	FVector TargetLoc = StartLoc + (MoveDir.GetSafeNormal() * ChargeVelocity);
 	

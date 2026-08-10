@@ -101,6 +101,9 @@ public:
     
     UFUNCTION(BlueprintCallable, Category = "Inputs")
     FVector2D GetSyncedInput() const;
+    
+    UFUNCTION(BlueprintCallable, Category = "Inputs")
+    FVector GetInputWorldDir() const;
 
 private:
 
