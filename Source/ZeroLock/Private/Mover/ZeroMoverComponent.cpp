@@ -61,6 +61,21 @@ void UZeroMoverComponent::OnMoverPreSimulationTick(const FMoverTimeStep& TimeSte
         
         QueueLayeredMove(AbilityMove);
     }
+    if (FoundZeroInputs->bHasDynamicAbilityMove && FoundZeroInputs->DynamicTargetActor)
+    {
+        if (CurrentMode == DefaultModeNames::Walking)
+        {
+            QueueNextMode(DefaultModeNames::Falling);
+        }
+        
+        TSharedPtr<FLayeredMove_MoveToDynamic> DynamicMove = MakeShared<FLayeredMove_MoveToDynamic>();
+        DynamicMove->LocationActor = FoundZeroInputs->DynamicTargetActor;
+        DynamicMove->StartLocation = UpdatedComponent->GetComponentLocation();
+        DynamicMove->DurationMs = FoundZeroInputs->DynamicMoveDuration * 1000.0f;
+        DynamicMove->MixMode = EMoveMixMode::OverrideVelocity;
+        
+        QueueLayeredMove(DynamicMove);
+    }
 }
 
 void UZeroMoverComponent::InitializeComponent()
@@ -362,4 +377,11 @@ void UZeroMoverComponent::RequestSafeAbilityMove(FVector Velocity, float Duratio
     bLatchedAbilityMove = true;
     LatchedAbilityVelocity = Velocity;
     LatchedAbilityDuration = Duration;
+}
+
+void UZeroMoverComponent::RequestSafeDynamicAbilityMove(AActor* TargetActor, float Duration)
+{
+    bLatchedDynamicMove = true;
+    LatchedDynamicActor = TargetActor;
+    LatchedDynamicDuration = Duration;
 }

@@ -150,6 +150,17 @@ void AZeroMoverPawn::ProduceInput_Implementation(int32 SimTimeMs, FMoverInputCmd
     {
         ZeroInputs.bHasAbilityMove = false;
     }
+    if (MoverComponent && MoverComponent->bLatchedDynamicMove)
+    {
+        ZeroInputs.bHasDynamicAbilityMove = true;
+        ZeroInputs.DynamicTargetActor = MoverComponent->LatchedDynamicActor;
+        ZeroInputs.DynamicMoveDuration = MoverComponent->LatchedDynamicDuration;
+        MoverComponent->bLatchedDynamicMove = false;
+    }
+    else
+    {
+        ZeroInputs.bHasDynamicAbilityMove = false;
+    }
     
     bWantsToDashLatch = false;
     bWantsToHeavyMelee = false;

@@ -46,6 +46,15 @@ struct FZeroMovementInputs : public FMoverDataStructBase
 
 	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
 	float AbilityMoveDuration = 0.0f;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
+	bool bHasDynamicAbilityMove = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
+	AActor* DynamicTargetActor = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Category = "ZeroLock|Movement")
+	float DynamicMoveDuration = 0.0f;
 
     virtual UScriptStruct* GetScriptStruct() const override { return FZeroMovementInputs::StaticStruct(); }
     virtual FMoverDataStructBase* Clone() const override { return new FZeroMovementInputs(*this); }
@@ -68,6 +77,12 @@ struct FZeroMovementInputs : public FMoverDataStructBase
     	Ar<< bHasAbilityMove;
     	Ar << AbilityMoveDuration;
     	Ar << AbilityVelocity;
+    	
+    	Ar << bHasDynamicAbilityMove;
+    	Ar << DynamicMoveDuration;
+    	Map->SerializeObject(Ar, AActor::StaticClass(), (UObject*&)DynamicTargetActor);
+    
+    	
 
        bOutSuccess = true;
        return true;

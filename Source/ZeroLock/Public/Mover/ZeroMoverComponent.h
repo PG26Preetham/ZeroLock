@@ -90,11 +90,19 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "ZeroLock|Movement")
 	void RequestSafeAbilityMove(FVector Velocity, float Duration);
+	
+	UFUNCTION(BlueprintCallable, Category = "ZeroLock|Movement")
+	void RequestSafeDynamicAbilityMove(AActor* TargetActor, float Duration);
 
 
 	bool bLatchedAbilityMove = false;
 	FVector LatchedAbilityVelocity = FVector::ZeroVector;
 	float LatchedAbilityDuration = 0.0f;
+	
+	bool bLatchedDynamicMove = false;
+	UPROPERTY()
+	AActor* LatchedDynamicActor = nullptr;
+	float LatchedDynamicDuration = 0.0f;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "WallBounce|VFX")
